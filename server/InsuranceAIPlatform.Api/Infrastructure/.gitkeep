@@ -1,0 +1,2 @@
+# Reserved for the Infrastructure layer (persistence, external integrations).
+# Populated at BACKEND_SQLSERVER_PERSISTENCE_GATE (EF Core, dedicated DB InsuranceAIPlatform).

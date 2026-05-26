@@ -1,0 +1,18 @@
+# .NET build output
+bin/
+obj/
+[Dd]ebug/
+[Rr]elease/
+
+# IDE / user files
+.vs/
+*.user
+*.suo
+*.userosscache
+
+# Local / secret config — never commit
+appsettings.Production.json
+appsettings.*.Local.json
+*.env
+.env
+secrets.json

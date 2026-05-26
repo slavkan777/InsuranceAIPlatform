@@ -1,0 +1,2 @@
+# Reserved for the Application layer (use cases, services, orchestration).
+# Populated at later gates; extracted to an Application project at BACKEND_AUDIT_RISK_PLACEHOLDERS.

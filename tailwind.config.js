@@ -1,0 +1,113 @@
+/** @type {import('tailwindcss').Config} */
+// Enterprise AI Command Center — design tokens.
+// brand  = Azure/electric blue (primary actions, navigation, focus)
+// ai     = indigo/violet (AI recommendations, evidence, confidence — the intelligence layer)
+// good/warn/danger = controlled risk semaphore (ok / review / high-risk)
+// ink    = cool slate/navy (surfaces, text, sidebar graphite, audit/governance)
+export default {
+  content: ['./index.html', './src/**/*.{ts,tsx}'],
+  theme: {
+    extend: {
+      colors: {
+        ink: {
+          50: '#f6f8fb',
+          100: '#eceff5',
+          200: '#e2e8f0',
+          300: '#bcc4d6',
+          400: '#8b93ab',
+          500: '#5b6480',
+          600: '#3d4660',
+          700: '#28304a',
+          800: '#1a2138',
+          900: '#0f1428',
+          950: '#070a18',
+        },
+        brand: {
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#2563eb',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
+        },
+        ai: {
+          50: '#eef2ff',
+          100: '#e0e7ff',
+          200: '#c7d2fe',
+          300: '#a5b4fc',
+          400: '#818cf8',
+          500: '#6366f1',
+          600: '#4f46e5',
+          700: '#4338ca',
+          800: '#3730a3',
+          900: '#312e81',
+        },
+        teal: {
+          50: '#effcf9',
+          100: '#cdf4ee',
+          500: '#0fb5a3',
+          600: '#0a8e80',
+        },
+        warn: {
+          50: '#fffbeb',
+          100: '#fef3c7',
+          200: '#fde68a',
+          300: '#fcd34d',
+          400: '#fbbf24',
+          500: '#f59e0b',
+          600: '#d97706',
+          700: '#b45309',
+          800: '#92400e',
+          900: '#78350f',
+        },
+        danger: {
+          50: '#fef2f2',
+          100: '#fee2e2',
+          200: '#fecaca',
+          300: '#fca5a5',
+          400: '#f87171',
+          500: '#ef4444',
+          600: '#dc2626',
+          700: '#b91c1c',
+          800: '#991b1b',
+          900: '#7f1d1d',
+        },
+        good: {
+          50: '#ecfdf5',
+          100: '#d1fae5',
+          200: '#a7f3d0',
+          300: '#6ee7b7',
+          400: '#34d399',
+          500: '#10b981',
+          600: '#059669',
+          700: '#047857',
+          800: '#065f46',
+          900: '#064e3b',
+        },
+      },
+      fontFamily: {
+        sans: [
+          'Inter',
+          'Segoe UI',
+          'system-ui',
+          '-apple-system',
+          'BlinkMacSystemFont',
+          '"Helvetica Neue"',
+          'Arial',
+          'sans-serif',
+        ],
+        mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Consolas', 'Menlo', 'monospace'],
+      },
+      boxShadow: {
+        card: '0 1px 2px rgba(15,23,42,0.04), 0 8px 24px rgba(15,23,42,0.04)',
+        soft: '0 1px 1px rgba(15,23,42,0.04), 0 8px 28px rgba(15,23,42,0.05)',
+        ring: '0 0 0 1px rgba(37,99,235,0.12), 0 6px 20px rgba(37,99,235,0.10)',
+      },
+    },
+  },
+  plugins: [],
+};

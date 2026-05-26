@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    background: linear-gradient(180deg, #f8fafc 0%, #f3f6fa 100%) fixed, #f4f7fb;
+    color: #0f172a;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white border border-ink-200 rounded-2xl shadow-card;
+  }
+  .card-pad {
+    @apply p-5;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold uppercase tracking-wide;
+  }
+  .pill-good {
+    @apply pill bg-good-500/10 text-good-600;
+  }
+  .pill-warn {
+    @apply pill bg-warn-500/15 text-warn-600;
+  }
+  .pill-bad {
+    @apply pill bg-danger-500/10 text-danger-600;
+  }
+  .pill-info {
+    @apply pill bg-brand-500/10 text-brand-700;
+  }
+  .pill-ai {
+    @apply pill bg-ai-500/10 text-ai-700;
+  }
+  .pill-muted {
+    @apply pill bg-ink-100 text-ink-600;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg bg-brand-600 hover:bg-brand-700 text-white text-sm font-semibold shadow-card transition-colors;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg bg-white border border-ink-200 hover:border-brand-400 hover:text-brand-700 text-ink-700 text-sm font-semibold transition-colors;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold text-ink-600 hover:bg-ink-100 transition-colors;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg bg-danger-500 hover:bg-danger-600 text-white text-sm font-semibold transition-colors;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-ink-100 text-ink-700 text-xs font-medium;
+  }
+  .metric-label {
+    @apply text-[11px] font-semibold uppercase tracking-wider text-ink-400;
+  }
+  .section-title {
+    @apply text-xs font-semibold uppercase tracking-wider text-ink-400;
+  }
+  .table-th {
+    @apply px-3 py-2.5 text-[11px] font-semibold uppercase tracking-wider text-ink-400 text-left;
+  }
+  .table-td {
+    @apply px-3 py-3 text-sm text-ink-800 align-middle;
+  }
+  .row-hover:hover {
+    @apply bg-ink-50;
+  }
+  .progress-bar-bg {
+    @apply h-1.5 w-full rounded-full bg-ink-100 overflow-hidden;
+  }
+  .progress-bar-fill {
+    @apply h-full bg-brand-500 rounded-full;
+  }
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white;
+  }
+}

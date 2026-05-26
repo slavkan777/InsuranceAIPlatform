@@ -1,0 +1,19 @@
+node_modules
+dist
+dist-ssr
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.local
+*.log
+.env
+.env.*
+!.env.example
+playwright-report
+.cache
+
+# TypeScript / Vite build artifacts
+*.tsbuildinfo
+vite.config.js
+vite.config.d.ts

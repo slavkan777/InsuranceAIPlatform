@@ -1,8 +1,12 @@
+using InsuranceAIPlatform.Api.Services;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
 
 const string ViteDevCors = "ViteDevServer";
+
+// In-memory claim service — singleton, deterministic, no DB dependency.
+builder.Services.AddSingleton<IClaimReadService, InMemoryClaimReadService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

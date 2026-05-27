@@ -1,0 +1,32 @@
+namespace InsuranceAIPlatform.Api.Contracts.Claims;
+
+/// <summary>Full claim detail page. All fields needed to render the claim header, financials, and AI summary panel.</summary>
+public record ClaimDetailsDto(
+    string Id,
+    string Customer,
+    string CustomerId,
+    string Vehicle,
+    string VehicleVin,
+    string Policy,
+    string PolicyId,
+    string EventType,
+    DateOnly EventDate,
+    string Location,
+    string? Description,
+    string Status,
+    string Risk,
+    int RiskScore,
+    int Confidence,
+    DateTimeOffset SlaDeadline,
+    int DocumentsReceived,
+    int DocumentsTotal,
+    string? MissingDocument,
+    decimal Estimate,
+    decimal ExpectedBenchmark,
+    decimal Deductible,
+    decimal RecommendedPayout,
+    string TraceId,
+    string RunId,
+    int Tokens,
+    decimal Cost,
+    double DurationSec);

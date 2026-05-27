@@ -1,3 +1,4 @@
+import { useNavigate } from 'react-router-dom';
 import { useAppSelector } from '@/app/hooks';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { goldenClaim } from '@/data/mock/claims';
@@ -8,6 +9,8 @@ import {
 } from '@/features/claims/claimWorkspaceSelectors';
 
 export default function CustomerVehiclePage() {
+  const navigate = useNavigate();
+
   // --- store selectors (with mock fallback) ---
   const claimDetailFromStore = useAppSelector(selectClaimDetail);
   const c = claimDetailFromStore ?? goldenClaim;
@@ -143,7 +146,13 @@ export default function CustomerVehiclePage() {
             <div className="text-xs text-ink-500 mt-0.5">
               <span className="font-mono">{c.policyId}</span> · до 31.12.2026
             </div>
-            <button className="btn-ghost mt-2 text-xs">→ Деталі</button>
+            <button
+              type="button"
+              onClick={() => navigate('/claims/CLM-1006/policy')}
+              className="btn-ghost mt-2 text-xs"
+            >
+              → Деталі
+            </button>
           </div>
           <div className="mt-4">
             <div className="section-title mb-2">Документи клієнта</div>

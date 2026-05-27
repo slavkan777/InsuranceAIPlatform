@@ -4,7 +4,6 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { goldenClaim } from '@/data/mock/claims';
 import { damagePhotos as mockDamagePhotos, documentsChecklist as mockDocumentsChecklist } from '@/data/mock/claim-1006';
 import {
-  requestMissingPhoto,
   selectDocument,
   toggleReviewed,
 } from '@/features/documents/documentsSlice';
@@ -13,6 +12,7 @@ import {
   selectWorkspacePhotos,
   selectClaimDetail,
 } from '@/features/claims/claimWorkspaceSelectors';
+import { DeferredActionButton } from '@/components/ui/DeferredActionButton';
 import clsx from '@/utils/clsx';
 
 const statusIcon = {
@@ -34,9 +34,7 @@ export default function DocumentsPhotosPage() {
   const photosFromStore = useAppSelector(selectWorkspacePhotos);
   const damagePhotos = photosFromStore ?? mockDamagePhotos;
 
-  const { selectedDocumentId, reviewedIds, reviewStatus, reviewMessage } = useAppSelector(
-    (s) => s.documents,
-  );
+  const { selectedDocumentId, reviewedIds } = useAppSelector((s) => s.documents);
 
   return (
     <div className="flex flex-col gap-5">
@@ -50,24 +48,14 @@ export default function DocumentsPhotosPage() {
             <p className="text-sm text-ink-600 mt-2">
               AI блокує автоматичне погодження до отримання документа.
             </p>
-            {reviewMessage && (
-              <p
-                className={clsx(
-                  'text-sm mt-2 font-medium',
-                  reviewStatus === 'sent' ? 'text-good-600' : 'text-danger-600',
-                )}
-              >
-                {reviewMessage}
-              </p>
-            )}
           </div>
-          <button
-            onClick={() => dispatch(requestMissingPhoto())}
-            disabled={reviewStatus === 'requesting'}
+          <DeferredActionButton
+            hint="Запит документів у клієнта — потрібен backend write-гейт"
             className="btn-primary"
+            badge="demo"
           >
-            {reviewStatus === 'requesting' ? 'Надсилаємо…' : 'Запросити у клієнта'}
-          </button>
+            Запросити у клієнта
+          </DeferredActionButton>
         </div>
       </div>
 
@@ -195,15 +183,25 @@ export default function DocumentsPhotosPage() {
           </section>
 
           <div className="grid gap-2">
-            <button
-              onClick={() => dispatch(requestMissingPhoto())}
-              disabled={reviewStatus === 'requesting'}
+            <DeferredActionButton
+              hint="Запит фото у клієнта — потрібен backend write-гейт"
               className="btn-primary"
+              badge="demo"
             >
               Запросити фото
-            </button>
-            <button className="btn-secondary">Переглянути оригінал</button>
-            <button className="btn-secondary">Підтвердити документ</button>
+            </DeferredActionButton>
+            <DeferredActionButton
+              hint="Перегляд оригіналу документа — read-only demo"
+              className="btn-secondary"
+            >
+              Переглянути оригінал
+            </DeferredActionButton>
+            <DeferredActionButton
+              hint="Підтвердження документа — потрібен backend write-гейт"
+              className="btn-secondary"
+            >
+              Підтвердити документ
+            </DeferredActionButton>
           </div>
         </aside>
       </div>

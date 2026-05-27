@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { MetricCard } from '@/components/ui/MetricCard';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { DeferredActionButton } from '@/components/ui/DeferredActionButton';
 import { claimRows } from '@/data/mock/claims';
 import { claimsListMetrics } from '@/data/mock/dashboard';
 import {
@@ -43,9 +44,27 @@ export default function ClaimsListPage() {
         subtitle="53 активних · 8 з високим ризиком · 5 чекають людського рішення"
         actions={
           <>
-            <button className="btn-secondary">Експорт CSV</button>
-            <button className="btn-secondary">Імпорт документів</button>
-            <button className="btn-primary">+ Новий випадок</button>
+            <DeferredActionButton
+              className="btn-secondary"
+              hint="Експорт CSV — доступний після backend-гейту"
+              badge="demo"
+            >
+              Експорт CSV
+            </DeferredActionButton>
+            <DeferredActionButton
+              className="btn-secondary"
+              hint="Імпорт документів — потрібен backend write-гейт"
+              badge="demo"
+            >
+              Імпорт документів
+            </DeferredActionButton>
+            <DeferredActionButton
+              className="btn-primary"
+              hint="Створення кейсу — потрібен backend write-гейт"
+              badge="demo"
+            >
+              + Новий випадок
+            </DeferredActionButton>
           </>
         }
       />

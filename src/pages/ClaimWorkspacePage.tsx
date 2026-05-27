@@ -190,13 +190,14 @@ export default function ClaimWorkspacePage() {
             <div className="metric-label text-brand-700">Наступна дія</div>
             <h4 className="text-base font-semibold text-ink-900 mt-1">Запросити фото пошкодження</h4>
             <p className="text-sm text-ink-600 mt-2 leading-snug">
-              Кнопка нижче надсилає запит клієнту через SMS + email.
+              Кнопка нижче відкриває збір документів по цьому випадку. Надсилання запиту клієнту
+              (SMS + email) у demo доступне лише для перегляду.
             </p>
             <button
               onClick={() => navigate('/claims/CLM-1006/documents')}
               className="btn-primary w-full mt-4"
             >
-              Запросити дані
+              Відкрити збір документів
             </button>
           </section>
         </aside>

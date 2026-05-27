@@ -4,8 +4,6 @@ import { StatusPill } from '@/components/ui/StatusPill';
 import { goldenClaim } from '@/data/mock/claims';
 import { approvalChecklist, decisionOptions as mockDecisionOptions } from '@/data/mock/claim-1006';
 import {
-  saveDraft,
-  sendRequestToCustomer,
   setDecision,
   setNotes,
   toggleChecklistItem,
@@ -14,6 +12,7 @@ import {
   selectClaimDetail,
   selectWorkspaceApprovalRead,
 } from '@/features/claims/claimWorkspaceSelectors';
+import { DeferredActionButton } from '@/components/ui/DeferredActionButton';
 import clsx from '@/utils/clsx';
 
 const toneRing: Record<string, string> = {
@@ -58,8 +57,7 @@ export default function HumanApprovalPage() {
   const recommendedPayout = approvalReadFromStore?.recommendedPayout ?? c.recommendedPayout;
   const aiRecommendation = approvalReadFromStore?.aiRecommendation ?? 'Запросити додаткове фото перед погодженням виплати';
 
-  const { selectedDecision, reviewerNotes, checklist, draftStatus, draftMessage } =
-    useAppSelector((s) => s.approval);
+  const { selectedDecision, reviewerNotes, checklist } = useAppSelector((s) => s.approval);
 
   const reductionAmount = 420;
   const draftPayout = recommendedPayout;
@@ -212,33 +210,28 @@ export default function HumanApprovalPage() {
           </section>
 
           <div className="grid gap-2">
-            <button
-              onClick={() => dispatch(saveDraft())}
-              disabled={draftStatus === 'saving' || draftStatus === 'sending'}
+            <DeferredActionButton
+              hint="Збереження чернетки рішення — потрібен backend write-гейт"
               className="btn-secondary"
             >
-              {draftStatus === 'saving' ? 'Зберігаємо…' : 'Зберегти чернетку'}
-            </button>
-            <button
-              onClick={() => dispatch(sendRequestToCustomer())}
-              disabled={draftStatus === 'sending'}
+              Зберегти чернетку
+            </DeferredActionButton>
+            <DeferredActionButton
+              hint="Надсилання запиту клієнту — потрібен backend write-гейт"
               className="btn-primary"
             >
-              {draftStatus === 'sending' ? 'Надсилаємо…' : 'Надіслати запит клієнту'}
-            </button>
-            <button className="btn-secondary text-good-600 border-good-300 hover:border-good-500">
+              Надіслати запит клієнту
+            </DeferredActionButton>
+            <DeferredActionButton
+              hint="Погодження виплати — потрібен backend write-гейт + людський підпис"
+              className="btn-secondary text-good-600 border-good-300"
+              badge="demo"
+            >
               Погодити після перевірки
-            </button>
-            {draftMessage && (
-              <p
-                className={clsx(
-                  'text-xs text-center mt-1 font-medium',
-                  draftStatus === 'failed' ? 'text-danger-600' : 'text-good-600',
-                )}
-              >
-                {draftMessage}
-              </p>
-            )}
+            </DeferredActionButton>
+            <p className="text-[11px] text-center text-ink-400 mt-1 leading-snug">
+              Дії рішення доступні лише для перегляду в demo · запис вмикається після backend write-гейту
+            </p>
           </div>
         </aside>
       </div>

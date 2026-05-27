@@ -66,6 +66,7 @@ export default function AiEvidencePage() {
           <button
             onClick={() => dispatch(runAiAnalysis())}
             disabled={status === 'running'}
+            title="Локальний демо-прогон mock-аналізу · реальний AI-провайдер не підключений"
             className="btn-primary"
           >
             {status === 'running' ? `Запускаємо ${progressPct}%` : 'Перезапустити mock-аналіз'}

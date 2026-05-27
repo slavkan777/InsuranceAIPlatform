@@ -5,6 +5,7 @@ import { StatusPill } from '@/components/ui/StatusPill';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { Icon } from '@/components/ui/Icon';
+import { DeferredActionButton } from '@/components/ui/DeferredActionButton';
 import { DonutChart } from '@/components/charts/DonutChart';
 import { BarList } from '@/components/charts/BarList';
 import { LineChart } from '@/components/charts/LineChart';
@@ -67,9 +68,19 @@ export default function DashboardPage() {
         subtitle="Операційна панель · Станом на 24 травня 2026, 22:48"
         actions={
           <>
-            <button className="btn-secondary">Сьогодні</button>
-            <button className="btn-ghost">7 днів</button>
-            <button className="btn-secondary">Експорт</button>
+            <DeferredActionButton className="btn-secondary" hint="Перемикач періоду — read-only demo">
+              Сьогодні
+            </DeferredActionButton>
+            <DeferredActionButton className="btn-ghost" hint="Перемикач періоду — read-only demo">
+              7 днів
+            </DeferredActionButton>
+            <DeferredActionButton
+              className="btn-secondary"
+              hint="Експорт — доступний після backend-гейту"
+              badge="demo"
+            >
+              Експорт
+            </DeferredActionButton>
           </>
         }
       />
@@ -135,15 +146,25 @@ export default function DashboardPage() {
               <h3 className="text-base font-semibold text-ink-900">Черга автострахових випадків</h3>
               <p className="text-xs text-ink-500 mt-0.5">{summaryFromStore ? `${summaryFromStore.totalActive} активних` : '53 активних'} · оновлено щохвилини</p>
             </div>
-            <button className="btn-primary">+ Створити випадок</button>
+            <DeferredActionButton
+              className="btn-primary"
+              hint="Створення кейсу — потрібен backend write-гейт"
+              badge="demo"
+            >
+              + Створити випадок
+            </DeferredActionButton>
           </div>
           <div className="flex flex-wrap gap-1.5 px-5 py-3 border-b border-ink-100 text-xs text-ink-600">
             {['Усі', 'ДТП', 'Високий ризик', 'Чекає AI', 'Чекає рішення'].map((seg, idx) => (
               <button
                 key={seg}
+                type="button"
+                disabled
+                aria-disabled="true"
+                title="Фільтри активні у розділі «Автострахові випадки»"
                 className={clsx(
-                  'px-2.5 py-1 rounded-md font-medium',
-                  idx === 0 ? 'bg-ink-900 text-white' : 'bg-ink-100 text-ink-600 hover:bg-ink-200',
+                  'px-2.5 py-1 rounded-md font-medium cursor-not-allowed',
+                  idx === 0 ? 'bg-ink-900 text-white' : 'bg-ink-100 text-ink-500',
                 )}
               >
                 {seg}

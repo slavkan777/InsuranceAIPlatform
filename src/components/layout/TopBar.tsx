@@ -26,6 +26,7 @@ export function TopBar() {
         <input
           type="search"
           placeholder="Пошук за кейсами, клієнтами, документами..."
+          title="Пошук — read-only demo"
           className="w-full pl-10 pr-14 py-2.5 rounded-xl bg-ink-50 border border-ink-200 text-sm focus-ring placeholder:text-ink-400"
         />
         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-ink-400 font-mono px-1.5 py-0.5 rounded border border-ink-200 bg-white">
@@ -53,14 +54,20 @@ export function TopBar() {
           {demoActive ? 'Зупинити демо' : 'Приклад використання'}
         </button>
         <button
-          className="w-9 h-9 rounded-lg text-ink-500 hover:bg-ink-100 grid place-items-center transition"
-          aria-label="Допомога"
+          type="button"
+          disabled
+          title="Довідка — read-only demo"
+          className="w-9 h-9 rounded-lg text-ink-400 grid place-items-center transition cursor-not-allowed opacity-60"
+          aria-label="Довідка (read-only demo)"
         >
           <Icon name="help" size={18} />
         </button>
         <button
-          className="relative w-9 h-9 rounded-lg text-ink-500 hover:bg-ink-100 grid place-items-center transition"
-          aria-label="Сповіщення"
+          type="button"
+          disabled
+          title="Сповіщення — read-only demo"
+          className="relative w-9 h-9 rounded-lg text-ink-400 grid place-items-center transition cursor-not-allowed opacity-60"
+          aria-label="Сповіщення (read-only demo)"
         >
           <span className="absolute top-0.5 right-0.5 w-4 h-4 grid place-items-center rounded-full bg-danger-500 text-white text-[10px] font-bold">
             3

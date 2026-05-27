@@ -21,6 +21,13 @@
 
   <ItemGroup>
     <ProjectReference Include="..\InsuranceAIPlatform.Api\InsuranceAIPlatform.Api.csproj" />
+    <ProjectReference Include="..\InsuranceAIPlatform.BuildingBlocks\InsuranceAIPlatform.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\InsuranceAIPlatform.Services.Claims\InsuranceAIPlatform.Services.Claims.csproj" />
+    <ProjectReference Include="..\InsuranceAIPlatform.Services.CustomersPolicies\InsuranceAIPlatform.Services.CustomersPolicies.csproj" />
+    <ProjectReference Include="..\InsuranceAIPlatform.Services.Documents\InsuranceAIPlatform.Services.Documents.csproj" />
+    <ProjectReference Include="..\InsuranceAIPlatform.Services.AiAnalysis\InsuranceAIPlatform.Services.AiAnalysis.csproj" />
+    <ProjectReference Include="..\InsuranceAIPlatform.Services.Approval\InsuranceAIPlatform.Services.Approval.csproj" />
+    <ProjectReference Include="..\InsuranceAIPlatform.Services.AuditCost\InsuranceAIPlatform.Services.AuditCost.csproj" />
   </ItemGroup>
 
 </Project>

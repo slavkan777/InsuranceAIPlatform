@@ -1,5 +1,6 @@
 using InsuranceAIPlatform.Api.Contracts;
 using InsuranceAIPlatform.Api.Middleware;
+using InsuranceAIPlatform.BuildingBlocks;
 using Microsoft.AspNetCore.Mvc;
 
 namespace InsuranceAIPlatform.Api.Controllers;
@@ -12,7 +13,9 @@ namespace InsuranceAIPlatform.Api.Controllers;
 [ApiController]
 [Route("api/bff")]
 [Tags("BFF Gateway")]
-public sealed class BffController(IWebHostEnvironment environment) : ControllerBase
+public sealed class BffController(
+    IWebHostEnvironment environment,
+    IEnumerable<IServiceHealthContributor> serviceHealth) : ControllerBase
 {
     // -----------------------------------------------------------------------
     // GET /api/bff/health
@@ -30,6 +33,15 @@ public sealed class BffController(IWebHostEnvironment environment) : ControllerB
         var correlationId = HttpContext.Items[CorrelationIdMiddleware.CorrelationIdKey]?.ToString()
             ?? HttpContext.TraceIdentifier;
 
+        // Additive: surface the six internal service skeletons' readiness as a BFF-owned DTO
+        // (mapped from each service's health snapshot). Proves DI resolution end-to-end without
+        // leaking internal service types to the frontend.
+        var services = serviceHealth
+            .Select(c => c.GetHealth())
+            .OrderBy(s => s.ServiceName, StringComparer.Ordinal)
+            .Select(s => new ServiceReadinessInfo(s.ServiceName, s.Status.ToString(), s.Stage, s.Capabilities))
+            .ToList();
+
         return Ok(new BffHealthResponse(
             Service: "bff-api-gateway",
             Status: "healthy",
@@ -37,7 +49,8 @@ public sealed class BffController(IWebHostEnvironment environment) : ControllerB
             Upstream: "in-memory-read-service",
             Environment: environment.EnvironmentName,
             CorrelationId: correlationId,
-            TimestampUtc: DateTimeOffset.UtcNow));
+            TimestampUtc: DateTimeOffset.UtcNow,
+            Services: services));
     }
 
     // -----------------------------------------------------------------------

@@ -10,4 +10,16 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- BFF / API Gateway references the thin shared kernel and all six internal service skeletons.
+         Dependency direction: Api -> Services.* -> BuildingBlocks. -->
+    <ProjectReference Include="..\InsuranceAIPlatform.BuildingBlocks\InsuranceAIPlatform.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\InsuranceAIPlatform.Services.Claims\InsuranceAIPlatform.Services.Claims.csproj" />
+    <ProjectReference Include="..\InsuranceAIPlatform.Services.CustomersPolicies\InsuranceAIPlatform.Services.CustomersPolicies.csproj" />
+    <ProjectReference Include="..\InsuranceAIPlatform.Services.Documents\InsuranceAIPlatform.Services.Documents.csproj" />
+    <ProjectReference Include="..\InsuranceAIPlatform.Services.AiAnalysis\InsuranceAIPlatform.Services.AiAnalysis.csproj" />
+    <ProjectReference Include="..\InsuranceAIPlatform.Services.Approval\InsuranceAIPlatform.Services.Approval.csproj" />
+    <ProjectReference Include="..\InsuranceAIPlatform.Services.AuditCost\InsuranceAIPlatform.Services.AuditCost.csproj" />
+  </ItemGroup>
+
 </Project>

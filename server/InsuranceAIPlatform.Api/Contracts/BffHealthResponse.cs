@@ -12,4 +12,16 @@ public record BffHealthResponse(
     string Upstream,
     string Environment,
     string CorrelationId,
-    DateTimeOffset TimestampUtc);
+    DateTimeOffset TimestampUtc,
+    IReadOnlyList<ServiceReadinessInfo> Services);
+
+/// <summary>
+/// Synthetic readiness line for one internal service skeleton, surfaced (additively) by
+/// GET /api/bff/health. BFF-owned DTO mapped from each service's health snapshot —
+/// internal service types never leak to the frontend.
+/// </summary>
+public record ServiceReadinessInfo(
+    string Service,
+    string Status,
+    string Stage,
+    IReadOnlyList<string> Capabilities);

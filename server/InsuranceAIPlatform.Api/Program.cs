@@ -1,5 +1,11 @@
 using InsuranceAIPlatform.Api.Middleware;
 using InsuranceAIPlatform.Api.Services;
+using InsuranceAIPlatform.Services.Claims;
+using InsuranceAIPlatform.Services.CustomersPolicies;
+using InsuranceAIPlatform.Services.Documents;
+using InsuranceAIPlatform.Services.AiAnalysis;
+using InsuranceAIPlatform.Services.Approval;
+using InsuranceAIPlatform.Services.AuditCost;
 using Microsoft.OpenApi;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -8,6 +14,17 @@ const string ViteDevCors = "ViteDevServer";
 
 // In-memory claim service — singleton, deterministic, no DB dependency.
 builder.Services.AddSingleton<IClaimReadService, InMemoryClaimReadService>();
+
+// Internal service skeletons (Stage-2): registered in-process behind the BFF.
+// Each is a boundary marker only — no DB, no writes, no AI provider, no data ownership yet.
+// The existing read routes are unchanged; these skeletons prove the boundaries + DI seam.
+builder.Services
+    .AddClaimsServiceSkeleton()
+    .AddCustomersPoliciesServiceSkeleton()
+    .AddDocumentsServiceSkeleton()
+    .AddAiAnalysisServiceSkeleton()
+    .AddApprovalServiceSkeleton()
+    .AddAuditCostServiceSkeleton();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

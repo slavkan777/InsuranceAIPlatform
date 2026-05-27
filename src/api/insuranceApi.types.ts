@@ -24,3 +24,50 @@ export interface MockAiRunResult {
   runId: string;
   status: 'succeeded' | 'failed';
 }
+
+// ---------------------------------------------------------------------------
+// Command result shapes — returned by the 4 BFF write endpoints.
+// Human-controlled only; no payout, no customer message, no upload.
+// ---------------------------------------------------------------------------
+
+/**
+ * Canonical result from any BFF command endpoint (POST /api/claims/{id}/...).
+ * Maps to C# CommandResult record.
+ */
+export interface CommandResult {
+  success: boolean;
+  commandId: string;
+  claimId: string;
+  status: string | null;
+  auditEventId: number | null;
+  outboxMessageId: number | null;
+  correlationId: string;
+  message: string;
+  warnings: string[];
+}
+
+/** Body for POST /api/claims/{claimId}/approval-draft */
+export interface SaveApprovalDraftBody {
+  currentDecision?: string | null;
+  notes?: string | null;
+}
+
+/** Body for POST /api/claims/{claimId}/human-decision */
+export interface SubmitHumanDecisionBody {
+  /** Must be one of: ApproveForReview | RejectForReview | NeedsMoreInformation | RequestDocuments */
+  decision: string;
+  notes?: string | null;
+}
+
+/** Body for POST /api/claims/{claimId}/missing-document-requests */
+export interface RequestMissingDocumentBody {
+  documentTitle: string;
+  reason?: string | null;
+}
+
+/** Body for POST /api/claims/{claimId}/document-metadata */
+export interface CreateDocumentMetadataBody {
+  kind: string;
+  title: string;
+  docType?: string | null;
+}

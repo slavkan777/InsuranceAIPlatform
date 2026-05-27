@@ -65,6 +65,29 @@ async function apiFetch<T>(path: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+/** POST a JSON body to a command endpoint; returns parsed response or throws BackendApiError. */
+async function apiPost<TBody, TResult>(path: string, body: TBody, idempotencyKey?: string): Promise<TResult> {
+  const url = `${BASE_URL}${path}`;
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+  if (idempotencyKey) headers['Idempotency-Key'] = idempotencyKey;
+  const res = await fetch(url, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    let errBody: ApiErrorResponse | null = null;
+    try { errBody = (await res.json()) as ApiErrorResponse; } catch { /* non-JSON */ }
+    throw new BackendApiError(
+      errBody?.code ?? 'HTTP_ERROR',
+      errBody?.message ?? `HTTP ${res.status} from ${url}`,
+      res.status,
+      errBody?.traceId ?? '',
+    );
+  }
+  return res.json() as Promise<TResult>;
+}
+
 // ---------------------------------------------------------------------------
 // Backend DTO shapes (camelCase; mirror the .cs record field names)
 // ---------------------------------------------------------------------------
@@ -586,17 +609,68 @@ export const backendInsuranceApi = {
     }));
   },
 
-  // ---- writes — stay mock regardless of mode ----
+  // ---- legacy mock-compatible writes (kept for backward compat) ----
   async saveApprovalDraft(
     _claimId: string,
     _draft: import('./insuranceApi.types').ApprovalDraftInput,
   ): Promise<import('./insuranceApi.types').ApprovalDraftResult> {
-    return { ok: true, savedAt: new Date().toISOString(), note: 'backend-mode: write deferred' };
+    return { ok: true, savedAt: new Date().toISOString(), note: 'backend-mode: use saveApprovalDraftCommand instead' };
   },
   async sendCustomerRequest(
     _claimId: string,
   ): Promise<import('./insuranceApi.types').CustomerRequestResult> {
     return { ok: true, savedAt: new Date().toISOString(), note: 'backend-mode: write deferred' };
+  },
+
+  // ---- BFF command endpoints (human-controlled; no payout, no customer msg, no upload) ----
+
+  /**
+   * POST /api/claims/{claimId}/approval-draft
+   * Upserts the human adjuster's draft decision. Submitted stays false.
+   */
+  async saveApprovalDraftCommand(
+    claimId: string,
+    body: import('./insuranceApi.types').SaveApprovalDraftBody,
+    idempotencyKey?: string,
+  ): Promise<import('./insuranceApi.types').CommandResult> {
+    return apiPost(`/api/claims/${claimId}/approval-draft`, body, idempotencyKey);
+  },
+
+  /**
+   * POST /api/claims/{claimId}/human-decision
+   * Submits the human decision (Submitted=true). Decision must be in the allowed set.
+   * No payout, no customer message.
+   */
+  async submitHumanDecision(
+    claimId: string,
+    body: import('./insuranceApi.types').SubmitHumanDecisionBody,
+    idempotencyKey?: string,
+  ): Promise<import('./insuranceApi.types').CommandResult> {
+    return apiPost(`/api/claims/${claimId}/human-decision`, body, idempotencyKey);
+  },
+
+  /**
+   * POST /api/claims/{claimId}/missing-document-requests
+   * Records an internal missing-document request. NO customer message sent.
+   */
+  async requestMissingDocument(
+    claimId: string,
+    body: import('./insuranceApi.types').RequestMissingDocumentBody,
+    idempotencyKey?: string,
+  ): Promise<import('./insuranceApi.types').CommandResult> {
+    return apiPost(`/api/claims/${claimId}/missing-document-requests`, body, idempotencyKey);
+  },
+
+  /**
+   * POST /api/claims/{claimId}/document-metadata
+   * Creates a document metadata placeholder row. NO binary upload, NO blob.
+   */
+  async createDocumentMetadata(
+    claimId: string,
+    body: import('./insuranceApi.types').CreateDocumentMetadataBody,
+    idempotencyKey?: string,
+  ): Promise<import('./insuranceApi.types').CommandResult> {
+    return apiPost(`/api/claims/${claimId}/document-metadata`, body, idempotencyKey);
   },
 };
 

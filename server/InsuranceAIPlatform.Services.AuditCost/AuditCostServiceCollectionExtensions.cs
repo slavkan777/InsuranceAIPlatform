@@ -11,8 +11,11 @@ public static class AuditCostServiceCollectionExtensions
 {
     public static IServiceCollection AddAuditCostServiceSkeleton(this IServiceCollection services)
     {
-        services.AddSingleton<IAuditCostService, AuditCostService>();
-        services.AddSingleton<IServiceHealthContributor>(sp => sp.GetRequiredService<IAuditCostService>());
+        // Register the concrete skeleton singleton directly — this ensures IServiceHealthContributor
+        // always resolves the skeleton AuditCostService regardless of IAuditCostService overrides.
+        services.AddSingleton<AuditCostService>();
+        services.AddSingleton<IAuditCostService>(sp => sp.GetRequiredService<AuditCostService>());
+        services.AddSingleton<IServiceHealthContributor>(sp => sp.GetRequiredService<AuditCostService>());
         return services;
     }
 }

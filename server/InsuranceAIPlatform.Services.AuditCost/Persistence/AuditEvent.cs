@@ -9,4 +9,12 @@ public sealed class AuditEvent
     public string Source { get; set; } = string.Empty;
     public string Message { get; set; } = string.Empty;
     public string Severity { get; set; } = string.Empty;    // "OK" | "WARN" | "BLOCK"
+
+    // --- Command audit extensions (nullable/additive; existing seed rows unaffected) ---
+    public string? CorrelationId { get; set; }
+    public string? Actor { get; set; }
+    public string? ActionType { get; set; }
+    public DateTimeOffset? OccurredAtUtc { get; set; }
+    /// <summary>Sanitized metadata JSON. No secrets, no PII.</summary>
+    public string? MetadataJson { get; set; }
 }

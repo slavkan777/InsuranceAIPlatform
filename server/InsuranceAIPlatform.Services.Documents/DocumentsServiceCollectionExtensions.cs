@@ -11,8 +11,11 @@ public static class DocumentsServiceCollectionExtensions
 {
     public static IServiceCollection AddDocumentsServiceSkeleton(this IServiceCollection services)
     {
-        services.AddSingleton<IDocumentsService, DocumentsService>();
-        services.AddSingleton<IServiceHealthContributor>(sp => sp.GetRequiredService<IDocumentsService>());
+        // Register the concrete skeleton singleton directly — this ensures IServiceHealthContributor
+        // always resolves the skeleton DocumentsService regardless of IDocumentsService overrides.
+        services.AddSingleton<DocumentsService>();
+        services.AddSingleton<IDocumentsService>(sp => sp.GetRequiredService<DocumentsService>());
+        services.AddSingleton<IServiceHealthContributor>(sp => sp.GetRequiredService<DocumentsService>());
         return services;
     }
 }

@@ -11,6 +11,7 @@ public sealed class DocumentsDbContext : DbContext
     public DocumentsDbContext(DbContextOptions<DocumentsDbContext> options) : base(options) { }
 
     public DbSet<ClaimDocument> ClaimDocuments => Set<ClaimDocument>();
+    public DbSet<MissingDocumentRequest> MissingDocumentRequests => Set<MissingDocumentRequest>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -26,6 +27,15 @@ public sealed class DocumentsDbContext : DbContext
             e.Property(x => x.Meta).HasMaxLength(300);
             e.Property(x => x.Status).HasMaxLength(50);
             e.Property(x => x.DocType).HasMaxLength(50);
+        });
+
+        modelBuilder.Entity<MissingDocumentRequest>(e =>
+        {
+            e.HasKey(x => x.Id);
+            e.Property(x => x.ClaimId).HasMaxLength(32).IsRequired();
+            e.Property(x => x.DocumentTitle).HasMaxLength(300).IsRequired();
+            e.Property(x => x.Reason).HasMaxLength(1000);
+            e.Property(x => x.RequestedByActor).HasMaxLength(200);
         });
     }
 }

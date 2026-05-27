@@ -11,8 +11,11 @@ public static class ApprovalServiceCollectionExtensions
 {
     public static IServiceCollection AddApprovalServiceSkeleton(this IServiceCollection services)
     {
-        services.AddSingleton<IApprovalService, ApprovalService>();
-        services.AddSingleton<IServiceHealthContributor>(sp => sp.GetRequiredService<IApprovalService>());
+        // Register the concrete skeleton singleton directly — this ensures IServiceHealthContributor
+        // always resolves the skeleton ApprovalService regardless of IApprovalService overrides.
+        services.AddSingleton<ApprovalService>();
+        services.AddSingleton<IApprovalService>(sp => sp.GetRequiredService<ApprovalService>());
+        services.AddSingleton<IServiceHealthContributor>(sp => sp.GetRequiredService<ApprovalService>());
         return services;
     }
 }

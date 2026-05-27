@@ -1,3 +1,4 @@
+using InsuranceAIPlatform.Api.Middleware;
 using InsuranceAIPlatform.Api.Services;
 using Microsoft.OpenApi;
 
@@ -14,13 +15,14 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "InsuranceAIPlatform API",
+        Title = "InsuranceAIPlatform BFF / API Gateway",
         Version = "v0.1",
         Description =
-            "Auto Insurance Claim AI Workbench — local demo backend skeleton. " +
+            "Auto Insurance Claim AI Workbench — BFF / API Gateway (Stage-1 skeleton). " +
             "Synthetic data only; this service performs no real claims operations. " +
             "AI outputs are advisory and human approval is always final. " +
-            "Database and AI provider are planned future gates."
+            "Database and AI provider are planned future gates. " +
+            "Correlation-id tracking: X-Correlation-Id header is echoed on all responses."
     });
 });
 
@@ -43,6 +45,10 @@ if (app.Environment.IsDevelopment())
         options.DocumentTitle = "InsuranceAIPlatform API";
     });
 }
+
+// Correlation-id middleware registered early so all downstream components (controllers,
+// health checks, error handlers) see the resolved id via HttpContext.Items.
+app.UseMiddleware<CorrelationIdMiddleware>();
 
 app.UseCors(ViteDevCors);
 app.MapControllers();

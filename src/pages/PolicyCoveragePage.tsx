@@ -1,9 +1,21 @@
+import { useAppSelector } from '@/app/hooks';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { goldenClaim } from '@/data/mock/claims';
-import { policyCoverageBlocks, policyValidation } from '@/data/mock/claim-1006';
+import { policyCoverageBlocks as mockPolicyCoverageBlocks, policyValidation as mockPolicyValidation } from '@/data/mock/claim-1006';
+import {
+  selectClaimDetail,
+  selectWorkspacePolicy,
+} from '@/features/claims/claimWorkspaceSelectors';
 
 export default function PolicyCoveragePage() {
-  const c = goldenClaim;
+  // --- store selectors (with mock fallback) ---
+  const claimDetailFromStore = useAppSelector(selectClaimDetail);
+  const c = claimDetailFromStore ?? goldenClaim;
+
+  const policyFromStore = useAppSelector(selectWorkspacePolicy);
+  const policyCoverageBlocks = policyFromStore?.blocks ?? mockPolicyCoverageBlocks;
+  const policyValidation = policyFromStore?.validation ?? mockPolicyValidation;
+
   return (
     <div className="flex flex-col gap-5">
       <section className="card card-pad flex flex-wrap items-center gap-x-6 gap-y-3 justify-between">

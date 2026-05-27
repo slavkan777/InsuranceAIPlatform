@@ -1,18 +1,23 @@
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { demoSteps } from '@/data/mock/claim-1006';
+import { demoSteps as mockDemoSteps } from '@/data/mock/claim-1006';
 import {
   setDemoStep,
   startDemo,
   stopDemo,
 } from '@/features/demo/demoSlice';
+import { selectDemoScenario } from '@/features/demo/demoSelectors';
 import clsx from '@/utils/clsx';
 
 export default function DemoScenarioPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { active, currentStep } = useAppSelector((s) => s.demo);
+
+  // --- store selector (with mock fallback) ---
+  const scenarioFromStore = useAppSelector(selectDemoScenario);
+  const demoSteps = scenarioFromStore ?? mockDemoSteps;
 
   function goStep(step: number, route: string) {
     dispatch(setDemoStep(step));

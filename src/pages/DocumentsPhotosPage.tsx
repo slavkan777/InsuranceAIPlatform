@@ -2,12 +2,17 @@ import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { goldenClaim } from '@/data/mock/claims';
-import { damagePhotos, documentsChecklist } from '@/data/mock/claim-1006';
+import { damagePhotos as mockDamagePhotos, documentsChecklist as mockDocumentsChecklist } from '@/data/mock/claim-1006';
 import {
   requestMissingPhoto,
   selectDocument,
   toggleReviewed,
 } from '@/features/documents/documentsSlice';
+import {
+  selectWorkspaceDocuments,
+  selectWorkspacePhotos,
+  selectClaimDetail,
+} from '@/features/claims/claimWorkspaceSelectors';
 import clsx from '@/utils/clsx';
 
 const statusIcon = {
@@ -18,7 +23,17 @@ const statusIcon = {
 
 export default function DocumentsPhotosPage() {
   const dispatch = useAppDispatch();
-  const c = goldenClaim;
+
+  // --- store selectors (with mock fallback) ---
+  const claimDetailFromStore = useAppSelector(selectClaimDetail);
+  const c = claimDetailFromStore ?? goldenClaim;
+
+  const documentsFromStore = useAppSelector(selectWorkspaceDocuments);
+  const documentsChecklist = documentsFromStore ?? mockDocumentsChecklist;
+
+  const photosFromStore = useAppSelector(selectWorkspacePhotos);
+  const damagePhotos = photosFromStore ?? mockDamagePhotos;
+
   const { selectedDocumentId, reviewedIds, reviewStatus, reviewMessage } = useAppSelector(
     (s) => s.documents,
   );

@@ -5,6 +5,15 @@ import type { ClaimRow } from '@/types';
 /** 'mock-fallback' = backend unreachable; fell back to mock data with degraded indicator */
 export type ClaimsApiMode = 'mock' | 'backend' | 'mock-fallback';
 
+export interface ClaimsSummaryData {
+  totalActive: number;
+  pendingReview: number;
+  highRisk: number;
+  avgSlaRemainingHours: number;
+  processedToday: number;
+  aiAnalysisRunning: number;
+}
+
 interface ClaimsState {
   list: ClaimRow[];
   selectedId: string;
@@ -17,10 +26,15 @@ interface ClaimsState {
     date: string;
   };
   segment: 'Усі' | 'ДТП' | 'Високий ризик' | 'Чекає AI' | 'Чекає рішення';
-  // --- async load state ---
+  // --- async load state (queue) ---
   loading: boolean;
   error: string | null;
   apiMode: ClaimsApiMode;
+  // --- async load state (summary) ---
+  summary: ClaimsSummaryData | null;
+  summaryLoading: boolean;
+  summaryError: string | null;
+  summaryApiMode: ClaimsApiMode;
 }
 
 const initialState: ClaimsState = {
@@ -38,6 +52,10 @@ const initialState: ClaimsState = {
   loading: false,
   error: null,
   apiMode: 'mock',
+  summary: null,
+  summaryLoading: false,
+  summaryError: null,
+  summaryApiMode: 'mock',
 };
 
 const claimsSlice = createSlice({
@@ -82,6 +100,29 @@ const claimsSlice = createSlice({
       state.error = action.payload.error;
       state.apiMode = 'mock-fallback';
     },
+    // --- async load actions for dashboard summary ---
+    loadClaimsSummary(state) {
+      state.summaryLoading = true;
+      state.summaryError = null;
+    },
+    claimsSummaryLoaded(
+      state,
+      action: PayloadAction<{ summary: ClaimsSummaryData; mode: ClaimsApiMode }>,
+    ) {
+      state.summaryLoading = false;
+      state.summary = action.payload.summary;
+      state.summaryApiMode = action.payload.mode;
+      state.summaryError = null;
+    },
+    claimsSummaryFailed(
+      state,
+      action: PayloadAction<{ error: string; fallback: ClaimsSummaryData }>,
+    ) {
+      state.summaryLoading = false;
+      state.summary = action.payload.fallback;
+      state.summaryError = action.payload.error;
+      state.summaryApiMode = 'mock-fallback';
+    },
   },
 });
 
@@ -93,5 +134,8 @@ export const {
   loadClaimsQueue,
   claimsQueueLoaded,
   claimsQueueFailed,
+  loadClaimsSummary,
+  claimsSummaryLoaded,
+  claimsSummaryFailed,
 } = claimsSlice.actions;
 export default claimsSlice.reducer;

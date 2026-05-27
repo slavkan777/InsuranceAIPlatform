@@ -1,9 +1,21 @@
+import { useAppSelector } from '@/app/hooks';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { goldenClaim } from '@/data/mock/claims';
-import { communicationHistory, previousClaims } from '@/data/mock/claim-1006';
+import { communicationHistory as mockCommunicationHistory, previousClaims as mockPreviousClaims } from '@/data/mock/claim-1006';
+import {
+  selectClaimDetail,
+  selectWorkspaceCustomerVehicle,
+} from '@/features/claims/claimWorkspaceSelectors';
 
 export default function CustomerVehiclePage() {
-  const c = goldenClaim;
+  // --- store selectors (with mock fallback) ---
+  const claimDetailFromStore = useAppSelector(selectClaimDetail);
+  const c = claimDetailFromStore ?? goldenClaim;
+
+  const customerVehicleFromStore = useAppSelector(selectWorkspaceCustomerVehicle);
+  const previousClaims = customerVehicleFromStore?.previousClaims ?? mockPreviousClaims;
+  const communicationHistory = customerVehicleFromStore?.communicationHistory ?? mockCommunicationHistory;
+
   return (
     <div className="flex flex-col gap-5">
       <section className="card card-pad flex flex-wrap items-center gap-x-6 gap-y-3 justify-between">
@@ -92,16 +104,20 @@ export default function CustomerVehiclePage() {
         <section className="card card-pad">
           <div className="section-title mb-3">Попередні випадки</div>
           <ul className="space-y-3">
-            {previousClaims.map((p) => (
-              <li key={p.id} className="flex items-start justify-between gap-3 text-sm">
-                <div className="min-w-0">
-                  <div className="font-mono font-semibold text-brand-700">{p.id}</div>
-                  <div className="text-ink-700">{p.label}</div>
-                  <div className="text-xs text-ink-500 mt-0.5">{p.date}</div>
-                </div>
-                <div className="text-right text-xs text-ink-600">{p.amount}</div>
-              </li>
-            ))}
+            {previousClaims.length > 0 ? (
+              previousClaims.map((p) => (
+                <li key={p.id} className="flex items-start justify-between gap-3 text-sm">
+                  <div className="min-w-0">
+                    <div className="font-mono font-semibold text-brand-700">{p.id}</div>
+                    <div className="text-ink-700">{p.label}</div>
+                    <div className="text-xs text-ink-500 mt-0.5">{p.date}</div>
+                  </div>
+                  <div className="text-right text-xs text-ink-600">{p.amount}</div>
+                </li>
+              ))
+            ) : (
+              <li className="text-sm text-ink-500">Попередніх випадків немає</li>
+            )}
           </ul>
         </section>
 

@@ -16,3 +16,8 @@ export const selectClaimById = (id: ClaimId) => (s: RootState) =>
 
 export const selectActiveClaim = (s: RootState) =>
   s.claims.list.find((c) => c.id === s.claims.selectedId);
+
+export const selectClaimsSummary = (s: RootState) => s.claims.summary;
+export const selectClaimsSummaryLoading = (s: RootState) => s.claims.summaryLoading;
+export const selectClaimsSummaryError = (s: RootState) => s.claims.summaryError;
+export const selectClaimsSummaryApiMode = (s: RootState) => s.claims.summaryApiMode;

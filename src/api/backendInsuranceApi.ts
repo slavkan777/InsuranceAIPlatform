@@ -543,6 +543,38 @@ export const backendInsuranceApi = {
     };
   },
 
+  async getClaimsSummary() {
+    const dto = await apiFetch<ClaimSummaryDto>('/api/claims/summary');
+    return {
+      totalActive: dto.totalActive,
+      pendingReview: dto.pendingReview,
+      highRisk: dto.highRisk,
+      avgSlaRemainingHours: dto.avgSlaRemainingHours,
+      processedToday: dto.processedToday,
+      aiAnalysisRunning: dto.aiAnalysisRunning,
+    };
+  },
+
+  async getClaimApproval(claimId: string) {
+    const dto = await apiFetch<ApprovalDraftDto>(`/api/claims/${claimId}/approval`);
+    return {
+      claimId: dto.claimId,
+      currentDecision: (dto.currentDecision ?? null) as string | null,
+      notes: (dto.notes ?? null) as string | null,
+      savedAt: (dto.savedAt ?? null) as string | null,
+      submitted: dto.submitted,
+      submittedAt: (dto.submittedAt ?? null) as string | null,
+      availableOptions: dto.availableOptions.map((o) => ({
+        value: o.value,
+        label: o.label,
+        recommended: o.recommended,
+        description: (o.description ?? null) as string | null,
+      })),
+      aiRecommendation: (dto.aiRecommendation ?? null) as string | null,
+      recommendedPayout: Number(dto.recommendedPayout),
+    };
+  },
+
   async getDemoScenario() {
     const dto = await apiFetch<DemoScenarioDto>('/api/demo/scenario');
     return dto.steps.map((s) => ({

@@ -3,21 +3,35 @@ import { StatusPill } from '@/components/ui/StatusPill';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { goldenClaim } from '@/data/mock/claims';
 import {
-  evidenceTabs,
-  extractedEntities,
-  keyFindings,
-  modelConfidence,
+  evidenceTabs as mockEvidenceTabs,
+  extractedEntities as mockExtractedEntities,
+  keyFindings as mockKeyFindings,
+  modelConfidence as mockModelConfidence,
 } from '@/data/mock/claim-1006';
 import {
   runAiAnalysis,
   setConfidenceFilter,
   setSelectedEvidence,
 } from '@/features/aiReview/aiReviewSlice';
+import {
+  selectClaimDetail,
+  selectWorkspaceAiEvidence,
+} from '@/features/claims/claimWorkspaceSelectors';
 import clsx from '@/utils/clsx';
 
 export default function AiEvidencePage() {
   const dispatch = useAppDispatch();
-  const c = goldenClaim;
+
+  // --- store selectors (with mock fallback) ---
+  const claimDetailFromStore = useAppSelector(selectClaimDetail);
+  const c = claimDetailFromStore ?? goldenClaim;
+
+  const aiEvidenceFromStore = useAppSelector(selectWorkspaceAiEvidence);
+  const keyFindings = aiEvidenceFromStore?.findings ?? mockKeyFindings.map((f, i) => ({ id: `f-${i}`, text: f.text, detail: f.detail, tone: f.tone }));
+  const evidenceTabs = aiEvidenceFromStore?.evidence ?? mockEvidenceTabs;
+  const modelConfidence = aiEvidenceFromStore?.modelConfidence ?? mockModelConfidence;
+  const extractedEntities = aiEvidenceFromStore?.extractedEntities ?? mockExtractedEntities;
+
   const { status, progressPct, selectedEvidence, confidenceFilter } = useAppSelector(
     (s) => s.aiReview,
   );
@@ -79,7 +93,7 @@ export default function AiEvidencePage() {
             <ul className="space-y-3">
               {keyFindings.map((f, idx) => (
                 <li
-                  key={idx}
+                  key={f.id ?? idx}
                   className={clsx(
                     'rounded-lg border p-3 flex items-start gap-3',
                     f.tone === 'danger'

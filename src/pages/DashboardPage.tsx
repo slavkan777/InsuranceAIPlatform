@@ -20,7 +20,8 @@ import {
 import { claimRows, goldenClaim } from '@/data/mock/claims';
 import { keyFindings } from '@/data/mock/claim-1006';
 import { setSelected } from '@/features/claims/claimsSlice';
-import { selectSelectedClaimId } from '@/features/claims/claimsSelectors';
+import { selectSelectedClaimId, selectClaimsQueue, selectClaimsSummary } from '@/features/claims/claimsSelectors';
+import { selectClaimDetail } from '@/features/claims/claimWorkspaceSelectors';
 import clsx from '@/utils/clsx';
 
 const eventDot: Record<string, string> = {
@@ -34,6 +35,25 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const selectedId = useAppSelector(selectSelectedClaimId);
+
+  // --- store selectors (with mock fallback) ---
+  const queueFromStore = useAppSelector(selectClaimsQueue);
+  const claimRows_ = queueFromStore.length > 0 ? queueFromStore : claimRows;
+
+  const summaryFromStore = useAppSelector(selectClaimsSummary);
+  // Build overviewMetrics from summary when available; fall back to static mock
+  const resolvedMetrics = summaryFromStore
+    ? [
+        { id: 'new', label: 'НОВІ ДТП', value: String(summaryFromStore.totalActive), delta: `${summaryFromStore.aiAnalysisRunning} AI runs`, tone: 'info' as const, icon: 'car' as const },
+        { id: 'wait-doc', label: 'ОЧІКУЮТЬ РІШЕННЯ', value: String(summaryFromStore.pendingReview), delta: 'на розгляді', tone: 'warn' as const, icon: 'file' as const },
+        { id: 'ai-today', label: 'AI-ОБРОБЛЕНО СЬОГОДНІ', value: String(summaryFromStore.processedToday), delta: `+${summaryFromStore.aiAnalysisRunning} зараз`, tone: 'ai' as const, icon: 'cpu' as const },
+        { id: 'high-risk', label: 'ВИСОКИЙ РИЗИК', value: String(summaryFromStore.highRisk), delta: 'поточні', tone: 'danger' as const, icon: 'shield' as const },
+        { id: 'avg-time', label: 'СЕРЕДНІЙ ЧАС SLA', value: `${summaryFromStore.avgSlaRemainingHours} год`, delta: 'залишилось', tone: 'good' as const, icon: 'clock' as const },
+      ]
+    : overviewMetrics;
+
+  const claimDetailFromStore = useAppSelector(selectClaimDetail);
+  const c = claimDetailFromStore ?? goldenClaim;
 
   function openClaim(id: string) {
     dispatch(setSelected(id));
@@ -55,7 +75,7 @@ export default function DashboardPage() {
       />
 
       <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
-        {overviewMetrics.map((m) => (
+        {resolvedMetrics.map((m) => (
           <MetricCard key={m.id} {...m} />
         ))}
       </div>
@@ -66,7 +86,7 @@ export default function DashboardPage() {
             <div className="section-title mb-1">Життєвий цикл автострахового випадку</div>
             <div className="text-sm text-ink-500">Розподіл активних випадків за фазами</div>
           </div>
-          <span className="chip">53 активних</span>
+          <span className="chip">{summaryFromStore ? `${summaryFromStore.totalActive} активних` : '53 активних'}</span>
         </div>
         <div className="flex items-center gap-1 overflow-x-auto pb-1">
           {lifecyclePhases.map((p, i) => {
@@ -113,7 +133,7 @@ export default function DashboardPage() {
           <div className="px-5 py-4 flex flex-wrap items-center justify-between gap-2 border-b border-ink-100">
             <div>
               <h3 className="text-base font-semibold text-ink-900">Черга автострахових випадків</h3>
-              <p className="text-xs text-ink-500 mt-0.5">53 активних · оновлено щохвилини</p>
+              <p className="text-xs text-ink-500 mt-0.5">{summaryFromStore ? `${summaryFromStore.totalActive} активних` : '53 активних'} · оновлено щохвилини</p>
             </div>
             <button className="btn-primary">+ Створити випадок</button>
           </div>
@@ -145,7 +165,7 @@ export default function DashboardPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-ink-100">
-                {claimRows.slice(0, 5).map((row) => (
+                {claimRows_.slice(0, 5).map((row) => (
                   <tr
                     key={row.id}
                     role="button"
@@ -214,22 +234,22 @@ export default function DashboardPage() {
                 <Icon name="cpu" size={16} />
               </span>
               <h3 className="text-sm font-semibold text-ink-900">
-                AI-рекомендація для {goldenClaim.id}
+                AI-рекомендація для {c.id}
               </h3>
             </div>
             <div className="flex items-end justify-between gap-3 mb-2">
               <div>
                 <div className="metric-label">Ймовірна виплата</div>
                 <div className="text-2xl font-bold text-ink-900 font-mono mt-0.5">
-                  ${goldenClaim.recommendedPayout.toLocaleString('uk-UA')}
+                  ${c.recommendedPayout.toLocaleString('uk-UA')}
                 </div>
               </div>
               <div className="text-right">
                 <div className="metric-label">Впевненість</div>
-                <div className="text-2xl font-bold text-ai-700 mt-0.5">{goldenClaim.confidence}%</div>
+                <div className="text-2xl font-bold text-ai-700 mt-0.5">{c.confidence}%</div>
               </div>
             </div>
-            <ProgressBar value={goldenClaim.confidence} tone="ai" />
+            <ProgressBar value={c.confidence} tone="ai" />
             <div className="mt-3 flex items-center gap-2">
               <span className="pill-ai">Рекомендація</span>
               <span className="text-xs text-ink-500">людська перевірка обов'язкова</span>
@@ -329,7 +349,7 @@ export default function DashboardPage() {
 
         <section className="card card-pad">
           <div className="section-title mb-1">AI-впевненість (розподіл)</div>
-          <div className="text-xs text-ink-400 mb-4">сьогодні · {goldenClaim.id} = 78%</div>
+          <div className="text-xs text-ink-400 mb-4">сьогодні · {c.id} = 78%</div>
           <BarList data={confidenceDistribution} />
         </section>
 

@@ -1,12 +1,26 @@
 import { useNavigate } from 'react-router-dom';
+import { useAppSelector } from '@/app/hooks';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { goldenClaim } from '@/data/mock/claims';
-import { riskFactors } from '@/data/mock/claim-1006';
+import { riskFactors as mockRiskFactors } from '@/data/mock/claim-1006';
+import {
+  selectClaimDetail,
+  selectWorkspaceRisks,
+} from '@/features/claims/claimWorkspaceSelectors';
 
 export default function RisksChecksPage() {
   const navigate = useNavigate();
-  const c = goldenClaim;
+
+  // --- store selectors (with mock fallback) ---
+  const claimDetailFromStore = useAppSelector(selectClaimDetail);
+  const c = claimDetailFromStore ?? goldenClaim;
+
+  const risksFromStore = useAppSelector(selectWorkspaceRisks);
+  const riskFactors = risksFromStore?.factors ?? mockRiskFactors;
+  const riskScore = risksFromStore?.score ?? c.riskScore;
+  const threshold = risksFromStore?.threshold ?? 60;
+
   const deviationAbs = c.estimate - c.expectedBenchmark;
   const deviationPct = ((deviationAbs / c.expectedBenchmark) * 100).toFixed(0);
 
@@ -35,19 +49,19 @@ export default function RisksChecksPage() {
                 fill="none"
                 stroke="#e5484d"
                 strokeWidth="10"
-                strokeDasharray={`${(c.riskScore / 100) * 314.16} 314.16`}
+                strokeDasharray={`${(riskScore / 100) * 314.16} 314.16`}
                 strokeLinecap="round"
               />
             </svg>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-4xl font-bold text-ink-900 leading-none font-mono">
-                {c.riskScore}
+                {riskScore}
               </span>
               <span className="text-xs text-ink-500 mt-1">/ 100</span>
             </div>
           </div>
           <p className="text-sm text-ink-600 mt-4">
-            Поріг автопогодження: 60. Перевищено на {c.riskScore - 60}.
+            Поріг автопогодження: {threshold}. Перевищено на {riskScore - threshold}.
           </p>
         </section>
 

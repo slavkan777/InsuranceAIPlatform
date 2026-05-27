@@ -98,6 +98,38 @@ export const mockInsuranceApi = {
     };
   },
 
+  // ---- dashboard summary ----
+  async getClaimsSummary() {
+    return {
+      totalActive: 53,
+      pendingReview: 5,
+      highRisk: 7,
+      avgSlaRemainingHours: 18,
+      processedToday: 48,
+      aiAnalysisRunning: 14,
+    };
+  },
+
+  // ---- approval read model ----
+  async getClaimApproval(_claimId: string) {
+    return {
+      claimId: goldenClaim.id,
+      currentDecision: 'request' as string | null,
+      notes: 'Запрошуємо клієнта надати фото пошкодження заднього бампера. AI confidence 78%.' as string | null,
+      savedAt: null as string | null,
+      submitted: false,
+      submittedAt: null as string | null,
+      availableOptions: [
+        { value: 'approve', label: 'Погодити виплату', recommended: false, description: 'Якщо ризики прийнятні' as string | null },
+        { value: 'request', label: 'Запросити дані', recommended: true, description: 'Рекомендовано AI' as string | null },
+        { value: 'reject', label: 'Відхилити', recommended: false, description: 'З обґрунтуванням' as string | null },
+        { value: 'escalate', label: 'Передати старшому', recommended: false, description: 'Ескалація' as string | null },
+      ],
+      aiRecommendation: 'Запросити додаткове фото перед погодженням виплати' as string | null,
+      recommendedPayout: goldenClaim.recommendedPayout,
+    };
+  },
+
   // ---- demo ----
   async getDemoScenario() {
     return demoSteps;

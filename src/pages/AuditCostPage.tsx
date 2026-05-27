@@ -1,6 +1,12 @@
+import { useAppSelector } from '@/app/hooks';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { goldenClaim } from '@/data/mock/claims';
-import { aiPipelineSteps, auditTrail, costDistribution } from '@/data/mock/claim-1006';
+import { aiPipelineSteps as mockAiPipelineSteps, auditTrail as mockAuditTrail, costDistribution as mockCostDistribution } from '@/data/mock/claim-1006';
+import {
+  selectClaimDetail,
+  selectWorkspaceAudit,
+  selectWorkspaceRisks,
+} from '@/features/claims/claimWorkspaceSelectors';
 import clsx from '@/utils/clsx';
 
 const resultTone = {
@@ -17,7 +23,23 @@ const stepDotTone: Record<string, string> = {
 };
 
 export default function AuditCostPage() {
-  const c = goldenClaim;
+  // --- store selectors (with mock fallback) ---
+  const claimDetailFromStore = useAppSelector(selectClaimDetail);
+  const c = claimDetailFromStore ?? goldenClaim;
+
+  const auditFromStore = useAppSelector(selectWorkspaceAudit);
+  const auditTrail = auditFromStore?.events ?? mockAuditTrail;
+  const costDistribution = auditFromStore?.distribution ?? mockCostDistribution;
+  const model = auditFromStore?.model ?? 'Azure OpenAI';
+  const tokens = auditFromStore?.tokens ?? c.tokens;
+  const cost = auditFromStore?.cost ?? c.cost;
+  const durationSec = auditFromStore?.durationSec ?? c.durationSec;
+  const runId = auditFromStore?.runId ?? c.runId;
+  const traceId = auditFromStore?.traceId ?? c.traceId;
+
+  const risksFromStore = useAppSelector(selectWorkspaceRisks);
+  const aiPipelineSteps = risksFromStore?.pipeline ?? mockAiPipelineSteps;
+
   return (
     <div className="flex flex-col gap-5">
       <section className="card card-pad flex flex-wrap items-center gap-x-6 gap-y-3 justify-between">
@@ -32,12 +54,12 @@ export default function AuditCostPage() {
 
       <section className="grid grid-cols-2 lg:grid-cols-6 gap-3">
         {[
-          { label: 'Run ID', value: c.runId, mono: true },
-          { label: 'Trace ID', value: c.traceId, mono: true },
-          { label: 'Модель', value: 'Azure OpenAI' },
-          { label: 'Токени', value: c.tokens.toLocaleString('uk-UA'), mono: true },
-          { label: 'Вартість', value: `$${c.cost.toFixed(4)}`, mono: true },
-          { label: 'Час', value: `${c.durationSec} с`, mono: true },
+          { label: 'Run ID', value: runId, mono: true },
+          { label: 'Trace ID', value: traceId, mono: true },
+          { label: 'Модель', value: model },
+          { label: 'Токени', value: tokens.toLocaleString('uk-UA'), mono: true },
+          { label: 'Вартість', value: `$${cost.toFixed(4)}`, mono: true },
+          { label: 'Час', value: `${durationSec} с`, mono: true },
         ].map((item) => (
           <div key={item.label} className="card card-pad">
             <div className="metric-label">{item.label}</div>
@@ -108,7 +130,7 @@ export default function AuditCostPage() {
             <ul className="space-y-2">
               {costDistribution.map((row) => {
                 const value = parseFloat(row.value.replace('$', ''));
-                const pct = (value / c.cost) * 100;
+                const pct = cost > 0 ? (value / cost) * 100 : 0;
                 return (
                   <li key={row.id}>
                     <div className="flex items-center justify-between text-sm">

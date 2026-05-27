@@ -2,7 +2,7 @@ import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { goldenClaim } from '@/data/mock/claims';
-import { approvalChecklist, decisionOptions } from '@/data/mock/claim-1006';
+import { approvalChecklist, decisionOptions as mockDecisionOptions } from '@/data/mock/claim-1006';
 import {
   saveDraft,
   sendRequestToCustomer,
@@ -10,6 +10,10 @@ import {
   setNotes,
   toggleChecklistItem,
 } from '@/features/approval/approvalSlice';
+import {
+  selectClaimDetail,
+  selectWorkspaceApprovalRead,
+} from '@/features/claims/claimWorkspaceSelectors';
 import clsx from '@/utils/clsx';
 
 const toneRing: Record<string, string> = {
@@ -20,14 +24,45 @@ const toneRing: Record<string, string> = {
   warn: 'border-warn-300 hover:border-warn-500 data-[selected=true]:bg-warn-500/10 data-[selected=true]:border-warn-500',
 };
 
+/** Map option value to a display tone. */
+function optionTone(value: string): string {
+  switch (value) {
+    case 'approve': return 'good';
+    case 'request': return 'info';
+    case 'reject': return 'danger';
+    case 'escalate': return 'warn';
+    default: return 'info';
+  }
+}
+
 export default function HumanApprovalPage() {
   const dispatch = useAppDispatch();
-  const c = goldenClaim;
+
+  // --- store selectors (with mock fallback) ---
+  const claimDetailFromStore = useAppSelector(selectClaimDetail);
+  const c = claimDetailFromStore ?? goldenClaim;
+
+  const approvalReadFromStore = useAppSelector(selectWorkspaceApprovalRead);
+
+  // Build decision options from the approval read model (or fall back to static mock)
+  const decisionOptions = approvalReadFromStore
+    ? approvalReadFromStore.availableOptions.map((o) => ({
+        id: o.value,
+        title: o.label,
+        caption: o.description ?? '',
+        tone: optionTone(o.value) as 'good' | 'info' | 'danger' | 'warn',
+        recommended: o.recommended,
+      }))
+    : mockDecisionOptions;
+
+  const recommendedPayout = approvalReadFromStore?.recommendedPayout ?? c.recommendedPayout;
+  const aiRecommendation = approvalReadFromStore?.aiRecommendation ?? 'Запросити додаткове фото перед погодженням виплати';
+
   const { selectedDecision, reviewerNotes, checklist, draftStatus, draftMessage } =
     useAppSelector((s) => s.approval);
 
   const reductionAmount = 420;
-  const draftPayout = c.recommendedPayout;
+  const draftPayout = recommendedPayout;
 
   return (
     <div className="flex flex-col gap-5">
@@ -46,7 +81,7 @@ export default function HumanApprovalPage() {
           <div>
             <div className="metric-label text-ai-700">AI-РЕКОМЕНДАЦІЯ</div>
             <h3 className="text-lg font-semibold text-ink-900 mt-1">
-              Запросити додаткове фото перед погодженням виплати
+              {aiRecommendation}
             </h3>
             <p className="text-sm text-ink-600 mt-2 max-w-2xl">
               Документи неповні + перевищення вартості ремонту на 38%. Confidence {c.confidence}%.

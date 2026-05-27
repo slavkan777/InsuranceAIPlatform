@@ -156,20 +156,15 @@ public class ServiceSkeletonTests(WebApplicationFactory<Program> factory)
         Assert.DoesNotContain(referenced, n => n == "InsuranceAIPlatform.Api");
     }
 
-    // (8) No Entity Framework referenced anywhere (skeleton = no persistence).
+    // (8) BuildingBlocks and BFF/API do not reference Entity Framework directly.
+    //     Service assemblies now own EF (persistence added in Stage-3) — excluded here.
     [Fact]
-    public void No_entity_framework_referenced()
+    public void BuildingBlocks_and_Api_do_not_reference_entity_framework()
     {
         var assemblies = new[]
         {
             typeof(Program).Assembly,                    // BFF / API
             typeof(IServiceHealthContributor).Assembly,  // BuildingBlocks
-            typeof(ClaimsService).Assembly,
-            typeof(CustomersPoliciesService).Assembly,
-            typeof(DocumentsService).Assembly,
-            typeof(AiAnalysisService).Assembly,
-            typeof(ApprovalService).Assembly,
-            typeof(AuditCostService).Assembly,
         };
         foreach (var asm in assemblies)
         {

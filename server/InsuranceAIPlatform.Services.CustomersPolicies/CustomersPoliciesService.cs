@@ -15,4 +15,8 @@ public sealed class CustomersPoliciesService : ICustomersPoliciesService
         ServiceReadinessStatus.Stub,
         "skeleton-v0.1",
         new[] { "customers", "vehicles", "policies", "coverage-validation" });
+
+    /// <summary>Skeleton returns 0 — DB not wired in-process. Use the seeder + migrator for real counts.</summary>
+    public Task<int> CountSyntheticCustomersAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult(0);
 }

@@ -7,6 +7,9 @@ export const selectSelectedClaimId = (s: RootState) => s.claims.selectedId;
 export const selectClaimsFilters = (s: RootState) => s.claims.filters;
 export const selectClaimsSearch = (s: RootState) => s.claims.search;
 export const selectClaimsSegment = (s: RootState) => s.claims.segment;
+export const selectClaimsLoading = (s: RootState) => s.claims.loading;
+export const selectClaimsError = (s: RootState) => s.claims.error;
+export const selectClaimsApiMode = (s: RootState) => s.claims.apiMode;
 
 export const selectClaimById = (id: ClaimId) => (s: RootState) =>
   s.claims.list.find((c) => c.id === id);

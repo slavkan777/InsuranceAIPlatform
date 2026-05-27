@@ -1,8 +1,13 @@
 import { goldenClaim } from '@/data/mock/claims';
 import { StatusPill } from '@/components/ui/StatusPill';
+import { useAppSelector } from '@/app/hooks';
+import { selectClaimDetail } from '@/features/claims/claimWorkspaceSelectors';
 
 export function ClaimHeader() {
-  const c = goldenClaim;
+  // Header reflects the saga-loaded claim detail (backend data in backend-mode);
+  // fall back to goldenClaim when null so mock mode stays byte-identical.
+  const claimDetail = useAppSelector(selectClaimDetail);
+  const c = claimDetail ?? goldenClaim;
   return (
     <div className="card card-pad flex flex-wrap items-start gap-5 justify-between">
       <div className="min-w-0">

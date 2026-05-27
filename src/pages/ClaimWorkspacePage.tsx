@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useAppSelector } from '@/app/hooks';
 import { ClaimHeader } from '@/components/claim/ClaimHeader';
 import { Timeline } from '@/components/claim/Timeline';
 import { StatusPill } from '@/components/ui/StatusPill';
@@ -10,11 +11,16 @@ import {
   keyRisks,
   stoInvoiceLines,
 } from '@/data/mock/claim-1006';
+import { selectClaimDetail } from '@/features/claims/claimWorkspaceSelectors';
 import clsx from '@/utils/clsx';
 
 export default function ClaimWorkspacePage() {
   const navigate = useNavigate();
-  const c = goldenClaim;
+  // Overview header/fields come from the saga-loaded claim detail (backend in
+  // backend-mode); fall back to goldenClaim when null so mock mode stays identical
+  // and there is no null-flash before the saga resolves.
+  const claimDetail = useAppSelector(selectClaimDetail);
+  const c = claimDetail ?? goldenClaim;
 
   return (
     <div className="flex flex-col gap-5">

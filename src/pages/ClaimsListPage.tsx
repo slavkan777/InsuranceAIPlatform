@@ -11,13 +11,25 @@ import {
   setFilter,
   setSelected,
 } from '@/features/claims/claimsSlice';
-import { selectClaimsState } from '@/features/claims/claimsSelectors';
+import {
+  selectClaimsState,
+  selectClaimsQueue,
+  selectClaimsApiMode,
+  selectClaimsError,
+} from '@/features/claims/claimsSelectors';
 import clsx from '@/utils/clsx';
 
 export default function ClaimsListPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { search, segment, filters } = useAppSelector(selectClaimsState);
+  // Source rows from the saga-loaded store (backend data in backend-mode); fall back to
+  // the static mock when the store list is empty so MOCK MODE stays byte-identical
+  // to the accepted baseline.
+  const storeRows = useAppSelector(selectClaimsQueue);
+  const rows = storeRows && storeRows.length > 0 ? storeRows : claimRows;
+  const apiMode = useAppSelector(selectClaimsApiMode);
+  const claimsError = useAppSelector(selectClaimsError);
 
   function openClaim(id: string) {
     dispatch(setSelected(id));
@@ -81,7 +93,14 @@ export default function ClaimsListPage() {
             <div className="px-5 py-4 flex flex-wrap items-center justify-between gap-3 border-b border-ink-100">
               <div>
                 <h3 className="text-base font-semibold text-ink-900">Черга автострахових випадків</h3>
-                <p className="text-xs text-ink-500 mt-0.5">Сортовано за SLA</p>
+                <p className="text-xs text-ink-500 mt-0.5">
+                  Сортовано за SLA
+                  {apiMode === 'mock-fallback' && (
+                    <span className="ml-2 text-warn-600" title={claimsError ?? undefined}>
+                      · демо-дані (бекенд недоступний)
+                    </span>
+                  )}
+                </p>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {([
@@ -122,7 +141,7 @@ export default function ClaimsListPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-100">
-                  {claimRows.map((row) => (
+                  {rows.map((row) => (
                     <tr
                       key={row.id}
                       onClick={() => openClaim(row.id)}

@@ -2,6 +2,9 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { claimRows } from '@/data/mock/claims';
 import type { ClaimRow } from '@/types';
 
+/** 'mock-fallback' = backend unreachable; fell back to mock data with degraded indicator */
+export type ClaimsApiMode = 'mock' | 'backend' | 'mock-fallback';
+
 interface ClaimsState {
   list: ClaimRow[];
   selectedId: string;
@@ -14,6 +17,10 @@ interface ClaimsState {
     date: string;
   };
   segment: 'Усі' | 'ДТП' | 'Високий ризик' | 'Чекає AI' | 'Чекає рішення';
+  // --- async load state ---
+  loading: boolean;
+  error: string | null;
+  apiMode: ClaimsApiMode;
 }
 
 const initialState: ClaimsState = {
@@ -28,6 +35,9 @@ const initialState: ClaimsState = {
     date: '7 днів',
   },
   segment: 'Усі',
+  loading: false,
+  error: null,
+  apiMode: 'mock',
 };
 
 const claimsSlice = createSlice({
@@ -49,8 +59,39 @@ const claimsSlice = createSlice({
     setSegment(state, action: PayloadAction<ClaimsState['segment']>) {
       state.segment = action.payload;
     },
+    // --- async load actions for claims queue ---
+    loadClaimsQueue(state) {
+      state.loading = true;
+      state.error = null;
+    },
+    claimsQueueLoaded(
+      state,
+      action: PayloadAction<{ list: ClaimRow[]; mode: ClaimsApiMode }>,
+    ) {
+      state.loading = false;
+      state.list = action.payload.list;
+      state.apiMode = action.payload.mode;
+      state.error = null;
+    },
+    claimsQueueFailed(
+      state,
+      action: PayloadAction<{ error: string; fallbackList: ClaimRow[] }>,
+    ) {
+      state.loading = false;
+      state.list = action.payload.fallbackList;
+      state.error = action.payload.error;
+      state.apiMode = 'mock-fallback';
+    },
   },
 });
 
-export const { setSelected, setSearch, setFilter, setSegment } = claimsSlice.actions;
+export const {
+  setSelected,
+  setSearch,
+  setFilter,
+  setSegment,
+  loadClaimsQueue,
+  claimsQueueLoaded,
+  claimsQueueFailed,
+} = claimsSlice.actions;
 export default claimsSlice.reducer;

@@ -26,6 +26,17 @@ public sealed class AiAnalysisDbContext : DbContext
             e.Property(x => x.ClaimId).HasMaxLength(32).IsRequired();
             e.Property(x => x.ProviderMode).HasMaxLength(50);
             e.Property(x => x.Cost).HasColumnType("decimal(18,4)");
+
+            // Structured fields added by AddAiAnalysisRunStructuredFields migration — all nullable.
+            e.Property(x => x.ModelName).HasMaxLength(100);
+            e.Property(x => x.Status).HasMaxLength(100);
+            e.Property(x => x.SummaryText).HasMaxLength(500);
+            e.Property(x => x.RecommendedActionJson).HasMaxLength(4000);
+            e.Property(x => x.PolicyExplanationText).HasMaxLength(500);
+            e.Property(x => x.GuardrailFlagsJson).HasMaxLength(4000);
+            e.Property(x => x.RiskLevel).HasMaxLength(100);
+            e.Property(x => x.CorrelationId).HasMaxLength(100);
+
             e.HasMany(x => x.Findings).WithOne(f => f.Run)
                 .HasForeignKey(f => f.RunId).OnDelete(DeleteBehavior.Cascade);
             e.HasMany(x => x.EvidenceReferences).WithOne(r => r.Run)

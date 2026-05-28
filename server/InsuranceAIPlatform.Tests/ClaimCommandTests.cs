@@ -223,16 +223,18 @@ public class ClaimCommandTests : IClassFixture<CommandTestWebApplicationFactory>
     }
 
     // -----------------------------------------------------------------------
-    // (C8) No AI provider / no HTTP egress on command path
+    // (C8) AI provider is MockAiProvider (no HTTP egress); command services intact.
+    // Updated for gate AddAiAnalysisRunStructuredFields: IAiProvider is now MockAiProvider.
     // -----------------------------------------------------------------------
 
     [Fact]
     public void Command_path_constructs_no_ai_provider_and_makes_no_http_egress()
     {
         using var scope = _factory.Services.CreateScope();
-        // IAiProvider must NOT be registered (AI provider disabled in all modes)
+        // IAiProvider is now MockAiProvider — deterministic local mock, no HTTP, no real provider.
         var aiProvider = scope.ServiceProvider.GetService<InsuranceAIPlatform.Services.AiAnalysis.IAiProvider>();
-        Assert.Null(aiProvider);
+        Assert.NotNull(aiProvider);
+        Assert.Equal(InsuranceAIPlatform.Services.AiAnalysis.AiProviderMode.Mock, aiProvider!.Mode);
 
         // Command services must be service interfaces, not DbContext types
         var approval  = scope.ServiceProvider.GetService<IApprovalService>();

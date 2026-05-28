@@ -672,6 +672,35 @@ export const backendInsuranceApi = {
   ): Promise<import('./insuranceApi.types').CommandResult> {
     return apiPost(`/api/claims/${claimId}/document-metadata`, body, idempotencyKey);
   },
+
+  // ---- AI Analysis endpoints (advisory only; never authorises payout/reject/fraud/status change) ----
+
+  /**
+   * GET /api/claims/{claimId}/ai-analysis
+   * Returns the latest AI analysis run for a claim, or null if none exists (404 → null).
+   * AI output is advisory only — human decision is always final.
+   */
+  async getClaimAiAnalysis(claimId: string): Promise<import('./insuranceApi.types').AiAnalysisDto | null> {
+    try {
+      return await apiFetch<import('./insuranceApi.types').AiAnalysisDto>(`/api/claims/${claimId}/ai-analysis`);
+    } catch (e) {
+      if (e instanceof BackendApiError && e.status === 404) return null;
+      throw e;
+    }
+  },
+
+  /**
+   * POST /api/claims/{claimId}/ai-analysis/run
+   * Triggers a new AI analysis run for a claim. Returns the result DTO.
+   * AI output is advisory only — human decision is always final.
+   * Throws BackendApiError on 4xx/5xx.
+   */
+  async runClaimAiAnalysis(claimId: string): Promise<import('./insuranceApi.types').AiAnalysisDto> {
+    return apiPost<import('./insuranceApi.types').AiAnalysisRunRequestDto, import('./insuranceApi.types').AiAnalysisDto>(
+      `/api/claims/${claimId}/ai-analysis/run`,
+      {},
+    );
+  },
 };
 
 // ---------------------------------------------------------------------------

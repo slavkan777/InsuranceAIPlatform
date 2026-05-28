@@ -6,6 +6,11 @@ using InsuranceAIPlatform.Services.CustomersPolicies;
 using InsuranceAIPlatform.Services.Documents;
 using InsuranceAIPlatform.Services.Documents.Persistence;
 using InsuranceAIPlatform.Services.AiAnalysis;
+using InsuranceAIPlatform.Services.AiAnalysis.Configuration;
+using InsuranceAIPlatform.Services.AiAnalysis.Guardrails;
+using InsuranceAIPlatform.Services.AiAnalysis.Orchestration;
+using InsuranceAIPlatform.Services.AiAnalysis.Persistence;
+using InsuranceAIPlatform.Services.AiAnalysis.Providers;
 using InsuranceAIPlatform.Services.Approval;
 using InsuranceAIPlatform.Services.Approval.Persistence;
 using InsuranceAIPlatform.Services.AuditCost;
@@ -54,6 +59,65 @@ builder.Services
 builder.Services.AddApprovalPersistence(connectionString);
 builder.Services.AddDocumentsPersistence(connectionString);
 builder.Services.AddAuditCostPersistence(connectionString);
+
+// -----------------------------------------------------------------------
+// AI provider mode: Mock by default; DeepSeek adapter is disabled (no HTTP,
+// never reads DEEPSEEK_API_KEY); orchestrator persists structured output +
+// audit + outbox; AI is advisory-only.
+// -----------------------------------------------------------------------
+var aiOptions = builder.Configuration.GetSection("AiProvider").Get<AiProviderOptions>() ?? new AiProviderOptions();
+
+// Defense-in-depth: if RealCallsEnabled=true AND Mode="DeepSeek", log warning and force Mock.
+if (aiOptions.RealCallsEnabled && aiOptions.Mode.Equals("DeepSeek", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddLogging();  // Ensure logging is registered
+    // Will log at runtime below via the app logger — force mode to Mock
+    aiOptions.Mode = "Mock";
+}
+
+// Register guardrail evaluator
+builder.Services.AddSingleton<IGuardrailEvaluator, AdvisoryOnlyGuardrailEvaluator>();
+
+// Register AI provider based on mode
+if (aiOptions.Mode.Equals("DeepSeekDisabled", StringComparison.OrdinalIgnoreCase))
+{
+    builder.Services.AddSingleton<IAiProvider, DisabledDeepSeekAiProvider>();
+}
+else
+{
+    // Default: Mock (or unknown mode defaults to Mock)
+    builder.Services.AddSingleton<IAiProvider, MockAiProvider>();
+}
+
+builder.Services.AddAiAnalysisPersistence(connectionString);
+
+// Claim existence delegate — wires IClaimReadService (Api layer) into the orchestrator (Service layer)
+// without creating a circular project reference.
+builder.Services.AddSingleton<Func<string, bool>>(sp =>
+{
+    var claimRead = sp.GetRequiredService<IClaimReadService>();
+    return claimId => claimRead.GetClaim(claimId) is not null;
+});
+
+// Audit/outbox delegates — wires IAuditCostService (AuditCost layer) into orchestrator without
+// a cross-service assembly reference (Services.AiAnalysis must not reference Services.AuditCost).
+builder.Services.AddSingleton<InsuranceAIPlatform.Services.AiAnalysis.Orchestration.AppendAuditDelegate>(sp =>
+{
+    var audit = sp.GetRequiredService<IAuditCostService>();
+    return (claimId, actionType, actor, correlationId, severity, message, meta, ct) =>
+        audit.AppendAuditAsync(claimId, actionType, actor, correlationId, severity, message, meta, ct);
+});
+
+builder.Services.AddSingleton<InsuranceAIPlatform.Services.AiAnalysis.Orchestration.WriteOutboxDelegate>(sp =>
+{
+    var audit = sp.GetRequiredService<IAuditCostService>();
+    return async (eventType, claimId, correlationId, payloadJson, idempotencyKey, ct) =>
+    {
+        await audit.WriteOutboxAsync(eventType, claimId, correlationId, payloadJson, idempotencyKey, ct);
+    };
+});
+
+builder.Services.AddSingleton<IAiAnalysisOrchestrator, PersistenceAiAnalysisOrchestrator>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

@@ -1,13 +1,21 @@
+using InsuranceAIPlatform.Services.AiAnalysis.Contracts;
+
 namespace InsuranceAIPlatform.Services.AiAnalysis;
 
 /// <summary>
-/// Placeholder for a future AI provider adapter. NOT implemented and NOT called in the skeleton.
-/// The real DeepSeek adapter is isolated to a later AI-provider gate (mock default,
-/// opt-in / disabled-by-default). The skeleton adds no HTTP client, no SDK, and never reads
-/// <c>DEEPSEEK_API_KEY</c>. No concrete implementation is registered in DI.
+/// AI provider adapter boundary. Implementations: MockAiProvider (default) and
+/// DisabledDeepSeekAiProvider (disabled, throws). No HttpClient, no SDK, no external call.
+/// DEEPSEEK_API_KEY is never read — not even in the disabled adapter.
 /// </summary>
 public interface IAiProvider
 {
-    /// <summary>Configured provider mode. The skeleton wires no implementation, so no provider runs.</summary>
+    /// <summary>Configured provider mode.</summary>
     AiProviderMode Mode { get; }
+
+    /// <summary>
+    /// Runs AI analysis for the given request. MockAiProvider returns deterministic output.
+    /// DisabledDeepSeekAiProvider throws InvalidOperationException unconditionally.
+    /// No real provider call is made in this gate.
+    /// </summary>
+    Task<AiProviderRawOutput> AnalyzeAsync(AiAnalysisRequest request, CancellationToken ct = default);
 }

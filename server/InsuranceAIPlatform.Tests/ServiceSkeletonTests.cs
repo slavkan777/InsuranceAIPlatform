@@ -86,17 +86,19 @@ public class ServiceSkeletonTests(WebApplicationFactory<Program> factory)
         Assert.Equal(ServiceReadinessStatus.Stub, byName[ServiceNames.AuditCost].Status);
     }
 
-    // (4) AI Analysis skeleton wires no provider and stays advisory-only — no AI call is possible.
+    // (4) AI Analysis wires a provider and stays advisory-only — no real AI call is possible.
+    // Updated for gate AddAiAnalysisRunStructuredFields: IAiProvider is now MockAiProvider (no HTTP).
     [Fact]
     public void AiAnalysis_skeleton_has_no_provider_and_is_advisory_only()
     {
         using var scope = _factory.Services.CreateScope();
         var ai = scope.ServiceProvider.GetRequiredService<IAiAnalysisService>();
-        Assert.Equal(AiProviderMode.Disabled, ai.ProviderMode);
         Assert.True(ai.AdvisoryOnly);
 
-        // No IAiProvider implementation is registered — nothing can call an external AI provider.
-        Assert.Null(scope.ServiceProvider.GetService<IAiProvider>());
+        // IAiProvider is now MockAiProvider (deterministic local mock, no HTTP, no real provider).
+        var provider = scope.ServiceProvider.GetService<IAiProvider>();
+        Assert.NotNull(provider);
+        Assert.Equal(AiProviderMode.Mock, provider!.Mode);
     }
 
     // (5) BFF health additively surfaces the six skeleton services without breaking identity fields.

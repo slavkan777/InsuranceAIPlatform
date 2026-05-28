@@ -9,9 +9,12 @@ public enum AiProviderMode
     /// <summary>Deterministic mock provider (future default). No external call.</summary>
     Mock,
 
-    /// <summary>DeepSeek adapter present but disabled — opt-in only, isolated to a later gate.</summary>
+    /// <summary>DeepSeek adapter present but disabled — opt-in only.</summary>
     DeepSeekDisabled,
 
     /// <summary>No provider configured or wired — the current skeleton state.</summary>
-    Disabled
+    Disabled,
+
+    /// <summary>Real DeepSeek provider — opt-in only, requires RealCallsEnabled=true + DEEPSEEK_API_KEY in environment.</summary>
+    DeepSeek
 }

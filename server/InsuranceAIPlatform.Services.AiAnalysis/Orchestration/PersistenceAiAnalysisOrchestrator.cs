@@ -128,7 +128,7 @@ public sealed class PersistenceAiAnalysisOrchestrator : IAiAnalysisOrchestrator
             db.AiAnalysisRuns.Add(blockedRun);
             await db.SaveChangesAsync(ct);
 
-            result = BuildResult(runId, claimId, status, rawOutput, assessment, now, correlationId,
+            result = BuildResult(runId, claimId, _provider.Mode.ToString(), status, rawOutput, assessment, now, correlationId,
                 findings: Array.Empty<FindingOut>(),
                 evidence: Array.Empty<EvidenceOut>(),
                 risks: Array.Empty<RiskOut>(),
@@ -193,7 +193,7 @@ public sealed class PersistenceAiAnalysisOrchestrator : IAiAnalysisOrchestrator
             var evidenceOut = rawOutput.Evidence.Select(e => new EvidenceOut(e.Id, e.Source, e.Note, e.Confidence)).ToList();
             var risksOut    = rawOutput.Risks.Select(r => new RiskOut(r.Id, r.Label, r.Weight)).ToList();
 
-            result = BuildResult(runId, claimId, status, rawOutput, assessment, now, correlationId,
+            result = BuildResult(runId, claimId, _provider.Mode.ToString(), status, rawOutput, assessment, now, correlationId,
                 findings: findingsOut, evidence: evidenceOut, risks: risksOut, riskLevel: riskLevel);
         }
 
@@ -246,6 +246,7 @@ public sealed class PersistenceAiAnalysisOrchestrator : IAiAnalysisOrchestrator
     private static AiAnalysisResult BuildResult(
         string runId,
         string claimId,
+        string providerMode,
         string status,
         AiProviderRawOutput raw,
         GuardrailAssessment assessment,
@@ -259,7 +260,7 @@ public sealed class PersistenceAiAnalysisOrchestrator : IAiAnalysisOrchestrator
         return new AiAnalysisResult(
             RunId: runId,
             ClaimId: claimId,
-            ProviderMode: "Mock",
+            ProviderMode: providerMode,
             ModelName: raw.ModelName,
             Status: status,
             SummaryText: raw.SummaryText,
@@ -280,7 +281,7 @@ public sealed class PersistenceAiAnalysisOrchestrator : IAiAnalysisOrchestrator
         new(
             RunId: "run_not_found",
             ClaimId: claimId,
-            ProviderMode: "Mock",
+            ProviderMode: "unknown",
             ModelName: "n/a",
             Status: "claim_not_found",
             SummaryText: string.Empty,

@@ -20,8 +20,17 @@ public sealed class AiProviderOptions
 
 /// <summary>
 /// DeepSeek model config. NO key property — DEEPSEEK_API_KEY is never stored here.
+/// The API key is intentionally NOT a property here; the value is loaded only via
+/// IConfiguration["DEEPSEEK_API_KEY"] at request time and never stored on this options object.
 /// </summary>
 public sealed class DeepSeekOptions
 {
-    public string Model { get; set; } = "deepseek-v4-flash";
+    /// <summary>DeepSeek model ID. Use "deepseek-chat" for the real OpenAI-compatible chat endpoint.</summary>
+    public string Model { get; set; } = "deepseek-chat";
+
+    /// <summary>DeepSeek OpenAI-compatible chat-completions endpoint.</summary>
+    public string Endpoint { get; set; } = "https://api.deepseek.com/v1/chat/completions";
+
+    /// <summary>HTTP request timeout in seconds for DeepSeek calls.</summary>
+    public int TimeoutSeconds { get; set; } = 30;
 }

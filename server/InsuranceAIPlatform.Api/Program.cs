@@ -61,32 +61,58 @@ builder.Services.AddDocumentsPersistence(connectionString);
 builder.Services.AddAuditCostPersistence(connectionString);
 
 // -----------------------------------------------------------------------
-// AI provider mode: Mock by default; DeepSeek adapter is disabled (no HTTP,
-// never reads DEEPSEEK_API_KEY); orchestrator persists structured output +
-// audit + outbox; AI is advisory-only.
+// AI provider mode selection.
+// Priority order (evaluated at startup):
+//   1. Mode in {"DeepSeek","DeepSeekReal"} + RealCallsEnabled=true + DEEPSEEK_API_KEY present
+//      → RealDeepSeekAiProvider (real HTTP calls to api.deepseek.com)
+//   2. Mode="DeepSeekDisabled"
+//      → DisabledDeepSeekAiProvider (throws on AnalyzeAsync; no key read; no HTTP)
+//   3. All other cases (Mode="Mock", unknown mode, or partial real-mode config)
+//      → MockAiProvider (deterministic, no external calls)
+//
+// DEEPSEEK_API_KEY is NEVER logged, stored, or printed. Only boolean presence is evaluated here.
 // -----------------------------------------------------------------------
 var aiOptions = builder.Configuration.GetSection("AiProvider").Get<AiProviderOptions>() ?? new AiProviderOptions();
 
-// Defense-in-depth: if RealCallsEnabled=true AND Mode="DeepSeek", log warning and force Mock.
-if (aiOptions.RealCallsEnabled && aiOptions.Mode.Equals("DeepSeek", StringComparison.OrdinalIgnoreCase))
-{
-    builder.Services.AddLogging();  // Ensure logging is registered
-    // Will log at runtime below via the app logger — force mode to Mock
-    aiOptions.Mode = "Mock";
-}
+// Bind options for DI (needed by RealDeepSeekAiProvider constructor)
+builder.Services.Configure<AiProviderOptions>(builder.Configuration.GetSection("AiProvider"));
+
+var mode = aiOptions.Mode;
+var realEnabled = aiOptions.RealCallsEnabled;
+// Evaluate key presence as boolean only — value is NEVER read here.
+var keyConfigured = !string.IsNullOrWhiteSpace(builder.Configuration["DEEPSEEK_API_KEY"]);
 
 // Register guardrail evaluator
 builder.Services.AddSingleton<IGuardrailEvaluator, AdvisoryOnlyGuardrailEvaluator>();
 
-// Register AI provider based on mode
-if (aiOptions.Mode.Equals("DeepSeekDisabled", StringComparison.OrdinalIgnoreCase))
+// Determine resolved provider name for startup logging (deferred until app.Run)
+string resolvedProviderName;
+
+// Register AI provider based on resolved mode
+if ((mode.Equals("DeepSeek", StringComparison.OrdinalIgnoreCase) ||
+     mode.Equals("DeepSeekReal", StringComparison.OrdinalIgnoreCase))
+    && realEnabled
+    && keyConfigured)
+{
+    // Real DeepSeek opt-in path — registers named HttpClient and the real provider.
+    builder.Services.AddHttpClient("deepseek");
+    builder.Services.AddSingleton<IAiProvider, RealDeepSeekAiProvider>();
+    resolvedProviderName = "RealDeepSeek (opt-in)";
+}
+else if (mode.Equals("DeepSeekDisabled", StringComparison.OrdinalIgnoreCase))
 {
     builder.Services.AddSingleton<IAiProvider, DisabledDeepSeekAiProvider>();
+    resolvedProviderName = "DisabledDeepSeek";
 }
 else
 {
-    // Default: Mock (or unknown mode defaults to Mock)
+    // Default safe fallback: Mock (no external calls, no key read)
     builder.Services.AddSingleton<IAiProvider, MockAiProvider>();
+    var reason = (mode.Equals("DeepSeek", StringComparison.OrdinalIgnoreCase) ||
+                  mode.Equals("DeepSeekReal", StringComparison.OrdinalIgnoreCase))
+        ? $"real mode requested but not all conditions met: RealCallsEnabled={realEnabled}, key configured={keyConfigured}"
+        : "default safe fallback";
+    resolvedProviderName = $"Mock ({reason})";
 }
 
 builder.Services.AddAiAnalysisPersistence(connectionString);
@@ -145,6 +171,10 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+// Log resolved AI provider mode at startup — safe (no key value, mode name only).
+var appLogger = app.Services.GetRequiredService<ILogger<Program>>();
+appLogger.LogInformation("AI provider resolved to: {ProviderName}", resolvedProviderName);
 
 if (app.Environment.IsDevelopment())
 {

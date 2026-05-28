@@ -1,3 +1,4 @@
+using System.Net;
 using System.Net.Http.Headers;
 using System.Text;
 using System.Text.Json;
@@ -22,6 +23,13 @@ namespace InsuranceAIPlatform.Services.AiAnalysis.Providers;
 /// - No SDK package is used — raw HttpClient via IHttpClientFactory only.
 /// - AI output is advisory only; this provider never approves payouts, rejects claims,
 ///   or performs any irreversible action.
+///
+/// Resilience contract:
+/// - Bounded retry: total attempts capped at AiProviderOptions.DeepSeek.MaxAttempts (default 2).
+/// - Retry ONLY on safe transient failures: HTTP 408, 429, 500, 502, 503, 504, or timeout
+///   (TaskCanceledException without caller cancellation).
+/// - NEVER retry on: success, or non-retryable status (400/401/403/404/405/etc).
+/// - Bounded backoff: short fixed delay with deterministic small jitter.
 /// </summary>
 public sealed class RealDeepSeekAiProvider : IAiProvider
 {
@@ -64,6 +72,17 @@ public sealed class RealDeepSeekAiProvider : IAiProvider
 
     private static readonly JsonSerializerOptions JsonOpts = new(JsonSerializerDefaults.Web);
 
+    /// <summary>HTTP status codes treated as safe transient — retried.</summary>
+    private static readonly HashSet<int> RetryableStatusCodes = new()
+    {
+        408, // Request Timeout
+        429, // Too Many Requests
+        500, // Internal Server Error
+        502, // Bad Gateway
+        503, // Service Unavailable
+        504, // Gateway Timeout
+    };
+
     public AiProviderMode Mode => AiProviderMode.DeepSeek;
 
     public RealDeepSeekAiProvider(
@@ -95,8 +114,10 @@ public sealed class RealDeepSeekAiProvider : IAiProvider
         }
 
         var opts = _options.Value.DeepSeek;
+        var maxAttempts = Math.Max(1, opts.MaxAttempts);
+        var retryBaseDelayMs = Math.Max(0, opts.RetryBaseDelayMs);
 
-        // Step 2: Build the OpenAI-compatible chat-completions request.
+        // Step 2: Build the OpenAI-compatible chat-completions request payload (once).
         var chatRequest = new DeepSeekChatRequest(
             Model: opts.Model,
             Messages:
@@ -109,19 +130,11 @@ public sealed class RealDeepSeekAiProvider : IAiProvider
             ResponseFormat: new DeepSeekResponseFormat("json_object"));
 
         var requestJson = JsonSerializer.Serialize(chatRequest, JsonOpts);
-        var requestContent = new StringContent(requestJson, Encoding.UTF8, "application/json");
 
         // Step 3: Get a named HttpClient — default headers are free of any credentials.
         // The Authorization header is set on the individual request message only.
         var httpClient = _factory.CreateClient("deepseek");
         httpClient.Timeout = TimeSpan.FromSeconds(opts.TimeoutSeconds);
-
-        var requestMessage = new HttpRequestMessage(HttpMethod.Post, opts.Endpoint)
-        {
-            Content = requestContent,
-        };
-        // Key is set per-request, never on the named client's default headers.
-        requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
 
         // Log the outgoing host+path ONLY — never the body, never the auth header.
         _logger.LogInformation(
@@ -129,97 +142,165 @@ public sealed class RealDeepSeekAiProvider : IAiProvider
             new Uri(opts.Endpoint).Host,
             new Uri(opts.Endpoint).AbsolutePath);
 
-        // Step 4: POST to DeepSeek endpoint.
-        HttpResponseMessage response;
-        try
-        {
-            response = await httpClient.SendAsync(requestMessage, ct);
-        }
-        catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
-        {
-            throw new HttpRequestException($"DeepSeek call timed out after {opts.TimeoutSeconds}s.", ex);
-        }
+        // Step 4: Send with bounded retry. The HttpRequestMessage + StringContent are
+        // single-use per attempt, so they are reconstructed inside the loop.
+        HttpResponseMessage? response = null;
+        int lastStatus = 0;
+        string? lastFailureCategory = null;
 
-        // Step 5: Non-2xx → safe error without response body.
-        if (!response.IsSuccessStatusCode)
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
+            using var requestMessage = new HttpRequestMessage(HttpMethod.Post, opts.Endpoint)
+            {
+                Content = new StringContent(requestJson, Encoding.UTF8, "application/json"),
+            };
+            // Key is set per-request, never on the named client's default headers.
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", apiKey);
+
+            try
+            {
+                response = await httpClient.SendAsync(requestMessage, ct);
+            }
+            catch (TaskCanceledException ex) when (!ct.IsCancellationRequested)
+            {
+                lastStatus = 0;
+                lastFailureCategory = "timeout";
+                if (attempt < maxAttempts)
+                {
+                    _logger.LogWarning(
+                        "DeepSeek call timed out (attempt {Attempt}/{MaxAttempts}); retrying after backoff.",
+                        attempt, maxAttempts);
+                    await Task.Delay(ComputeBackoffMs(attempt, retryBaseDelayMs), ct);
+                    continue;
+                }
+                throw new HttpRequestException(
+                    $"DeepSeek call timed out after {opts.TimeoutSeconds}s.", ex);
+            }
+
+            // Step 5: Status code triage.
             var statusCode = (int)response.StatusCode;
+            if (response.IsSuccessStatusCode)
+            {
+                // Success — exit loop, response is owned by us for parsing below.
+                break;
+            }
+
+            lastStatus = statusCode;
+            if (RetryableStatusCodes.Contains(statusCode) && attempt < maxAttempts)
+            {
+                // Retryable transient — discard response, wait, try again.
+                lastFailureCategory = "transient";
+                response.Dispose();
+                response = null;
+                _logger.LogWarning(
+                    "DeepSeek transient failure HTTP {StatusCode} (attempt {Attempt}/{MaxAttempts}); retrying after backoff.",
+                    statusCode, attempt, maxAttempts);
+                await Task.Delay(ComputeBackoffMs(attempt, retryBaseDelayMs), ct);
+                continue;
+            }
+
+            // Non-retryable OR retries exhausted → dispose and throw safe error.
             // Response body is NOT included — it may contain echoed request content or PII.
+            response.Dispose();
+            response = null;
             throw new HttpRequestException($"DeepSeek call failed: HTTP {statusCode}");
         }
 
+        if (response is null)
+        {
+            // Defensive — should not be reached given the loop semantics above.
+            throw new HttpRequestException(
+                lastFailureCategory == "timeout"
+                    ? $"DeepSeek call timed out after {opts.TimeoutSeconds}s."
+                    : $"DeepSeek call failed: HTTP {lastStatus}");
+        }
+
         // Step 6: Parse response JSON.
-        var responseBody = await response.Content.ReadAsStringAsync(ct);
-        var contentLength = responseBody.Length;
-
-        DeepSeekChatResponse chatResponse;
-        try
+        using (response)
         {
-            chatResponse = JsonSerializer.Deserialize<DeepSeekChatResponse>(responseBody, JsonOpts)
-                ?? throw new InvalidOperationException("DeepSeek returned a null response body.");
-        }
-        catch (JsonException ex)
-        {
-            throw new InvalidOperationException(
-                "DeepSeek returned a response that could not be parsed as the expected structured JSON.", ex);
-        }
+            var responseBody = await response.Content.ReadAsStringAsync(ct);
+            var contentLength = responseBody.Length;
 
-        var choice = chatResponse.Choices.FirstOrDefault()
-            ?? throw new InvalidOperationException(
-                "DeepSeek returned a response that could not be parsed as the expected structured JSON.");
+            DeepSeekChatResponse chatResponse;
+            try
+            {
+                chatResponse = JsonSerializer.Deserialize<DeepSeekChatResponse>(responseBody, JsonOpts)
+                    ?? throw new InvalidOperationException("DeepSeek returned a null response body.");
+            }
+            catch (JsonException ex)
+            {
+                throw new InvalidOperationException(
+                    "DeepSeek returned a response that could not be parsed as the expected structured JSON.", ex);
+            }
 
-        var assistantContent = choice.Message.Content;
-
-        // Step 7: Parse the assistant's structured JSON content.
-        DeepSeekStructuredAssistantResponse structured;
-        try
-        {
-            structured = JsonSerializer.Deserialize<DeepSeekStructuredAssistantResponse>(assistantContent, JsonOpts)
+            var choice = chatResponse.Choices.FirstOrDefault()
                 ?? throw new InvalidOperationException(
                     "DeepSeek returned a response that could not be parsed as the expected structured JSON.");
+
+            var assistantContent = choice.Message.Content;
+
+            // Step 7: Parse the assistant's structured JSON content.
+            DeepSeekStructuredAssistantResponse structured;
+            try
+            {
+                structured = JsonSerializer.Deserialize<DeepSeekStructuredAssistantResponse>(assistantContent, JsonOpts)
+                    ?? throw new InvalidOperationException(
+                        "DeepSeek returned a response that could not be parsed as the expected structured JSON.");
+            }
+            catch (JsonException ex)
+            {
+                // Raw assistant content is NOT included in the exception message.
+                throw new InvalidOperationException(
+                    "DeepSeek returned a response that could not be parsed as the expected structured JSON.", ex);
+            }
+
+            var totalTokens = chatResponse.Usage.TotalTokens;
+
+            // Log safe summary — tokens and model ID only, no content.
+            _logger.LogInformation(
+                "DeepSeek response received. Model: {Model}, Tokens: {Tokens}, ContentLength: {ContentLength}",
+                chatResponse.Model,
+                totalTokens,
+                contentLength);
+
+            // Step 8: Map to AiProviderRawOutput.
+            var findings = structured.Findings
+                .Select((f, i) => new AiFindingDraft($"f{i + 1}", f.Category, f.Text, f.Severity))
+                .ToList();
+
+            var evidence = structured.Evidence
+                .Select((e, i) => new AiEvidenceDraft($"e{i + 1}", e.Source, e.Note, e.Confidence))
+                .ToList();
+
+            var risks = structured.Risks
+                .Select((r, i) => new AiRiskDraft($"rs{i + 1}", r.Label, r.Weight))
+                .ToList();
+
+            // Cost estimate — not authoritative pricing; see comment on CostPerTokenEstimate.
+            var estimatedCost = totalTokens * CostPerTokenEstimate;
+
+            return new AiProviderRawOutput(
+                ModelName: chatResponse.Model,
+                SummaryText: structured.SummaryText,
+                Findings: findings,
+                Evidence: evidence,
+                Risks: risks,
+                RecommendedActionText: structured.RecommendedActionText,
+                PolicyExplanationText: structured.PolicyExplanationText,
+                ConfidenceScore: structured.ConfidenceScore,
+                Tokens: totalTokens,
+                Cost: estimatedCost);
         }
-        catch (JsonException ex)
-        {
-            // Raw assistant content is NOT included in the exception message.
-            throw new InvalidOperationException(
-                "DeepSeek returned a response that could not be parsed as the expected structured JSON.", ex);
-        }
+    }
 
-        var totalTokens = chatResponse.Usage.TotalTokens;
-
-        // Log safe summary — tokens and model ID only, no content.
-        _logger.LogInformation(
-            "DeepSeek response received. Model: {Model}, Tokens: {Tokens}, ContentLength: {ContentLength}",
-            chatResponse.Model,
-            totalTokens,
-            contentLength);
-
-        // Step 8: Map to AiProviderRawOutput.
-        var findings = structured.Findings
-            .Select((f, i) => new AiFindingDraft($"f{i + 1}", f.Category, f.Text, f.Severity))
-            .ToList();
-
-        var evidence = structured.Evidence
-            .Select((e, i) => new AiEvidenceDraft($"e{i + 1}", e.Source, e.Note, e.Confidence))
-            .ToList();
-
-        var risks = structured.Risks
-            .Select((r, i) => new AiRiskDraft($"rs{i + 1}", r.Label, r.Weight))
-            .ToList();
-
-        // Cost estimate — not authoritative pricing; see comment on CostPerTokenEstimate.
-        var estimatedCost = totalTokens * CostPerTokenEstimate;
-
-        return new AiProviderRawOutput(
-            ModelName: chatResponse.Model,
-            SummaryText: structured.SummaryText,
-            Findings: findings,
-            Evidence: evidence,
-            Risks: risks,
-            RecommendedActionText: structured.RecommendedActionText,
-            PolicyExplanationText: structured.PolicyExplanationText,
-            ConfidenceScore: structured.ConfidenceScore,
-            Tokens: totalTokens,
-            Cost: estimatedCost);
+    /// <summary>
+    /// Bounded backoff: base * attempt + deterministic small jitter (0..base/2).
+    /// Jitter is deterministic-per-attempt to keep tests reproducible.
+    /// </summary>
+    private static int ComputeBackoffMs(int attempt, int baseDelayMs)
+    {
+        if (baseDelayMs <= 0) return 0;
+        var jitter = (attempt * 37) % Math.Max(1, baseDelayMs / 2);
+        return baseDelayMs * attempt + jitter;
     }
 }

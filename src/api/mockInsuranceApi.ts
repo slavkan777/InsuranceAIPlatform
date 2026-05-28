@@ -24,6 +24,7 @@ import {
 } from '@/data/mock/claim-1006';
 import type { ClaimDetail, ClaimRow, DamagePhoto, DocumentChecklistItem } from '@/types';
 import type {
+  AiAnalysisDto,
   ApprovalDraftInput,
   ApprovalDraftResult,
   CustomerRequestResult,
@@ -147,6 +148,76 @@ export const mockInsuranceApi = {
     await delay(700);
     return { ok: true, savedAt: new Date().toISOString(), note: MOCK_NOTE };
   },
+
+  // ---- AI Analysis (advisory only) — synthetic stub mirroring the BFF DTO shape ----
+  // In mock mode these return deterministic synthetic data so the UI exercises the
+  // same advisory-only rendering pipeline as backend mode without any network call.
+
+  async getClaimAiAnalysis(claimId: string): Promise<AiAnalysisDto | null> {
+    return buildSyntheticAiAnalysisDto(claimId, 'corr-mock-get');
+  },
+
+  async runClaimAiAnalysis(claimId: string): Promise<AiAnalysisDto> {
+    await delay(400);
+    return buildSyntheticAiAnalysisDto(claimId, 'corr-mock-run');
+  },
 };
+
+function buildSyntheticAiAnalysisDto(claimId: string, correlationId: string): AiAnalysisDto {
+  return {
+    runId: 'run_mock_local',
+    claimId,
+    providerMode: 'Mock',
+    modelName: 'local-mock-v0.1',
+    status: 'succeeded',
+    summaryText:
+      'Локальний демо-аналіз: розбіжність кошторису з бенчмарком та неповний фотопакет. ' +
+      'Усі прапорці порадницькі; рішення приймає людина.',
+    recommendedAction: {
+      action: 'Запросити фото заднього бампера перед остаточним рішенням.',
+      rationale: 'AI advisory recommendation — human adjuster decides.',
+      confidenceScore: 78,
+    },
+    policyCoverageExplanation:
+      'Поліс POL-2025-AC-4421 покриває ДТП після франшизи $500; виплата у межах ліміту.',
+    riskLevel: 'moderate',
+    confidenceScore: 78,
+    findings: keyFindings.map((f, i) => ({
+      id: `f-${i + 1}`,
+      category: 'Mock',
+      text: f.text,
+      severity: f.tone === 'danger' ? 'danger' : f.tone === 'warn' ? 'warn' : 'ok',
+    })),
+    evidence: extractedEntities.slice(0, 2).map((e, i) => ({
+      id: `e-${i + 1}`,
+      source: e.source,
+      note: `${e.field}: ${e.value}`,
+      confidence: e.confidence,
+    })),
+    risks: riskFactors.map((r, i) => ({
+      id: `rs-${i + 1}`,
+      label: r.label,
+      weight: r.contribution,
+    })),
+    guardrails: {
+      advisoryOnly: true,
+      requiresHumanReview: true,
+      canApprovePayout: false,
+      canRejectClaim: false,
+      canAccuseFraudFinal: false,
+      canSendCustomerMessage: false,
+      canChangeClaimStatus: false,
+    },
+    costTrace: {
+      tokens: 4261,
+      estimatedCost: 0.0187,
+      currencyCode: 'USD',
+    },
+    correlationId,
+    createdAtUtc: new Date().toISOString(),
+    isAdvisoryOnly: true,
+    notice: 'AI output is advisory only — human decision is final.',
+  };
+}
 
 export type MockInsuranceApi = typeof mockInsuranceApi;

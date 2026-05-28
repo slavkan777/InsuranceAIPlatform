@@ -1,5 +1,5 @@
+import { useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { StatusPill } from '@/components/ui/StatusPill';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { goldenClaim } from '@/data/mock/claims';
 import {
@@ -9,10 +9,16 @@ import {
   modelConfidence as mockModelConfidence,
 } from '@/data/mock/claim-1006';
 import {
+  loadLatestAiAnalysis,
   runAiAnalysis,
   setConfidenceFilter,
   setSelectedEvidence,
 } from '@/features/aiReview/aiReviewSlice';
+import {
+  selectAiLastRun,
+  selectAiLastRunStatus,
+  selectAiLastError,
+} from '@/features/aiReview/aiReviewSelectors';
 import {
   selectClaimDetail,
   selectWorkspaceAiEvidence,
@@ -35,18 +41,48 @@ export default function AiEvidencePage() {
   const { status, progressPct, selectedEvidence, confidenceFilter } = useAppSelector(
     (s) => s.aiReview,
   );
+  const lastRun = useAppSelector(selectAiLastRun);
+  const lastRunStatus = useAppSelector(selectAiLastRunStatus);
+  const lastError = useAppSelector(selectAiLastError);
+
+  // Load the latest persisted AI analysis run for the current claim on mount / claim change.
+  useEffect(() => {
+    dispatch(loadLatestAiAnalysis(c.id));
+  }, [dispatch, c.id]);
 
   const filteredEntities = extractedEntities.filter((e) => e.confidence >= confidenceFilter);
 
+  // Derived display values — prefer real BFF run, fall back to claim metadata.
+  const providerMode = lastRun?.providerMode ?? '—';
+  const modelName = lastRun?.modelName ?? '—';
+  const displayTokens = lastRun?.costTrace?.tokens ?? c.tokens;
+  const displayCost = lastRun?.costTrace?.estimatedCost ?? c.cost;
+  const currencyCode = lastRun?.costTrace?.currencyCode ?? 'USD';
+
   return (
     <div className="flex flex-col gap-5">
+      {/* ---------- Header / run controls ---------- */}
       <section className="card card-pad flex flex-wrap items-center gap-x-6 gap-y-3 justify-between">
         <div>
           <h2 className="text-xl font-bold text-ink-900">AI-аналіз та докази</h2>
           <p className="text-sm text-ink-500 mt-1">
             {c.id} · Trace:{' '}
-            <span className="font-mono text-brand-700">{c.traceId}</span> · Azure OpenAI ·{' '}
-            {c.tokens.toLocaleString('uk-UA')} токенів · ${c.cost.toFixed(4)}
+            <span className="font-mono text-brand-700">{c.traceId}</span> ·{' '}
+            <span
+              className={clsx(
+                'inline-flex items-center px-2 py-0.5 rounded-md text-xs font-semibold uppercase tracking-wide',
+                providerMode === 'DeepSeek'
+                  ? 'bg-ai-100 text-ai-700'
+                  : providerMode === 'Mock'
+                    ? 'bg-ink-100 text-ink-600'
+                    : 'bg-warn-100 text-warn-700',
+              )}
+              title="AI-провайдер, який повернув останній прогон"
+            >
+              {providerMode}
+            </span>{' '}
+            · <span className="font-mono text-ink-600">{modelName}</span> ·{' '}
+            {displayTokens.toLocaleString('uk-UA')} токенів · ${displayCost.toFixed(4)} {currencyCode}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -64,28 +100,204 @@ export default function AiEvidencePage() {
             <span className="font-mono w-10 text-right">{confidenceFilter}%</span>
           </label>
           <button
-            onClick={() => dispatch(runAiAnalysis())}
+            onClick={() => dispatch(runAiAnalysis(c.id))}
             disabled={status === 'running'}
-            title="Локальний демо-прогон mock-аналізу · реальний AI-провайдер не підключений"
+            title="Запустити advisory-only AI-аналіз через BFF (Mock за замовчуванням; DeepSeek тільки за явним opt-in)"
             className="btn-primary"
           >
-            {status === 'running' ? `Запускаємо ${progressPct}%` : 'Перезапустити mock-аналіз'}
+            {status === 'running' ? `Запускаємо ${progressPct}%` : 'Запустити AI-аналіз'}
           </button>
         </div>
       </section>
 
       {status === 'running' && (
         <section className="card card-pad">
-          <ProgressBar value={progressPct} tone="ai" label="Хід mock-AI-запуску" />
+          <ProgressBar value={progressPct} tone="ai" label="Хід AI-запуску" />
         </section>
       )}
 
+      {lastError && status === 'failed' && (
+        <section className="card card-pad border-danger-200 bg-danger-500/5">
+          <div className="text-sm font-semibold text-danger-700">AI-аналіз не виконано</div>
+          <div className="text-xs text-ink-600 mt-1">{lastError}</div>
+        </section>
+      )}
+
+      {/* ---------- BFF AI Analysis advisory card ---------- */}
+      <section className="card card-pad border-ai-200 bg-gradient-to-br from-ai-50 to-white">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+          <div>
+            <div className="metric-label text-ai-700">Advisory-only AI</div>
+            <h3 className="text-lg font-semibold text-ink-900 mt-0.5">
+              Останній прогон AI-аналізу
+            </h3>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            {lastRunStatus === 'loading' && (
+              <span className="chip bg-ink-100 text-ink-600">Завантаження…</span>
+            )}
+            {lastRunStatus === 'succeeded' && lastRun && (
+              <>
+                <span className="chip bg-good-100 text-good-700">{lastRun.status}</span>
+                <span className="chip bg-ink-100 text-ink-600">
+                  conf {lastRun.confidenceScore}%
+                </span>
+                <span
+                  className={clsx(
+                    'chip',
+                    lastRun.riskLevel === 'high'
+                      ? 'bg-danger-100 text-danger-700'
+                      : lastRun.riskLevel === 'moderate'
+                        ? 'bg-warn-100 text-warn-700'
+                        : 'bg-good-100 text-good-700',
+                  )}
+                >
+                  risk {lastRun.riskLevel}
+                </span>
+              </>
+            )}
+            {lastRunStatus === 'succeeded' && !lastRun && (
+              <span className="chip bg-ink-100 text-ink-600">Прогонів ще немає</span>
+            )}
+            {lastRunStatus === 'failed' && (
+              <span className="chip bg-danger-100 text-danger-700">Помилка завантаження</span>
+            )}
+          </div>
+        </div>
+
+        {lastRun ? (
+          <div className="grid lg:grid-cols-2 gap-4">
+            <div className="space-y-3">
+              <div>
+                <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1">
+                  Зведення
+                </div>
+                <p className="text-sm text-ink-800">{lastRun.summaryText}</p>
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1">
+                  Рекомендована дія (порадницька)
+                </div>
+                <p className="text-sm text-ink-800">{lastRun.recommendedAction.action}</p>
+                <p className="text-xs text-ink-500 mt-1">
+                  Обґрунтування: {lastRun.recommendedAction.rationale} · conf{' '}
+                  {lastRun.recommendedAction.confidenceScore}%
+                </p>
+              </div>
+              <div>
+                <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1">
+                  Поліс / покриття
+                </div>
+                <p className="text-sm text-ink-800">{lastRun.policyCoverageExplanation}</p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1">
+                  Знахідки ({lastRun.findings.length})
+                </div>
+                <ul className="space-y-1.5">
+                  {lastRun.findings.map((f) => (
+                    <li key={f.id} className="text-sm text-ink-800 flex items-start gap-2">
+                      <span
+                        className={clsx(
+                          'w-1.5 h-1.5 rounded-full mt-1.5 shrink-0',
+                          f.severity === 'danger'
+                            ? 'bg-danger-500'
+                            : f.severity === 'warn'
+                              ? 'bg-warn-500'
+                              : 'bg-good-500',
+                        )}
+                      />
+                      <span>
+                        <span className="text-ink-500 text-xs">[{f.category}]</span> {f.text}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div>
+                  <div className="text-ink-500 uppercase tracking-wide">Докази</div>
+                  <div className="text-ink-800 font-semibold mt-0.5">
+                    {lastRun.evidence.length}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-ink-500 uppercase tracking-wide">Ризики</div>
+                  <div className="text-ink-800 font-semibold mt-0.5">{lastRun.risks.length}</div>
+                </div>
+                <div>
+                  <div className="text-ink-500 uppercase tracking-wide">Токени</div>
+                  <div className="text-ink-800 font-semibold mt-0.5 font-mono">
+                    {lastRun.costTrace.tokens.toLocaleString('uk-UA')}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-ink-500 uppercase tracking-wide">Cost</div>
+                  <div className="text-ink-800 font-semibold mt-0.5 font-mono">
+                    ${lastRun.costTrace.estimatedCost.toFixed(6)} {lastRun.costTrace.currencyCode}
+                  </div>
+                </div>
+              </div>
+
+              {/* Guardrail authority pills — must all be FALSE; rendered as read-only chips */}
+              <div>
+                <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1.5">
+                  Guardrails (порадницький режим)
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  <GuardrailPill label="advisoryOnly" value={lastRun.guardrails.advisoryOnly} positive />
+                  <GuardrailPill
+                    label="requiresHumanReview"
+                    value={lastRun.guardrails.requiresHumanReview}
+                    positive
+                  />
+                  <GuardrailPill
+                    label="canApprovePayout"
+                    value={lastRun.guardrails.canApprovePayout}
+                  />
+                  <GuardrailPill
+                    label="canRejectClaim"
+                    value={lastRun.guardrails.canRejectClaim}
+                  />
+                  <GuardrailPill
+                    label="canAccuseFraudFinal"
+                    value={lastRun.guardrails.canAccuseFraudFinal}
+                  />
+                  <GuardrailPill
+                    label="canSendCustomerMessage"
+                    value={lastRun.guardrails.canSendCustomerMessage}
+                  />
+                  <GuardrailPill
+                    label="canChangeClaimStatus"
+                    value={lastRun.guardrails.canChangeClaimStatus}
+                  />
+                </div>
+                <p className="text-xs text-ink-500 mt-2 italic">{lastRun.notice}</p>
+              </div>
+            </div>
+          </div>
+        ) : lastRunStatus === 'idle' || lastRunStatus === 'loading' ? (
+          <div className="text-sm text-ink-500">
+            Очікуємо першу відповідь BFF (GET /api/claims/{c.id}/ai-analysis)…
+          </div>
+        ) : (
+          <div className="text-sm text-ink-600">
+            Для цього кейсу AI-прогонів ще немає. Натисніть «Запустити AI-аналіз», щоб виконати
+            advisory-only прогон.
+          </div>
+        )}
+      </section>
+
+      {/* ---------- Legacy / mock-evidence sections (carried forward; unchanged) ---------- */}
       <div className="grid xl:grid-cols-[1fr_360px] gap-5">
         <div className="flex flex-col gap-5">
           <section className="card card-pad">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <div className="section-title">AI-знахідки</div>
+                <div className="section-title">AI-знахідки (mock-візуалізація)</div>
                 <p className="text-sm text-ink-500 mt-0.5">
                   {keyFindings.length} висновки після обробки документів
                 </p>
@@ -121,16 +333,6 @@ export default function AiEvidencePage() {
                 </li>
               ))}
             </ul>
-          </section>
-
-          <section className="card card-pad bg-gradient-to-br from-ai-50 to-white border-ai-200">
-            <div className="metric-label text-ai-700">Guardrail</div>
-            <h4 className="text-base font-semibold text-ink-900 mt-1">
-              AI надає аналіз, але не приймає фінальне рішення
-            </h4>
-            <p className="text-sm text-ink-600 mt-2">
-              Усі рекомендації перевіряються експертом і фіксуються в audit trail.
-            </p>
           </section>
 
           <section className="card overflow-hidden">
@@ -224,5 +426,38 @@ export default function AiEvidencePage() {
         </aside>
       </div>
     </div>
+  );
+}
+
+/**
+ * Compact pill rendering one boolean guardrail flag.
+ * `positive` = green = expected true (advisoryOnly, requiresHumanReview).
+ * `!positive` = expected false (every Can-* authority flag).
+ */
+function GuardrailPill({
+  label,
+  value,
+  positive,
+}: {
+  label: string;
+  value: boolean;
+  positive?: boolean;
+}) {
+  // Expected for safety: positive=true OR (positive=false AND value=false)
+  const safe = positive ? value === true : value === false;
+  return (
+    <span
+      className={clsx(
+        'inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-mono font-semibold',
+        safe ? 'bg-good-100 text-good-700' : 'bg-danger-100 text-danger-700',
+      )}
+      title={
+        positive
+          ? `Очікуємо ${label}=true`
+          : `Очікуємо ${label}=false — AI ніколи не отримує цей дозвіл`
+      }
+    >
+      {label}={String(value)}
+    </span>
   );
 }

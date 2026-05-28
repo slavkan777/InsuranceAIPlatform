@@ -33,4 +33,18 @@ public sealed class DeepSeekOptions
 
     /// <summary>HTTP request timeout in seconds for DeepSeek calls.</summary>
     public int TimeoutSeconds { get; set; } = 30;
+
+    /// <summary>
+    /// Bounded total number of attempts for a single AnalyzeAsync call.
+    /// Default: 2 (i.e. one retry after the first failure).
+    /// Only safe transient failures are retried: 408, 429, 500, 502, 503, 504, or timeout.
+    /// Auth/validation failures (400/401/403) are NEVER retried.
+    /// </summary>
+    public int MaxAttempts { get; set; } = 2;
+
+    /// <summary>
+    /// Base delay in milliseconds before a retry attempt. A small deterministic jitter is added
+    /// (0–RetryBaseDelayMs/2 ms). Default: 200ms.
+    /// </summary>
+    public int RetryBaseDelayMs { get; set; } = 200;
 }

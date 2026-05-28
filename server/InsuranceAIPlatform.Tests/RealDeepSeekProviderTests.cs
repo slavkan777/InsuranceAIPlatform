@@ -304,6 +304,181 @@ public class RealDeepSeekProviderTests
     }
 
     // -----------------------------------------------------------------------
+    // (R6) Retry happens on 503 — second attempt succeeds
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public async Task Real_provider_retries_on_503_and_succeeds_on_second_attempt()
+    {
+        var callCount = 0;
+        var fakeHandler = new FakeHttpHandler(_ =>
+        {
+            callCount++;
+            if (callCount == 1)
+            {
+                return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable)
+                {
+                    Content = new StringContent("upstream unavailable", Encoding.UTF8, "text/plain"),
+                };
+            }
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(BuildHappyResponseJson(), Encoding.UTF8, "application/json"),
+            };
+        });
+
+        var provider = BuildProvider(TestKeySentinel, fakeHandler);
+        var request = new AiAnalysisRequest("CLM-1006", "corr-r6", "test-actor");
+
+        var output = await provider.AnalyzeAsync(request);
+
+        Assert.Equal(2, callCount); // exactly one retry
+        Assert.Equal("deepseek-chat", output.ModelName);
+    }
+
+    // -----------------------------------------------------------------------
+    // (R7) Retry happens on 429 — second attempt succeeds
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public async Task Real_provider_retries_on_429_and_succeeds_on_second_attempt()
+    {
+        var callCount = 0;
+        var fakeHandler = new FakeHttpHandler(_ =>
+        {
+            callCount++;
+            if (callCount == 1)
+            {
+                return new HttpResponseMessage(HttpStatusCode.TooManyRequests);
+            }
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(BuildHappyResponseJson(), Encoding.UTF8, "application/json"),
+            };
+        });
+
+        var provider = BuildProvider(TestKeySentinel, fakeHandler);
+        var request = new AiAnalysisRequest("CLM-1006", "corr-r7", "test-actor");
+
+        var output = await provider.AnalyzeAsync(request);
+
+        Assert.Equal(2, callCount);
+        Assert.True(output.Tokens > 0);
+    }
+
+    // -----------------------------------------------------------------------
+    // (R8) Retry happens on timeout (TaskCanceledException) — second attempt succeeds
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public async Task Real_provider_retries_on_timeout_and_succeeds_on_second_attempt()
+    {
+        var callCount = 0;
+        var fakeHandler = new FakeHttpHandler(_ =>
+        {
+            callCount++;
+            if (callCount == 1)
+            {
+                // Simulate timeout — HttpClient maps TaskCanceledException to its timeout pathway.
+                throw new TaskCanceledException("simulated handler timeout");
+            }
+            return new HttpResponseMessage(HttpStatusCode.OK)
+            {
+                Content = new StringContent(BuildHappyResponseJson(), Encoding.UTF8, "application/json"),
+            };
+        });
+
+        var provider = BuildProvider(TestKeySentinel, fakeHandler);
+        var request = new AiAnalysisRequest("CLM-1006", "corr-r8", "test-actor");
+
+        var output = await provider.AnalyzeAsync(request);
+
+        Assert.Equal(2, callCount);
+        Assert.NotNull(output);
+    }
+
+    // -----------------------------------------------------------------------
+    // (R9) NO retry on 401 — auth failures are not transient
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public async Task Real_provider_does_not_retry_on_401()
+    {
+        var callCount = 0;
+        var fakeHandler = new FakeHttpHandler(_ =>
+        {
+            callCount++;
+            return new HttpResponseMessage(HttpStatusCode.Unauthorized)
+            {
+                Content = new StringContent("unauthorized", Encoding.UTF8, "application/json"),
+            };
+        });
+
+        var provider = BuildProvider(TestKeySentinel, fakeHandler);
+        var request = new AiAnalysisRequest("CLM-1006", "corr-r9", "test-actor");
+
+        var ex = await Assert.ThrowsAsync<HttpRequestException>(
+            () => provider.AnalyzeAsync(request));
+
+        Assert.Equal(1, callCount); // exactly one call, NO retry
+        Assert.Contains("HTTP 401", ex.Message);
+        // Response body must NOT leak
+        Assert.DoesNotContain("unauthorized", ex.Message, StringComparison.OrdinalIgnoreCase);
+        // Key must NOT leak
+        Assert.DoesNotContain(TestKeySentinel, ex.Message);
+        Assert.DoesNotContain("sk-", ex.Message);
+    }
+
+    // -----------------------------------------------------------------------
+    // (R10) NO retry on 403 — forbidden is not transient
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public async Task Real_provider_does_not_retry_on_403()
+    {
+        var callCount = 0;
+        var fakeHandler = new FakeHttpHandler(_ =>
+        {
+            callCount++;
+            return new HttpResponseMessage(HttpStatusCode.Forbidden);
+        });
+
+        var provider = BuildProvider(TestKeySentinel, fakeHandler);
+        var request = new AiAnalysisRequest("CLM-1006", "corr-r10", "test-actor");
+
+        var ex = await Assert.ThrowsAsync<HttpRequestException>(
+            () => provider.AnalyzeAsync(request));
+
+        Assert.Equal(1, callCount);
+        Assert.Contains("HTTP 403", ex.Message);
+        Assert.DoesNotContain(TestKeySentinel, ex.Message);
+    }
+
+    // -----------------------------------------------------------------------
+    // (R11) NO retry on 400 — bad request is not transient
+    // -----------------------------------------------------------------------
+
+    [Fact]
+    public async Task Real_provider_does_not_retry_on_400()
+    {
+        var callCount = 0;
+        var fakeHandler = new FakeHttpHandler(_ =>
+        {
+            callCount++;
+            return new HttpResponseMessage(HttpStatusCode.BadRequest);
+        });
+
+        var provider = BuildProvider(TestKeySentinel, fakeHandler);
+        var request = new AiAnalysisRequest("CLM-1006", "corr-r11", "test-actor");
+
+        var ex = await Assert.ThrowsAsync<HttpRequestException>(
+            () => provider.AnalyzeAsync(request));
+
+        Assert.Equal(1, callCount);
+        Assert.Contains("HTTP 400", ex.Message);
+    }
+
+    // -----------------------------------------------------------------------
     // Test double: FakeHttpHandler
     // -----------------------------------------------------------------------
 

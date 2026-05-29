@@ -1,0 +1,14 @@
+# Build context = ./server. Keep the image small and the context clean.
+**/bin/
+**/obj/
+**/*.user
+**/.vs/
+**/TestResults/
+
+# Test project is not part of the runtime image.
+InsuranceAIPlatform.Tests/
+
+# Docker meta + docs don't belong in the image.
+Dockerfile
+.dockerignore
+**/*.md

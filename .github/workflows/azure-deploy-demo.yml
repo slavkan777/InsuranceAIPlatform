@@ -1,9 +1,9 @@
 # =====================================================================
 # Azure deploy — SKELETON / DISABLED.
 # Manual-only (workflow_dispatch). DOES NOT run on push. NO secrets stored.
-# OIDC placeholders only. The real deploy step is GUARDED behind an explicit
-# 'confirm: DEPLOY' input AND is activated in AZURE_MINIMAL_DEPLOY_V0.1.
-# Until then this workflow only validates (bicep build) when manually run.
+# OIDC placeholders only. Build/push + deploy steps are GUARDED behind an
+# explicit 'confirm: DEPLOY' input AND remain commented until AZURE_MINIMAL_DEPLOY_V0.1.
+# A manual run with the default input only validates (bicep + backend + frontend build).
 # =====================================================================
 name: azure-deploy-demo (disabled skeleton)
 
@@ -11,30 +11,71 @@ on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: "Type DEPLOY to enable the deploy job (otherwise validate-only)."
+        description: "Type DEPLOY to enable build+push+deploy (otherwise validate-only)."
         required: false
         default: "validate-only"
 
 permissions:
-  id-token: write   # for future Azure OIDC federated login (no client secret)
+  id-token: write   # future Azure OIDC federated login (no client secret)
   contents: read
+  packages: write   # future GHCR image push (only used by the guarded build job)
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: insurance-api
 
 jobs:
   validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
       - name: Bicep build (offline, no login)
         run: |
           az bicep install
           az bicep build --file infra/main.bicep
-      # Frontend + backend build/test would also run here in the real gate.
+      - name: Backend build (Release)
+        run: dotnet build server/InsuranceAIPlatform.sln -c Release
+      - name: Frontend build
+        run: |
+          npm ci
+          npm run build
 
-  deploy:
+  # ---------------------------------------------------------------
+  # Build the API image and push to GHCR. GUARDED (confirm=DEPLOY) +
+  # steps COMMENTED until AZURE_MINIMAL_DEPLOY_V0.1 flips them on.
+  # ---------------------------------------------------------------
+  build-and-push:
     needs: validate
     runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.confirm == 'DEPLOY' }}
+    steps:
+      - uses: actions/checkout@v4
+      # - name: Log in to GHCR
+      #   uses: docker/login-action@v3
+      #   with:
+      #     registry: ${{ env.REGISTRY }}
+      #     username: ${{ github.actor }}
+      #     password: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Build and push API image (context = server/)
+      #   uses: docker/build-push-action@v6
+      #   with:
+      #     context: server
+      #     file: server/Dockerfile
+      #     push: true
+      #     tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
+      - name: Placeholder
+        run: echo "Build+push disabled until AZURE_MINIMAL_DEPLOY_V0.1."
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
     # GUARD: only runs when manually dispatched with confirm=DEPLOY.
-    # Activated (uncommented az steps) in AZURE_MINIMAL_DEPLOY_V0.1.
     if: ${{ github.event.inputs.confirm == 'DEPLOY' }}
     environment: azure-demo   # add a manual-approval reviewer here before first real deploy
     steps:
@@ -51,7 +92,7 @@ jobs:
       #       --location westeurope \
       #       --template-file infra/main.bicep \
       #       --parameters infra/parameters/demo.bicepparam \
-      #         insuranceApiImage=ghcr.io/${{ github.repository_owner }}/insurance-api:${{ github.sha }} \
+      #         insuranceApiImage=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
       #         sqlAdminObjectId=${{ secrets.SQL_ADMIN_OBJECT_ID }}
       - name: Placeholder
         run: echo "Deploy steps are intentionally disabled until AZURE_MINIMAL_DEPLOY_V0.1."

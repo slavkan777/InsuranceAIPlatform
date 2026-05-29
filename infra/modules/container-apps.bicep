@@ -76,6 +76,12 @@ resource app 'Microsoft.App/containerApps@2024-03-01' = {
             // AI stays Mock by default in Azure too — real provider is an explicit later gate.
             { name: 'AiProvider__Mode', value: 'Mock' }
           ]
+          // Health probes hit the API's GET /health (HealthController) on the ingress port.
+          probes: [
+            { type: 'Liveness', httpGet: { path: '/health', port: 8080 }, initialDelaySeconds: 10, periodSeconds: 30 }
+            { type: 'Readiness', httpGet: { path: '/health', port: 8080 }, initialDelaySeconds: 5, periodSeconds: 10, failureThreshold: 3 }
+            { type: 'Startup', httpGet: { path: '/health', port: 8080 }, initialDelaySeconds: 5, periodSeconds: 5, failureThreshold: 30 }
+          ]
         }
       ]
       scale: {

@@ -1,0 +1,57 @@
+# =====================================================================
+# Azure deploy — SKELETON / DISABLED.
+# Manual-only (workflow_dispatch). DOES NOT run on push. NO secrets stored.
+# OIDC placeholders only. The real deploy step is GUARDED behind an explicit
+# 'confirm: DEPLOY' input AND is activated in AZURE_MINIMAL_DEPLOY_V0.1.
+# Until then this workflow only validates (bicep build) when manually run.
+# =====================================================================
+name: azure-deploy-demo (disabled skeleton)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type DEPLOY to enable the deploy job (otherwise validate-only)."
+        required: false
+        default: "validate-only"
+
+permissions:
+  id-token: write   # for future Azure OIDC federated login (no client secret)
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bicep build (offline, no login)
+        run: |
+          az bicep install
+          az bicep build --file infra/main.bicep
+      # Frontend + backend build/test would also run here in the real gate.
+
+  deploy:
+    needs: validate
+    runs-on: ubuntu-latest
+    # GUARD: only runs when manually dispatched with confirm=DEPLOY.
+    # Activated (uncommented az steps) in AZURE_MINIMAL_DEPLOY_V0.1.
+    if: ${{ github.event.inputs.confirm == 'DEPLOY' }}
+    environment: azure-demo   # add a manual-approval reviewer here before first real deploy
+    steps:
+      - uses: actions/checkout@v4
+      # - name: Azure login (OIDC — placeholders; secrets not configured yet)
+      #   uses: azure/login@v2
+      #   with:
+      #     client-id: ${{ secrets.AZURE_CLIENT_ID }}
+      #     tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+      #     subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      # - name: Deploy infra (subscription scope)
+      #   run: |
+      #     az deployment sub create \
+      #       --location westeurope \
+      #       --template-file infra/main.bicep \
+      #       --parameters infra/parameters/demo.bicepparam \
+      #         insuranceApiImage=ghcr.io/${{ github.repository_owner }}/insurance-api:${{ github.sha }} \
+      #         sqlAdminObjectId=${{ secrets.SQL_ADMIN_OBJECT_ID }}
+      - name: Placeholder
+        run: echo "Deploy steps are intentionally disabled until AZURE_MINIMAL_DEPLOY_V0.1."

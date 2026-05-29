@@ -21,6 +21,9 @@ param prefix string = 'iap'
 @description('Deploy optional AI services (Azure OpenAI / Document Intelligence / AI Search). Default FALSE = zero AI cost until an explicit AI gate.')
 param enableAi bool = false
 
+@description('Deploy Azure SQL (serverless). Default FALSE for the minimal deploy — API runs without a DB (Mock AI + in-memory reads). Enable in a later SQL gate with a real Entra admin objectId.')
+param enableSql bool = false
+
 @description('Container image for insurance-api. Placeholder public image until our image is published to GHCR (set by the deploy gate).')
 param insuranceApiImage string = 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
 
@@ -67,7 +70,7 @@ module storage 'modules/storage.bicep' = {
   params: { prefix: prefix, environmentName: environmentName, location: location, tags: tags, appPrincipalId: identity.outputs.principalId, ttlDays: blobTtlDays }
 }
 
-module sql 'modules/sql-serverless.bicep' = {
+module sql 'modules/sql-serverless.bicep' = if (enableSql) {
   scope: rg
   name: 'sql-serverless'
   params: { prefix: prefix, environmentName: environmentName, location: location, tags: tags }
@@ -108,5 +111,5 @@ output resourceGroupName string = rg.name
 output staticWebAppName string = swa.outputs.name
 output containerAppFqdn string = containerApps.outputs.fqdn
 output keyVaultName string = keyVault.outputs.name
-output sqlServerFqdn string = sql.outputs.serverFqdn
+output sqlServerFqdn string = enableSql ? sql!.outputs.serverFqdn : ''
 output appPrincipalId string = identity.outputs.principalId

@@ -27,6 +27,39 @@ public sealed record RequestMissingDocumentRequest(string DocumentTitle, string?
 /// <summary>Body for POST /api/claims/{claimId}/document-metadata</summary>
 public sealed record CreateDocumentMetadataRequest(string Kind, string Title, string? DocType);
 
+/// <summary>Body for POST /api/claims/{claimId}/documents/upload — DB-backed text content.</summary>
+public sealed record UploadDocumentContentRequest(string Kind, string Title, string? DocType, string Content);
+
+/// <summary>Body for POST /api/claims/{claimId}/payout-simulation — DB-only simulation record.</summary>
+public sealed record CreatePayoutSimulationRequest(
+    decimal Amount,
+    decimal Deductible,
+    string? Currency,
+    string? DecisionSource,
+    string? SourceAiRunId,
+    string? Notes);
+
+/// <summary>Result returned by POST /api/claims/{claimId}/payout-simulation.</summary>
+public sealed record PayoutSimulationResult(
+    bool Success,
+    string CommandId,
+    string ClaimId,
+    int SimulationId,
+    string Status,
+    decimal Amount,
+    decimal Deductible,
+    decimal NetPayoutAmount,
+    string Currency,
+    string DecisionSource,
+    string DecisionActor,
+    string? SourceAiRunId,
+    int? AuditEventId,
+    int? OutboxMessageId,
+    string CorrelationId,
+    string Message,
+    IReadOnlyList<string> Warnings,
+    bool SimulationOnly);
+
 // -----------------------------------------------------------------------
 // Controller
 // -----------------------------------------------------------------------
@@ -336,5 +369,235 @@ public sealed class ClaimCommandsController : ClaimsControllerBase
             CorrelationId: correlationId,
             Message: $"Document metadata placeholder created (id={docId}). No binary upload.",
             Warnings: warnings));
+    }
+
+    // -----------------------------------------------------------------------
+    // 5. POST /api/claims/{claimId}/documents/upload — DB-backed text content
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// UploadDocumentContent — persists a synthetic ClaimDocument with text content
+    /// (police report, customer statement, internal note, etc.) directly to the
+    /// database. NO binary, NO blob, NO OCR, NO real PII, NO external storage.
+    /// Local sandbox only. Content is a plain nvarchar(max) field — reviewers can
+    /// SELECT it back to confirm persistence.
+    /// </summary>
+    [HttpPost("{claimId}/documents/upload")]
+    [ProducesResponseType(typeof(CommandResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<CommandResult>> UploadDocumentContent(
+        string claimId,
+        [FromBody] UploadDocumentContentRequest body,
+        CancellationToken ct)
+    {
+        var validationError = ValidateClaimId(claimId);
+        if (validationError is not null) return validationError;
+
+        if (!ClaimExists(claimId)) return ClaimNotFound(claimId);
+
+        if (string.IsNullOrWhiteSpace(body.Kind) ||
+            string.IsNullOrWhiteSpace(body.Title) ||
+            string.IsNullOrEmpty(body.Content))
+        {
+            return BadRequest(new ApiErrorResponse(
+                Code: "MISSING_REQUIRED_FIELDS",
+                Message: "kind, title and content are required.",
+                TraceId: HttpContext.TraceIdentifier));
+        }
+
+        // Soft size guard — local sandbox; no need to absorb megabyte payloads.
+        if (body.Content.Length > 200_000)
+        {
+            return BadRequest(new ApiErrorResponse(
+                Code: "CONTENT_TOO_LARGE",
+                Message: "Content length exceeds 200 000 characters (local sandbox limit).",
+                TraceId: HttpContext.TraceIdentifier));
+        }
+
+        var correlationId = GetCorrelationId();
+        var actor         = BuildActor();
+        var idempKey      = IdempotencyKey(HttpContext);
+        var commandId     = $"cmd-{Guid.NewGuid():N}";
+        var warnings      = new List<string>();
+
+        // (a) Service write — Documents owns its DbContext and the Content column
+        var docId = await _documents.UploadDocumentContentAsync(
+            claimId, body.Kind, body.Title, body.DocType, body.Content, actor, ct);
+
+        // (b) Audit write — do NOT echo Content into audit metadata (it can be large)
+        var meta = JsonSerializer.Serialize(new
+        {
+            DocId          = docId,
+            Kind           = body.Kind,
+            Title          = body.Title,
+            DocType        = body.DocType,
+            ContentLength  = body.Content.Length,
+            Sandbox        = true,
+        });
+        var auditId = await _audit.AppendAuditAsync(
+            claimId, "DocumentUploaded", actor, correlationId,
+            "OK", $"Synthetic document uploaded: '{body.Title}' ({body.Content.Length} chars) for {claimId}.",
+            meta, ct);
+
+        // (c) Outbox write
+        var payload = JsonSerializer.Serialize(new
+        {
+            ClaimId       = claimId,
+            DocId         = docId,
+            Kind          = body.Kind,
+            Title         = body.Title,
+            ContentLength = body.Content.Length,
+            ActionType    = "DocumentUploaded",
+            CommandId     = commandId,
+        });
+        var (outboxId, outboxWarning) = await _audit.WriteOutboxAsync(
+            "DocumentUploaded", claimId, correlationId, payload, idempKey, ct);
+        if (outboxWarning is not null) warnings.Add(outboxWarning);
+
+        return Ok(new CommandResult(
+            Success:         true,
+            CommandId:       commandId,
+            ClaimId:         claimId,
+            Status:          "Uploaded",
+            AuditEventId:    auditId < 0 ? null : auditId,
+            OutboxMessageId: outboxId < 0 ? null : outboxId,
+            CorrelationId:   correlationId,
+            Message:         $"Document '{body.Title}' uploaded ({body.Content.Length} chars). DB-backed synthetic content; no external storage.",
+            Warnings:        warnings));
+    }
+
+    // -----------------------------------------------------------------------
+    // 6. POST /api/claims/{claimId}/payout-simulation — DB-only simulation
+    // -----------------------------------------------------------------------
+
+    /// <summary>
+    /// CreatePayoutSimulation — persists a DB-only payout/settlement simulation
+    /// record. NEVER performs a real money transfer; SimulationOnly=true is a
+    /// schema-level guarantee. Status starts at "DraftSimulated". Audit + outbox
+    /// rows are also written for traceability.
+    /// </summary>
+    [HttpPost("{claimId}/payout-simulation")]
+    [ProducesResponseType(typeof(PayoutSimulationResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<PayoutSimulationResult>> CreatePayoutSimulation(
+        string claimId,
+        [FromBody] CreatePayoutSimulationRequest body,
+        CancellationToken ct)
+    {
+        var validationError = ValidateClaimId(claimId);
+        if (validationError is not null) return validationError;
+
+        if (!ClaimExists(claimId)) return ClaimNotFound(claimId);
+
+        if (body.Amount <= 0m)
+        {
+            return BadRequest(new ApiErrorResponse(
+                Code: "INVALID_AMOUNT",
+                Message: "amount must be > 0.",
+                TraceId: HttpContext.TraceIdentifier));
+        }
+        if (body.Deductible < 0m)
+        {
+            return BadRequest(new ApiErrorResponse(
+                Code: "INVALID_DEDUCTIBLE",
+                Message: "deductible must be >= 0.",
+                TraceId: HttpContext.TraceIdentifier));
+        }
+
+        var correlationId = GetCorrelationId();
+        var actor         = BuildActor();
+        var idempKey      = IdempotencyKey(HttpContext);
+        var commandId     = $"cmd-{Guid.NewGuid():N}";
+        var warnings      = new List<string>();
+        var currency      = string.IsNullOrWhiteSpace(body.Currency) ? "USD" : body.Currency!.ToUpperInvariant();
+        var decisionSrc   = string.IsNullOrWhiteSpace(body.DecisionSource) ? "Human" : body.DecisionSource!;
+        var net           = Math.Max(0m, body.Amount - body.Deductible);
+
+        // (a) Service write — Approval owns the PayoutSimulations table
+        var simId = await _approval.CreatePayoutSimulationAsync(
+            claimId, body.Amount, body.Deductible, currency,
+            decisionSrc, body.SourceAiRunId, body.Notes, actor, correlationId, ct);
+
+        // (b) Audit write
+        var meta = JsonSerializer.Serialize(new
+        {
+            SimulationId   = simId,
+            Amount         = body.Amount,
+            Deductible     = body.Deductible,
+            NetPayoutAmount= net,
+            Currency       = currency,
+            DecisionSource = decisionSrc,
+            SourceAiRunId  = body.SourceAiRunId,
+            HasNotes       = body.Notes is not null,
+            SimulationOnly = true,
+        });
+        var auditId = await _audit.AppendAuditAsync(
+            claimId, "PayoutSimulationCreated", actor, correlationId,
+            "OK",
+            $"Payout simulation #{simId} created for {claimId}: " +
+            $"amount={body.Amount} {currency}, net={net} (DB-only; SimulationOnly=true; no real transfer).",
+            meta, ct);
+
+        // (c) Outbox write
+        var payload = JsonSerializer.Serialize(new
+        {
+            ClaimId        = claimId,
+            SimulationId   = simId,
+            Amount         = body.Amount,
+            Currency       = currency,
+            NetPayoutAmount= net,
+            DecisionSource = decisionSrc,
+            ActionType     = "PayoutSimulationCreated",
+            CommandId      = commandId,
+            SimulationOnly = true,
+        });
+        var (outboxId, outboxWarning) = await _audit.WriteOutboxAsync(
+            "PayoutSimulationCreated", claimId, correlationId, payload, idempKey, ct);
+        if (outboxWarning is not null) warnings.Add(outboxWarning);
+
+        return Ok(new PayoutSimulationResult(
+            Success:         true,
+            CommandId:       commandId,
+            ClaimId:         claimId,
+            SimulationId:    simId,
+            Status:          "DraftSimulated",
+            Amount:          body.Amount,
+            Deductible:      body.Deductible,
+            NetPayoutAmount: net,
+            Currency:        currency,
+            DecisionSource:  decisionSrc,
+            DecisionActor:   $"{actor.ActorName} ({actor.ActorType})",
+            SourceAiRunId:   body.SourceAiRunId,
+            AuditEventId:    auditId < 0 ? null : auditId,
+            OutboxMessageId: outboxId < 0 ? null : outboxId,
+            CorrelationId:   correlationId,
+            Message:
+                $"Payout simulation #{simId} recorded. DB-only; SimulationOnly=true. " +
+                "No real money transfer; no customer message; no claim status mutation.",
+            Warnings:        warnings,
+            SimulationOnly:  true));
+    }
+
+    // -----------------------------------------------------------------------
+    // 7. GET /api/claims/{claimId}/payout-simulations — list all simulations
+    // -----------------------------------------------------------------------
+
+    /// <summary>Lists all payout simulations for a claim (newest first).</summary>
+    [HttpGet("{claimId}/payout-simulations")]
+    [ProducesResponseType(typeof(IEnumerable<PayoutSimulationSummary>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ApiErrorResponse), StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<IEnumerable<PayoutSimulationSummary>>> GetPayoutSimulations(
+        string claimId, CancellationToken ct)
+    {
+        var validationError = ValidateClaimId(claimId);
+        if (validationError is not null) return validationError;
+
+        if (!ClaimExists(claimId)) return ClaimNotFound(claimId);
+
+        var rows = await _approval.GetPayoutSimulationsAsync(claimId, ct);
+        return Ok(rows);
     }
 }

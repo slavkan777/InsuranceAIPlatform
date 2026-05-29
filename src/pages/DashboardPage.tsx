@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { MetricCard } from '@/components/ui/MetricCard';
@@ -6,6 +7,9 @@ import { ProgressBar } from '@/components/ui/ProgressBar';
 import { SectionHeader } from '@/components/ui/SectionHeader';
 import { Icon } from '@/components/ui/Icon';
 import { DeferredActionButton } from '@/components/ui/DeferredActionButton';
+import { NewClaimModal } from '@/components/claim/NewClaimModal';
+import { pushToast } from '@/features/ui/uiFeedbackSlice';
+import { buildCsv, downloadBlob, localDateStamp } from '@/utils/csv';
 import { DonutChart } from '@/components/charts/DonutChart';
 import { BarList } from '@/components/charts/BarList';
 import { LineChart } from '@/components/charts/LineChart';
@@ -55,32 +59,59 @@ export default function DashboardPage() {
 
   const claimDetailFromStore = useAppSelector(selectClaimDetail);
   const c = claimDetailFromStore ?? goldenClaim;
+  const [newClaimOpen, setNewClaimOpen] = useState(false);
 
   function openClaim(id: string) {
     dispatch(setSelected(id));
     navigate(`/claims/${id}`);
   }
 
+  function handleExportCsv() {
+    const csv = buildCsv(claimRows_.slice(0, 5), [
+      { header: 'ClaimId', accessor: (r) => r.id },
+      { header: 'Customer', accessor: (r) => r.customer },
+      { header: 'Vehicle', accessor: (r) => r.vehicle },
+      { header: 'EventType', accessor: (r) => r.eventType },
+      { header: 'Documents', accessor: (r) => r.documentsCount },
+      { header: 'AiStatus', accessor: (r) => r.aiStatus },
+      { header: 'Risk', accessor: (r) => r.risk },
+      { header: 'NextAction', accessor: (r) => r.nextAction },
+      { header: 'Updated', accessor: (r) => r.updated },
+    ]);
+    const filename = `dashboard-claims-${localDateStamp()}.csv`;
+    downloadBlob(csv, filename);
+    dispatch(
+      pushToast({
+        tone: 'success',
+        title: 'Експортовано 5 рядків.',
+        detail: `Файл ${filename} збережено у завантаженнях браузера.`,
+      }),
+    );
+  }
+
   return (
     <div className="flex flex-col gap-6">
+      <NewClaimModal open={newClaimOpen} onClose={() => setNewClaimOpen(false)} />
       <SectionHeader
         title="Огляд автострахових випадків"
         subtitle="Операційна панель · Станом на 24 травня 2026, 22:48"
         actions={
           <>
-            <DeferredActionButton className="btn-secondary" hint="Перемикач періоду — read-only demo">
+            <DeferredActionButton className="btn-secondary" hint="Перемикач періоду з'явиться у наступному релізі">
               Сьогодні
             </DeferredActionButton>
-            <DeferredActionButton className="btn-ghost" hint="Перемикач періоду — read-only demo">
+            <DeferredActionButton className="btn-ghost" hint="Перемикач періоду з'явиться у наступному релізі">
               7 днів
             </DeferredActionButton>
-            <DeferredActionButton
-              className="btn-secondary"
-              hint="Експорт — доступний після backend-гейту"
-              badge="demo"
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              className="btn-secondary inline-flex items-center gap-1.5"
+              title="Експортувати огляд черги у CSV (локально)"
             >
-              Експорт
-            </DeferredActionButton>
+              <Icon name="download" size={14} />
+              Експорт CSV
+            </button>
           </>
         }
       />
@@ -146,13 +177,15 @@ export default function DashboardPage() {
               <h3 className="text-base font-semibold text-ink-900">Черга автострахових випадків</h3>
               <p className="text-xs text-ink-500 mt-0.5">{summaryFromStore ? `${summaryFromStore.totalActive} активних` : '53 активних'} · оновлено щохвилини</p>
             </div>
-            <DeferredActionButton
-              className="btn-primary"
-              hint="Створення кейсу — потрібен backend write-гейт"
-              badge="demo"
+            <button
+              type="button"
+              onClick={() => setNewClaimOpen(true)}
+              className="btn-primary inline-flex items-center gap-1.5"
+              title="Створення нового синтетичного кейсу (локальний sandbox)"
             >
-              + Створити випадок
-            </DeferredActionButton>
+              <Icon name="plus" size={14} />
+              Створити випадок
+            </button>
           </div>
           <div className="flex flex-wrap gap-1.5 px-5 py-3 border-b border-ink-100 text-xs text-ink-600">
             {['Усі', 'ДТП', 'Високий ризик', 'Чекає AI', 'Чекає рішення'].map((seg, idx) => (

@@ -109,84 +109,124 @@ function* loadClaimDetailWorker(action: PayloadAction<string>) {
     );
     yield put(claimDetailLoaded({ detail, mode: API_MODE }));
   } catch (err) {
+    // Only fall back to the rich goldenClaim mock for the golden id itself.
+    // For DB-created claims this used to fall back to nothing (`null`) which
+    // is correct — surface the failure honestly, do NOT leak CLM-1006 data.
     const fallback = claimId === 'CLM-1006' ? goldenClaim : null;
     yield put(claimDetailFailed({ error: errMsg(err, 'Unknown error loading claim detail'), fallback }));
   }
 
-  // Load all sub-resources in sequence (non-critical — failures set mock-fallback per resource)
+  // Sub-resource fallbacks: CLM-1006 (the demo claim) keeps the rich mock
+  // fixtures so its demo page survives a backend hiccup. For any other claim
+  // we fall back to HONEST EMPTY structures — leaking CLM-1006 documents /
+  // photos / AI findings into a different claim's tab was part of the
+  // PostManualV4 bug surface area.
+  const useGoldenFixtures = claimId === 'CLM-1006';
+
   yield* loadSubResource(
     'documents',
     () => insuranceApi.getClaimDocuments(claimId),
-    documentsChecklist,
+    useGoldenFixtures ? documentsChecklist : [],
   );
   yield* loadSubResource(
     'photos',
     () => insuranceApi.getClaimPhotos(claimId),
-    damagePhotos,
+    useGoldenFixtures ? damagePhotos : [],
   );
   yield* loadSubResource(
     'aiEvidence',
     () => insuranceApi.getAiAnalysis(claimId),
-    {
-      findings: keyFindings.map((f, i) => ({ id: `f-${i}`, text: f.text, detail: f.detail, tone: f.tone })),
-      evidence: evidenceTabs,
-      modelConfidence,
-      extractedEntities,
-    },
+    useGoldenFixtures
+      ? {
+          findings: keyFindings.map((f, i) => ({ id: `f-${i}`, text: f.text, detail: f.detail, tone: f.tone })),
+          evidence: evidenceTabs,
+          modelConfidence,
+          extractedEntities,
+        }
+      : { findings: [], evidence: [], modelConfidence: [], extractedEntities: [] },
   );
   yield* loadSubResource(
     'risks',
     () => insuranceApi.getRiskReview(claimId),
-    {
-      score: goldenClaim.riskScore,
-      threshold: 60,
-      factors: riskFactors,
-      pipeline: aiPipelineSteps,
-    },
+    useGoldenFixtures
+      ? {
+          score: goldenClaim.riskScore,
+          threshold: 60,
+          factors: riskFactors,
+          pipeline: aiPipelineSteps,
+        }
+      : { score: 0, threshold: 60, factors: [], pipeline: [] },
   );
   yield* loadSubResource(
     'policy',
     () => insuranceApi.getPolicyCoverage(claimId),
-    { blocks: policyCoverageBlocks, validation: policyValidation },
+    useGoldenFixtures
+      ? { blocks: policyCoverageBlocks, validation: policyValidation }
+      : { blocks: [], validation: [] },
   );
   yield* loadSubResource(
     'customerVehicle',
     () => insuranceApi.getCustomerVehicleContext(claimId),
-    { previousClaims, communicationHistory },
+    useGoldenFixtures
+      ? { previousClaims, communicationHistory }
+      : { previousClaims: [], communicationHistory: [] },
   );
   yield* loadSubResource(
     'approvalRead',
     () => insuranceApi.getClaimApproval(claimId),
-    {
-      claimId,
-      currentDecision: 'request',
-      notes: 'Запрошуємо клієнта надати фото пошкодження заднього бампера. AI confidence 78%.',
-      savedAt: null,
-      submitted: false,
-      submittedAt: null,
-      availableOptions: [
-        { value: 'approve', label: 'Погодити виплату', recommended: false, description: 'Якщо ризики прийнятні' },
-        { value: 'request', label: 'Запросити дані', recommended: true, description: 'Рекомендовано AI' },
-        { value: 'reject', label: 'Відхилити', recommended: false, description: 'З обґрунтуванням' },
-        { value: 'escalate', label: 'Передати старшому', recommended: false, description: 'Ескалація' },
-      ],
-      aiRecommendation: 'Запросити додаткове фото перед погодженням виплати',
-      recommendedPayout: goldenClaim.recommendedPayout,
-    },
+    useGoldenFixtures
+      ? {
+          claimId,
+          currentDecision: 'request',
+          notes: 'Запрошуємо клієнта надати фото пошкодження заднього бампера. AI confidence 78%.',
+          savedAt: null,
+          submitted: false,
+          submittedAt: null,
+          availableOptions: [
+            { value: 'approve', label: 'Погодити виплату', recommended: false, description: 'Якщо ризики прийнятні' },
+            { value: 'request', label: 'Запросити дані', recommended: true, description: 'Рекомендовано AI' },
+            { value: 'reject', label: 'Відхилити', recommended: false, description: 'З обґрунтуванням' },
+            { value: 'escalate', label: 'Передати старшому', recommended: false, description: 'Ескалація' },
+          ],
+          aiRecommendation: 'Запросити додаткове фото перед погодженням виплати',
+          recommendedPayout: goldenClaim.recommendedPayout,
+        }
+      : {
+          claimId,
+          currentDecision: null,
+          notes: null,
+          savedAt: null,
+          submitted: false,
+          submittedAt: null,
+          availableOptions: [],
+          aiRecommendation: null,
+          recommendedPayout: 0,
+        },
   );
   yield* loadSubResource(
     'audit',
     () => insuranceApi.getAuditTrace(claimId),
-    {
-      runId: goldenClaim.runId,
-      traceId: goldenClaim.traceId,
-      model: 'Azure OpenAI',
-      tokens: goldenClaim.tokens,
-      cost: goldenClaim.cost,
-      durationSec: goldenClaim.durationSec,
-      events: auditTrail,
-      distribution: costDistribution,
-    },
+    useGoldenFixtures
+      ? {
+          runId: goldenClaim.runId,
+          traceId: goldenClaim.traceId,
+          model: 'local-mock-v0.1',
+          tokens: goldenClaim.tokens,
+          cost: goldenClaim.cost,
+          durationSec: goldenClaim.durationSec,
+          events: auditTrail,
+          distribution: costDistribution,
+        }
+      : {
+          runId: '',
+          traceId: '',
+          model: '',
+          tokens: 0,
+          cost: 0,
+          durationSec: 0,
+          events: [],
+          distribution: [],
+        },
   );
 }
 

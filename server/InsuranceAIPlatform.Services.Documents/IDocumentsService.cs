@@ -35,4 +35,20 @@ public interface IDocumentsService : IServiceHealthContributor
         string? docType,
         ActorContext actor,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Persists a ClaimDocument with synthetic text content for the local sandbox.
+    /// NO binary upload, NO blob, NO OCR, NO external storage — content is plain
+    /// text stored in the database column. Used for the test/local-demo scenario
+    /// where a reviewer pastes a synthetic police report / statement / notes.
+    /// Returns the new document's Id string.
+    /// </summary>
+    Task<string> UploadDocumentContentAsync(
+        string claimId,
+        string kind,
+        string title,
+        string? docType,
+        string content,
+        ActorContext actor,
+        CancellationToken ct = default);
 }

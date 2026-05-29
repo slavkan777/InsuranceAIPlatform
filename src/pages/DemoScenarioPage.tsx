@@ -102,10 +102,15 @@ export default function DemoScenarioPage() {
               items: ['Document Classifier', 'Field Extractor', 'Risk + Recommender'],
             },
             {
-              title: 'Azure AI / Infrastructure',
-              subtitle: 'OpenAI · App Insights · Storage',
+              title: 'AI provider / Infrastructure',
+              subtitle: 'Mock by default · DeepSeek opt-in · Azure-ready',
               tone: 'warn',
-              items: ['Azure OpenAI', 'Application Insights', 'Blob Storage + Search'],
+              items: [
+                'Mock provider (default)',
+                'Real DeepSeek (env opt-in)',
+                'Audit + Outbox',
+                'Azure / App Insights / Blob — planned',
+              ],
             },
           ].map((layer) => (
             <div
@@ -141,7 +146,7 @@ export default function DemoScenarioPage() {
           human review та audit / cost governance.
         </p>
         <p className="text-xs text-ink-300 mt-3 font-mono">
-          Stack: .NET 9 · ASP.NET Core · Azure OpenAI · Polly · OpenTelemetry · React+TS (planned)
+          Stack: .NET 9 · ASP.NET Core · EF Core · React + TS (active) · DeepSeek opt-in / Azure-ready (next)
         </p>
       </section>
 

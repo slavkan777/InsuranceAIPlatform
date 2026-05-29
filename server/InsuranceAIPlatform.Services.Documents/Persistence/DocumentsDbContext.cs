@@ -27,6 +27,9 @@ public sealed class DocumentsDbContext : DbContext
             e.Property(x => x.Meta).HasMaxLength(300);
             e.Property(x => x.Status).HasMaxLength(50);
             e.Property(x => x.DocType).HasMaxLength(50);
+            // Synthetic text content for local sandbox uploads — no binary, no blob.
+            e.Property(x => x.Content).HasColumnType("nvarchar(max)");
+            e.Property(x => x.UploadedByActor).HasMaxLength(200);
         });
 
         modelBuilder.Entity<MissingDocumentRequest>(e =>

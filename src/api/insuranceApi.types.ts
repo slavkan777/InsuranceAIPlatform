@@ -72,6 +72,123 @@ export interface CreateDocumentMetadataBody {
   docType?: string | null;
 }
 
+/** Body for POST /api/claims/{claimId}/documents/upload (DB-backed text content). */
+export interface UploadDocumentContentBody {
+  kind: string;
+  title: string;
+  docType?: string | null;
+  /** Plain text content stored in nvarchar(max). No binary, no blob. */
+  content: string;
+}
+
+/** Body for POST /api/claims (create synthetic claim row). */
+export interface CreateClaimBody {
+  customerId?: string | null;
+  customerName?: string | null;
+  policy?: string | null;
+  policyId?: string | null;
+  vehicle: string;
+  vehicleVin?: string | null;
+  eventType: string;
+  /** ISO date "YYYY-MM-DD". */
+  eventDate: string;
+  location: string;
+  description?: string | null;
+}
+
+/** Returned by POST /api/claims. */
+export interface CreateClaimResult extends CommandResult {
+  customerId: string;
+  customer: string;
+  vehicle: string;
+}
+
+/** Body for POST /api/claims/{claimId}/payout-simulation (DB-only). */
+export interface CreatePayoutSimulationBody {
+  amount: number;
+  deductible: number;
+  currency?: string | null;
+  /** "Human" | "AI-advisory" | "Hybrid" */
+  decisionSource?: string | null;
+  sourceAiRunId?: string | null;
+  notes?: string | null;
+}
+
+/** Returned by POST /api/claims/{claimId}/payout-simulation. */
+export interface PayoutSimulationResultDto extends CommandResult {
+  simulationId: number;
+  amount: number;
+  deductible: number;
+  netPayoutAmount: number;
+  currency: string;
+  decisionSource: string;
+  decisionActor: string;
+  sourceAiRunId?: string | null;
+  /** Always true — schema-level guarantee that no real money transfer occurred. */
+  simulationOnly: true;
+}
+
+/** Returned by GET /api/claims/{claimId}/payout-simulations. */
+export interface PayoutSimulationSummaryDto {
+  id: number;
+  claimId: string;
+  status: string;
+  amount: number;
+  deductible: number;
+  netPayoutAmount: number;
+  currency: string;
+  decisionSource: string;
+  decisionActor: string;
+  sourceAiRunId?: string | null;
+  notes?: string | null;
+  correlationId: string;
+  createdAtUtc: string;
+  confirmedAtUtc?: string | null;
+  simulationOnly: boolean;
+}
+
+/** Returned by GET /api/customers (paginated synthetic directory). */
+export interface CustomerSummaryDto {
+  id: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  addressLine: string;
+  customerSince: string; // YYYY-MM-DD
+  previousClaimsCount: number;
+  isSynthetic: boolean;
+}
+
+export interface CustomerListResultDto {
+  total: number;
+  page: number;
+  pageSize: number;
+  items: CustomerSummaryDto[];
+}
+
+/** Body for POST /api/customers (create a new synthetic customer). */
+export interface CreateCustomerBody {
+  fullName: string;
+  email?: string | null;
+  phone?: string | null;
+  addressLine?: string | null;
+  customerSince?: string | null; // YYYY-MM-DD
+}
+
+/** Returned by POST /api/customers (create synthetic customer). */
+export interface CreateCustomerResult {
+  success: boolean;
+  commandId: string;
+  customerId: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  addressLine: string;
+  customerSince: string;
+  isSynthetic: boolean;
+  message: string;
+}
+
 // ---------------------------------------------------------------------------
 // AI Analysis types — advisory only; IsAdvisoryOnly is always true.
 // AI cannot approve payout, reject claim, accuse fraud, send customer messages,
@@ -149,4 +266,36 @@ export interface AiAnalysisDto {
 /** Empty body for POST /api/claims/{claimId}/ai-analysis/run */
 export interface AiAnalysisRunRequestDto {
   // intentionally empty — no parameters needed
+}
+
+// ---------------------------------------------------------------------------
+// AI Decision (local-demo only) — records an auditable AI decision from the
+// latest analysis run. Never authorises payout/reject/fraud/status change,
+// never sends customer messages. Audit + outbox only.
+// ---------------------------------------------------------------------------
+
+/** Body for POST /api/claims/{claimId}/ai-decision */
+export interface RecordAiDecisionBody {
+  /** Optional human notes attached to the AI decision record. */
+  notes?: string | null;
+}
+
+/** Returned by POST /api/claims/{claimId}/ai-decision — extends CommandResult with AI decision fields. */
+export interface AiDecisionRecordedResult extends CommandResult {
+  /** The AI run this decision was derived from. */
+  aiRunId: string;
+  /** Mode of the provider that produced the run (Mock | DeepSeek | Disabled). */
+  providerMode: string;
+  /** Model identifier. */
+  modelName: string;
+  /** AI's recommended action (advisory only). */
+  recommendedAction: string;
+  /** Risk level reported by the run. */
+  riskLevel: string;
+  /** Confidence score (0–100). */
+  confidenceScore: number;
+  /** Always true — kept explicit for clarity in the UI/audit. */
+  isAdvisoryOnly: true;
+  /** Source attribution marker — always "AI" for this endpoint. */
+  source: 'AI';
 }

@@ -30,7 +30,7 @@ export default function AuditCostPage() {
   const auditFromStore = useAppSelector(selectWorkspaceAudit);
   const auditTrail = auditFromStore?.events ?? mockAuditTrail;
   const costDistribution = auditFromStore?.distribution ?? mockCostDistribution;
-  const model = auditFromStore?.model ?? 'Azure OpenAI';
+  const model = auditFromStore?.model ?? 'local-mock-v0.1';
   const tokens = auditFromStore?.tokens ?? c.tokens;
   const cost = auditFromStore?.cost ?? c.cost;
   const durationSec = auditFromStore?.durationSec ?? c.durationSec;

@@ -109,4 +109,78 @@ public sealed class PersistenceApprovalService : IApprovalService
         await db.SaveChangesAsync(ct);
         return claimId;
     }
+
+    // -----------------------------------------------------------------------
+    // CreatePayoutSimulationAsync — DB-only, no real money transfer
+    // -----------------------------------------------------------------------
+
+    public async Task<int> CreatePayoutSimulationAsync(
+        string claimId,
+        decimal amount,
+        decimal deductible,
+        string currency,
+        string decisionSource,
+        string? sourceAiRunId,
+        string? notes,
+        ActorContext actor,
+        string correlationId,
+        CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(ct);
+        var net = Math.Max(0, amount - deductible);
+        var sim = new PayoutSimulation
+        {
+            ClaimId         = claimId,
+            Status          = "DraftSimulated",
+            Amount          = amount,
+            Deductible      = deductible,
+            NetPayoutAmount = net,
+            Currency        = string.IsNullOrWhiteSpace(currency) ? "USD" : currency,
+            DecisionSource  = string.IsNullOrWhiteSpace(decisionSource) ? "Human" : decisionSource,
+            DecisionActor   = $"{actor.ActorName} ({actor.ActorType})",
+            SourceAiRunId   = sourceAiRunId,
+            Notes           = notes,
+            CorrelationId   = correlationId,
+            CreatedAtUtc    = _clock.UtcNow,
+            // SimulationOnly hard-set to true at construction — schema-level
+            // guarantee that no row in this table represents a real money transfer.
+            SimulationOnly  = true,
+        };
+        db.PayoutSimulations.Add(sim);
+        await db.SaveChangesAsync(ct);
+        return sim.Id;
+    }
+
+    public async Task<string?> ConfirmPayoutSimulationAsync(
+        int simulationId,
+        ActorContext actor,
+        CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(ct);
+        var sim = await db.PayoutSimulations.FirstOrDefaultAsync(s => s.Id == simulationId, ct);
+        if (sim is null) return null;
+        if (sim.Status == "Cancelled") return sim.Status;
+
+        sim.Status         = "Simulated";
+        sim.ConfirmedAtUtc = _clock.UtcNow;
+        // SimulationOnly stays true — confirming a simulation never makes it real.
+        await db.SaveChangesAsync(ct);
+        return sim.Status;
+    }
+
+    public async Task<IReadOnlyList<PayoutSimulationSummary>> GetPayoutSimulationsAsync(
+        string claimId,
+        CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(ct);
+        var rows = await db.PayoutSimulations
+            .Where(s => s.ClaimId == claimId)
+            .OrderByDescending(s => s.CreatedAtUtc)
+            .ToListAsync(ct);
+
+        return rows.Select(r => new PayoutSimulationSummary(
+            r.Id, r.ClaimId, r.Status, r.Amount, r.Deductible, r.NetPayoutAmount,
+            r.Currency, r.DecisionSource, r.DecisionActor, r.SourceAiRunId, r.Notes,
+            r.CorrelationId, r.CreatedAtUtc, r.ConfirmedAtUtc, r.SimulationOnly)).ToList();
+    }
 }

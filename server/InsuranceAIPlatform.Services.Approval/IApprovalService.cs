@@ -36,4 +36,59 @@ public interface IApprovalService : IServiceHealthContributor
         string? notes,
         ActorContext actor,
         CancellationToken ct = default);
+
+    /// <summary>
+    /// Persists a DB-only payout simulation record for <paramref name="claimId"/>.
+    /// NEVER performs a real money transfer; NEVER sends external messages.
+    /// SimulationOnly=true is hard-set at row construction. Status starts at
+    /// "DraftSimulated" and may be advanced to "Simulated" later by a follow-up
+    /// confirmation call. Returns the new simulation's Id.
+    /// </summary>
+    Task<int> CreatePayoutSimulationAsync(
+        string claimId,
+        decimal amount,
+        decimal deductible,
+        string currency,
+        string decisionSource,
+        string? sourceAiRunId,
+        string? notes,
+        ActorContext actor,
+        string correlationId,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Advances an existing payout simulation from "DraftSimulated" to "Simulated".
+    /// Still DB-only; NO real transfer. Returns the updated row's current status,
+    /// or null if the id does not exist.
+    /// </summary>
+    Task<string?> ConfirmPayoutSimulationAsync(
+        int simulationId,
+        ActorContext actor,
+        CancellationToken ct = default);
+
+    /// <summary>
+    /// Returns the payout simulations for a claim, ordered by CreatedAtUtc DESC.
+    /// Used by the BFF GET endpoint and tests.
+    /// </summary>
+    Task<IReadOnlyList<PayoutSimulationSummary>> GetPayoutSimulationsAsync(
+        string claimId,
+        CancellationToken ct = default);
 }
+
+/// <summary>Read-only DTO surface for payout simulations (no schema leak to controllers/tests).</summary>
+public sealed record PayoutSimulationSummary(
+    int Id,
+    string ClaimId,
+    string Status,
+    decimal Amount,
+    decimal Deductible,
+    decimal NetPayoutAmount,
+    string Currency,
+    string DecisionSource,
+    string DecisionActor,
+    string? SourceAiRunId,
+    string? Notes,
+    string CorrelationId,
+    DateTimeOffset CreatedAtUtc,
+    DateTimeOffset? ConfirmedAtUtc,
+    bool SimulationOnly);

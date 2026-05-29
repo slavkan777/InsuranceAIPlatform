@@ -7,17 +7,21 @@ import documentsReducer from '@/features/documents/documentsSlice';
 import aiReviewReducer from '@/features/aiReview/aiReviewSlice';
 import approvalReducer from '@/features/approval/approvalSlice';
 import demoReducer from '@/features/demo/demoSlice';
+import authReducer from '@/features/auth/authSlice';
+import uiFeedbackReducer from '@/features/ui/uiFeedbackSlice';
 
 const sagaMiddleware = createSagaMiddleware();
 
 export const store = configureStore({
   reducer: {
+    auth: authReducer,
     claims: claimsReducer,
     claimWorkspace: claimWorkspaceReducer,
     documents: documentsReducer,
     aiReview: aiReviewReducer,
     approval: approvalReducer,
     demo: demoReducer,
+    uiFeedback: uiFeedbackReducer,
   },
   middleware: (getDefault) =>
     getDefault({

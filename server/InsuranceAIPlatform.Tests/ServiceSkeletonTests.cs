@@ -74,16 +74,17 @@ public class ServiceSkeletonTests(WebApplicationFactory<Program> factory)
             .Select(c => c.GetHealth())
             .ToDictionary(s => s.ServiceName);
 
+        // Each service either still reports "skeleton-v0.1" or has been moved to
+        // "persistence-v0.1" by its AddXyzPersistence registration. Both are valid.
+        var validStages = new HashSet<string> { "skeleton-v0.1", "persistence-v0.1" };
         foreach (var snap in byName.Values)
         {
-            Assert.Equal("skeleton-v0.1", snap.Stage);
+            Assert.Contains(snap.Stage, validStages);
             Assert.NotEmpty(snap.Capabilities);
         }
 
-        // AI Analysis is deferred (provider integration is a later gate); the rest are stubs.
+        // AI Analysis is deferred (provider integration is a later gate).
         Assert.Equal(ServiceReadinessStatus.Deferred, byName[ServiceNames.AiAnalysis].Status);
-        Assert.Equal(ServiceReadinessStatus.Stub, byName[ServiceNames.Claims].Status);
-        Assert.Equal(ServiceReadinessStatus.Stub, byName[ServiceNames.AuditCost].Status);
     }
 
     // (4) AI Analysis wires a provider and stays advisory-only — no real AI call is possible.

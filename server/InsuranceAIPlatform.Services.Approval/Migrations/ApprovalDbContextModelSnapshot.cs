@@ -97,6 +97,79 @@ namespace InsuranceAIPlatform.Services.Approval.Migrations
                     b.ToTable("ApprovalDrafts", "approval");
                 });
 
+            modelBuilder.Entity("InsuranceAIPlatform.Services.Approval.Persistence.PayoutSimulation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("ClaimId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("nvarchar(32)");
+
+                    b.Property<DateTimeOffset?>("ConfirmedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("CorrelationId")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTimeOffset>("CreatedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("nvarchar(8)");
+
+                    b.Property<string>("DecisionActor")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("DecisionSource")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<decimal>("Deductible")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("NetPayoutAmount")
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<bool>("SimulationOnly")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("SourceAiRunId")
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClaimId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("PayoutSimulations", "approval");
+                });
+
             modelBuilder.Entity("InsuranceAIPlatform.Services.Approval.Persistence.ApprovalDecisionOption", b =>
                 {
                     b.HasOne("InsuranceAIPlatform.Services.Approval.Persistence.ApprovalDraft", "Draft")

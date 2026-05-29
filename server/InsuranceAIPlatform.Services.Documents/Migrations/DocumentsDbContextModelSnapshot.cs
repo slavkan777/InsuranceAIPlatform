@@ -37,6 +37,9 @@ namespace InsuranceAIPlatform.Services.Documents.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("nvarchar(32)");
 
+                    b.Property<string>("Content")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("DocType")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -61,6 +64,13 @@ namespace InsuranceAIPlatform.Services.Documents.Migrations
                         .IsRequired()
                         .HasMaxLength(300)
                         .HasColumnType("nvarchar(300)");
+
+                    b.Property<DateTimeOffset?>("UploadedAtUtc")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("UploadedByActor")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
 
                     b.HasKey("Id");
 

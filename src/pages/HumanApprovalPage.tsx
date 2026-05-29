@@ -1,6 +1,9 @@
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { StatusPill } from '@/components/ui/StatusPill';
+import { Icon } from '@/components/ui/Icon';
 import { goldenClaim } from '@/data/mock/claims';
 import { approvalChecklist, decisionOptions as mockDecisionOptions } from '@/data/mock/claim-1006';
 import {
@@ -12,8 +15,27 @@ import {
   selectClaimDetail,
   selectWorkspaceApprovalRead,
 } from '@/features/claims/claimWorkspaceSelectors';
-import { DeferredActionButton } from '@/components/ui/DeferredActionButton';
+import { pushToast } from '@/features/ui/uiFeedbackSlice';
+import { RequestMissingDocumentModal } from '@/components/claim/RequestMissingDocumentModal';
+import { PayoutSimulationModal } from '@/components/claim/PayoutSimulationModal';
+import { insuranceApi } from '@/api/insuranceApi';
 import clsx from '@/utils/clsx';
+
+/** Map the UI decision tile id (lowercase) to the backend decision enum (PascalCase, allow-listed). */
+function uiDecisionToBackend(id: string | null): string | null {
+  switch (id) {
+    case 'approve':
+      return 'ApproveForReview';
+    case 'request':
+      return 'RequestDocuments';
+    case 'reject':
+      return 'RejectForReview';
+    case 'escalate':
+      return 'NeedsMoreInformation';
+    default:
+      return null;
+  }
+}
 
 const toneRing: Record<string, string> = {
   good: 'border-good-300 hover:border-good-500 data-[selected=true]:bg-good-500/10 data-[selected=true]:border-good-500',
@@ -36,12 +58,20 @@ function optionTone(value: string): string {
 
 export default function HumanApprovalPage() {
   const dispatch = useAppDispatch();
+  const { claimId: routeClaimId } = useParams<{ claimId: string }>();
 
   // --- store selectors (with mock fallback) ---
   const claimDetailFromStore = useAppSelector(selectClaimDetail);
   const c = claimDetailFromStore ?? goldenClaim;
+  const claimId = routeClaimId ?? c.id;
 
   const approvalReadFromStore = useAppSelector(selectWorkspaceApprovalRead);
+
+  // --- local action state ---
+  const [savingDraft, setSavingDraft] = useState(false);
+  const [submittingDecision, setSubmittingDecision] = useState(false);
+  const [requestDocOpen, setRequestDocOpen] = useState(false);
+  const [payoutSimOpen, setPayoutSimOpen] = useState(false);
 
   // Build decision options from the approval read model (or fall back to static mock)
   const decisionOptions = approvalReadFromStore
@@ -61,6 +91,85 @@ export default function HumanApprovalPage() {
 
   const reductionAmount = 420;
   const draftPayout = recommendedPayout;
+
+  async function handleSaveDraft() {
+    setSavingDraft(true);
+    try {
+      const idempKey = `save-draft-${claimId}-${Date.now()}`;
+      const backendDecision = uiDecisionToBackend(selectedDecision);
+      const result = await insuranceApi.saveApprovalDraftCommand(
+        claimId,
+        {
+          currentDecision: backendDecision,
+          notes: reviewerNotes.trim() || null,
+        },
+        idempKey,
+      );
+      dispatch(
+        pushToast({
+          tone: 'success',
+          title: 'Чернетку рішення збережено.',
+          detail: `${result.message} cmd=${result.commandId.slice(0, 14)}…`,
+        }),
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Невідома помилка.';
+      dispatch(
+        pushToast({
+          tone: 'error',
+          title: 'Не вдалося зберегти чернетку.',
+          detail: msg,
+        }),
+      );
+    } finally {
+      setSavingDraft(false);
+    }
+  }
+
+  async function handleApproveAfterReview() {
+    if (selectedDecision !== 'approve') {
+      dispatch(
+        pushToast({
+          tone: 'warning',
+          title: 'Оберіть «Погодити виплату» у варіантах рішення.',
+          detail: 'Без явного вибору не можна підтверджувати погодження.',
+        }),
+      );
+      return;
+    }
+    setSubmittingDecision(true);
+    try {
+      const idempKey = `submit-decision-${claimId}-approve-${Date.now()}`;
+      const result = await insuranceApi.submitHumanDecision(
+        claimId,
+        {
+          decision: 'ApproveForReview',
+          notes: reviewerNotes.trim() || null,
+        },
+        idempKey,
+      );
+      dispatch(
+        pushToast({
+          tone: 'success',
+          title: 'Погодження після перевірки зафіксовано.',
+          detail:
+            `${result.message} ` +
+            'Реальна виплата не виконувалась — це локальний sandbox-запис.',
+        }),
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Невідома помилка.';
+      dispatch(
+        pushToast({
+          tone: 'error',
+          title: 'Не вдалося зафіксувати рішення.',
+          detail: msg,
+        }),
+      );
+    } finally {
+      setSubmittingDecision(false);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-5">
@@ -210,31 +319,70 @@ export default function HumanApprovalPage() {
           </section>
 
           <div className="grid gap-2">
-            <DeferredActionButton
-              hint="Збереження чернетки рішення — потрібен backend write-гейт"
-              className="btn-secondary"
+            <button
+              type="button"
+              data-testid="save-draft"
+              onClick={handleSaveDraft}
+              disabled={savingDraft}
+              title="Зберегти чернетку поточного рішення + нотатки у БД (audit + outbox)"
+              className="btn-secondary inline-flex items-center justify-center gap-1.5 disabled:opacity-50"
             >
-              Зберегти чернетку
-            </DeferredActionButton>
-            <DeferredActionButton
-              hint="Надсилання запиту клієнту — потрібен backend write-гейт"
-              className="btn-primary"
+              <Icon name="edit" size={14} />
+              {savingDraft ? 'Збереження…' : 'Зберегти чернетку'}
+            </button>
+            <button
+              type="button"
+              data-testid="request-missing-doc-open-approval"
+              onClick={() => setRequestDocOpen(true)}
+              title="Зафіксувати внутрішній запит на додаткові дані (без листа клієнту)"
+              className="btn-primary inline-flex items-center justify-center gap-1.5"
             >
-              Надіслати запит клієнту
-            </DeferredActionButton>
-            <DeferredActionButton
-              hint="Погодження виплати — потрібен backend write-гейт + людський підпис"
-              className="btn-secondary text-good-600 border-good-300"
-              badge="demo"
+              <Icon name="check" size={14} />
+              Зафіксувати запит у журналі
+            </button>
+            <button
+              type="button"
+              data-testid="approve-after-review"
+              onClick={handleApproveAfterReview}
+              disabled={submittingDecision || selectedDecision !== 'approve'}
+              title="Зафіксувати погодження після перевірки. Без виплати, без листа клієнту, без зміни статусу кейсу."
+              className="btn-secondary inline-flex items-center justify-center gap-1.5 text-good-700 border-good-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Погодити після перевірки
-            </DeferredActionButton>
+              <Icon name="check" size={14} />
+              {submittingDecision ? 'Збереження…' : 'Погодити після перевірки'}
+            </button>
+            <button
+              type="button"
+              data-testid="payout-sim-open"
+              onClick={() => setPayoutSimOpen(true)}
+              title="Створити DB-only симуляцію виплати (SimulationOnly=true; без реальної транзакції)"
+              className="btn-secondary inline-flex items-center justify-center gap-1.5 text-brand-700 border-brand-300"
+            >
+              <Icon name="receipt" size={14} />
+              Симуляція виплати (sandbox)
+            </button>
             <p className="text-[11px] text-center text-ink-400 mt-1 leading-snug">
-              Дії рішення доступні лише для перегляду в demo · запис вмикається після backend write-гейту
+              Локальний sandbox. Реальна виплата та повідомлення клієнту не виконуються.
             </p>
           </div>
         </aside>
       </div>
+
+      <RequestMissingDocumentModal
+        open={requestDocOpen}
+        onClose={() => setRequestDocOpen(false)}
+        claimId={claimId}
+        defaultTitle="Уточнення / додаткові документи від клієнта"
+        defaultReason="Потрібно для остаточного людського рішення."
+      />
+      <PayoutSimulationModal
+        open={payoutSimOpen}
+        onClose={() => setPayoutSimOpen(false)}
+        claimId={claimId}
+        defaultAmount={Number(c.recommendedPayout)}
+        defaultDeductible={Number(c.deductible)}
+        defaultDecisionSource="Human"
+      />
     </div>
   );
 }

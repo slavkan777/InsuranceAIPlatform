@@ -1,7 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { ProgressBar } from '@/components/ui/ProgressBar';
+import { Icon } from '@/components/ui/Icon';
 import { goldenClaim } from '@/data/mock/claims';
+import { insuranceApi } from '@/api/insuranceApi';
+import type { AiDecisionRecordedResult } from '@/api/insuranceApi.types';
+import { pushToast } from '@/features/ui/uiFeedbackSlice';
 import {
   evidenceTabs as mockEvidenceTabs,
   extractedEntities as mockExtractedEntities,
@@ -45,10 +49,55 @@ export default function AiEvidencePage() {
   const lastRunStatus = useAppSelector(selectAiLastRunStatus);
   const lastError = useAppSelector(selectAiLastError);
 
+  // Local component state for the AI Decision recording action.
+  const [recordingDecision, setRecordingDecision] = useState(false);
+  const [lastAiDecision, setLastAiDecision] = useState<AiDecisionRecordedResult | null>(null);
+  const [aiDecisionError, setAiDecisionError] = useState<string | null>(null);
+
   // Load the latest persisted AI analysis run for the current claim on mount / claim change.
   useEffect(() => {
     dispatch(loadLatestAiAnalysis(c.id));
   }, [dispatch, c.id]);
+
+  // Reset the local AI-decision banner when navigating between claims.
+  useEffect(() => {
+    setLastAiDecision(null);
+    setAiDecisionError(null);
+  }, [c.id]);
+
+  async function handleRecordAiDecision() {
+    if (!lastRun) return;
+    setRecordingDecision(true);
+    setAiDecisionError(null);
+    try {
+      const idempKey = `ai-decision-${c.id}-${lastRun.runId}-${Date.now()}`;
+      const result = await insuranceApi.recordAiDecision(
+        c.id,
+        { notes: null },
+        idempKey,
+      );
+      setLastAiDecision(result);
+      dispatch(
+        pushToast({
+          tone: 'success',
+          title: 'AI-рішення зафіксовано у журналі.',
+          detail: `Джерело: AI · cmd=${result.commandId.slice(0, 14)}… · run=${result.aiRunId}`,
+        }),
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Невідома помилка.';
+      setAiDecisionError(msg);
+      dispatch(
+        pushToast({
+          tone: 'error',
+          title: 'Не вдалося зафіксувати AI-рішення.',
+          detail: msg,
+        }),
+      );
+    } finally {
+      setRecordingDecision(false);
+    }
+  }
 
   const filteredEntities = extractedEntities.filter((e) => e.confidence >= confidenceFilter);
 
@@ -100,6 +149,7 @@ export default function AiEvidencePage() {
             <span className="font-mono w-10 text-right">{confidenceFilter}%</span>
           </label>
           <button
+            data-testid="run-ai-analysis"
             onClick={() => dispatch(runAiAnalysis(c.id))}
             disabled={status === 'running'}
             title="Запустити advisory-only AI-аналіз через BFF (Mock за замовчуванням; DeepSeek тільки за явним opt-in)"
@@ -289,6 +339,94 @@ export default function AiEvidencePage() {
             advisory-only прогон.
           </div>
         )}
+      </section>
+
+      {/* ---------- AI Decision recording (local/demo, audit-only) ---------- */}
+      <section className="card card-pad border-ai-200">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <div className="metric-label text-ai-700">AI-рішення у журналі (sandbox)</div>
+            <h3 className="text-base font-semibold text-ink-900 mt-0.5">
+              Зафіксувати AI-рекомендацію як аудитоване рішення
+            </h3>
+            <p className="text-xs text-ink-500 mt-1 leading-snug max-w-xl">
+              Створює запис у журналі аудиту з джерелом{' '}
+              <span className="font-mono">Source=AI</span> та відповідний outbox-event.
+              Виплата не виконується, лист клієнту не надсилається, статус кейсу не змінюється.
+            </p>
+          </div>
+          <button
+            type="button"
+            data-testid="record-ai-decision"
+            onClick={handleRecordAiDecision}
+            disabled={!lastRun || recordingDecision}
+            title={
+              lastRun
+                ? 'Зафіксувати AI-рекомендацію останнього прогону у журналі (без виплати/повідомлень)'
+                : 'Спершу виконайте AI-аналіз — без прогону неможливо створити AI-рішення'
+            }
+            className="btn-primary inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Icon name="cpu" size={14} />
+            {recordingDecision
+              ? 'Збереження…'
+              : 'Зафіксувати AI-рішення'}
+          </button>
+        </div>
+
+        {lastAiDecision ? (
+          <div data-testid="ai-decision-recorded" className="mt-4 rounded-lg border border-good-200 bg-good-50 px-3 py-2.5 text-sm">
+            <div className="flex items-center gap-2 text-good-800 font-semibold">
+              <Icon name="check" size={14} />
+              Збережено · advisory-only · <span data-testid="ai-decision-source">{lastAiDecision.source}</span>
+            </div>
+            <div className="grid sm:grid-cols-2 gap-x-4 gap-y-1 mt-2 text-xs text-ink-700">
+              <div>
+                <span className="text-ink-500">cmd </span>
+                <span className="font-mono text-ink-900">{lastAiDecision.commandId}</span>
+              </div>
+              <div>
+                <span className="text-ink-500">audit </span>
+                <span className="font-mono text-ink-900">
+                  {lastAiDecision.auditEventId ?? '—'}
+                </span>
+              </div>
+              <div>
+                <span className="text-ink-500">outbox </span>
+                <span className="font-mono text-ink-900">
+                  {lastAiDecision.outboxMessageId ?? '—'}
+                </span>
+              </div>
+              <div>
+                <span className="text-ink-500">runId </span>
+                <span className="font-mono text-ink-900">{lastAiDecision.aiRunId}</span>
+              </div>
+              <div>
+                <span className="text-ink-500">provider </span>
+                <span className="font-mono text-ink-900">
+                  {lastAiDecision.providerMode} / {lastAiDecision.modelName}
+                </span>
+              </div>
+              <div>
+                <span className="text-ink-500">source </span>
+                <span className="font-mono text-ai-700 font-semibold">
+                  {lastAiDecision.source}
+                </span>
+              </div>
+            </div>
+            <p className="text-[11px] text-ink-600 mt-2 italic leading-snug">
+              {lastAiDecision.message}
+            </p>
+          </div>
+        ) : aiDecisionError ? (
+          <div className="mt-4 rounded-lg border border-danger-200 bg-danger-50 px-3 py-2.5 text-sm text-danger-700">
+            {aiDecisionError}
+          </div>
+        ) : !lastRun ? (
+          <div className="mt-4 rounded-lg border border-ink-200 bg-ink-50 px-3 py-2.5 text-xs text-ink-600">
+            Спершу виконайте «Запустити AI-аналіз» — без прогону немає що фіксувати.
+          </div>
+        ) : null}
       </section>
 
       {/* ---------- Legacy / mock-evidence sections (carried forward; unchanged) ---------- */}

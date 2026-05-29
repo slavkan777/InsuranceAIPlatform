@@ -1,6 +1,9 @@
 import { NavLink, Outlet, useParams } from 'react-router-dom';
+import { useEffect } from 'react';
 import clsx from '@/utils/clsx';
-import { goldenClaim } from '@/data/mock/claims';
+import { useAppDispatch, useAppSelector } from '@/app/hooks';
+import { loadClaimDetail } from '@/features/claims/claimWorkspaceSlice';
+import { selectClaimDetail } from '@/features/claims/claimWorkspaceSelectors';
 
 const tabs = [
   { to: '', label: 'Робоче місце', end: true },
@@ -15,8 +18,24 @@ const tabs = [
 
 export function ClaimShell() {
   const { claimId } = useParams();
-  const c = goldenClaim;
-  const id = claimId || c.id;
+  const dispatch = useAppDispatch();
+  const claimDetail = useAppSelector(selectClaimDetail);
+
+  // Fire the saga whenever the route claimId changes — this is the single
+  // source of truth for "which claim's data lives in Redux right now".
+  // Previously rootSaga.ts dispatched loadClaimDetail('CLM-1006') ONCE at boot
+  // and no route handler ever re-dispatched, so every /claims/:claimId route
+  // rendered CLM-1006 data regardless of URL (PostManualV4 bug).
+  useEffect(() => {
+    if (claimId) dispatch(loadClaimDetail(claimId));
+  }, [claimId, dispatch]);
+
+  // Breadcrumb labels use the loaded detail ONLY when it actually belongs to
+  // the current route claim. Until the saga resolves we show "…" — never the
+  // stale-claim customer/vehicle (that was the visible symptom of the bug).
+  const headerMatchesRoute = claimDetail?.id === claimId;
+  const customerLabel = headerMatchesRoute ? claimDetail!.customer : '…';
+  const vehicleLabel = headerMatchesRoute ? claimDetail!.vehicle : '…';
 
   return (
     <div className="flex flex-col gap-5 min-w-0">
@@ -25,11 +44,17 @@ export function ClaimShell() {
           ← Повернутись до списку
         </NavLink>
         <span className="text-ink-300">/</span>
-        <span className="font-semibold text-ink-900">{id}</span>
+        <span className="font-semibold text-ink-900" data-testid="claim-shell-id">
+          {claimId}
+        </span>
         <span className="text-ink-400">·</span>
-        <span className="text-ink-600">{c.customer}</span>
+        <span className="text-ink-600" data-testid="claim-shell-customer">
+          {customerLabel}
+        </span>
         <span className="text-ink-400">·</span>
-        <span className="text-ink-600">{c.vehicle}</span>
+        <span className="text-ink-600" data-testid="claim-shell-vehicle">
+          {vehicleLabel}
+        </span>
       </div>
 
       <nav className="bg-white border border-ink-100 rounded-xl px-1.5 py-1 shadow-card overflow-x-auto">

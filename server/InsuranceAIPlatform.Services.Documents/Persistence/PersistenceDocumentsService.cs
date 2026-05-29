@@ -80,4 +80,33 @@ public sealed class PersistenceDocumentsService : IDocumentsService
         await db.SaveChangesAsync(ct);
         return id;
     }
+
+    public async Task<string> UploadDocumentContentAsync(
+        string claimId,
+        string kind,
+        string title,
+        string? docType,
+        string content,
+        ActorContext actor,
+        CancellationToken ct = default)
+    {
+        await using var db = await _factory.CreateDbContextAsync(ct);
+        var id = $"doc-{Guid.NewGuid():N}";
+        var doc = new ClaimDocument
+        {
+            Id              = id,
+            ClaimId         = claimId,
+            Kind            = kind,
+            Title           = title,
+            Meta            = $"{content.Length} symbols",
+            Status          = "uploaded",
+            DocType         = docType ?? "document",
+            Content         = content,
+            UploadedAtUtc   = _clock.UtcNow,
+            UploadedByActor = $"{actor.ActorName} ({actor.ActorType})",
+        };
+        db.ClaimDocuments.Add(doc);
+        await db.SaveChangesAsync(ct);
+        return id;
+    }
 }

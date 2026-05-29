@@ -1,6 +1,9 @@
+import { useState } from 'react';
+import { useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { ProgressBar } from '@/components/ui/ProgressBar';
+import { Icon } from '@/components/ui/Icon';
 import { goldenClaim } from '@/data/mock/claims';
 import { damagePhotos as mockDamagePhotos, documentsChecklist as mockDocumentsChecklist } from '@/data/mock/claim-1006';
 import {
@@ -12,7 +15,11 @@ import {
   selectWorkspacePhotos,
   selectClaimDetail,
 } from '@/features/claims/claimWorkspaceSelectors';
-import { DeferredActionButton } from '@/components/ui/DeferredActionButton';
+import { RequestMissingDocumentModal } from '@/components/claim/RequestMissingDocumentModal';
+import { DocumentPreviewModal } from '@/components/claim/DocumentPreviewModal';
+import { UploadDocumentContentModal } from '@/components/claim/UploadDocumentContentModal';
+import { pushToast } from '@/features/ui/uiFeedbackSlice';
+import { insuranceApi } from '@/api/insuranceApi';
 import clsx from '@/utils/clsx';
 
 const statusIcon = {
@@ -23,6 +30,8 @@ const statusIcon = {
 
 export default function DocumentsPhotosPage() {
   const dispatch = useAppDispatch();
+  const { claimId: routeClaimId } = useParams<{ claimId: string }>();
+  const claimId = routeClaimId ?? 'CLM-1006';
 
   // --- store selectors (with mock fallback) ---
   const claimDetailFromStore = useAppSelector(selectClaimDetail);
@@ -36,8 +45,108 @@ export default function DocumentsPhotosPage() {
 
   const { selectedDocumentId, reviewedIds } = useAppSelector((s) => s.documents);
 
+  // --- modal state ---
+  const [requestDocOpen, setRequestDocOpen] = useState(false);
+  const [requestDocPrefill, setRequestDocPrefill] = useState<{
+    title: string;
+    reason: string;
+  }>({ title: '', reason: '' });
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewTitle, setPreviewTitle] = useState('Документ');
+  const [confirming, setConfirming] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
+
+  function openRequestForBumper() {
+    setRequestDocPrefill({
+      title: c.missingDocument || 'Додаткове фото пошкодження заднього бампера',
+      reason:
+        'AI блокує автоматичне погодження до отримання документа. Внутрішній запит для адʼюстера.',
+    });
+    setRequestDocOpen(true);
+  }
+
+  function openRequestForPhoto() {
+    const missing = damagePhotos.find((p) => p.missing);
+    setRequestDocPrefill({
+      title: missing
+        ? `Фото — ${missing.label}`
+        : 'Додаткове фото пошкодження',
+      reason: 'Потрібен повний фото-пакет для AI-аналізу.',
+    });
+    setRequestDocOpen(true);
+  }
+
+  function openPreviewForSelected() {
+    const sel = documentsChecklist.find((d) => d.id === selectedDocumentId);
+    setPreviewTitle(sel?.label ?? 'Документ');
+    setPreviewOpen(true);
+  }
+
+  async function confirmCurrentDocument() {
+    const sel = documentsChecklist.find((d) => d.id === selectedDocumentId);
+    if (!sel) {
+      dispatch(
+        pushToast({
+          tone: 'warning',
+          title: 'Оберіть документ у списку, щоб підтвердити його.',
+        }),
+      );
+      return;
+    }
+    setConfirming(true);
+    try {
+      const idempKey = `confirm-doc-${claimId}-${sel.id}-${Date.now()}`;
+      const result = await insuranceApi.createDocumentMetadata(
+        claimId,
+        {
+          kind: 'document-review',
+          title: `Підтверджено: ${sel.label}`,
+          docType: 'ReviewedConfirmation',
+        },
+        idempKey,
+      );
+      dispatch(toggleReviewed(sel.id));
+      dispatch(
+        pushToast({
+          tone: 'success',
+          title: 'Документ підтверджено.',
+          detail: `${result.message} cmd=${result.commandId.slice(0, 14)}…`,
+        }),
+      );
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Невідома помилка.';
+      dispatch(
+        pushToast({
+          tone: 'error',
+          title: 'Не вдалося підтвердити документ.',
+          detail: msg,
+        }),
+      );
+    } finally {
+      setConfirming(false);
+    }
+  }
+
   return (
     <div className="flex flex-col gap-5">
+      <RequestMissingDocumentModal
+        open={requestDocOpen}
+        onClose={() => setRequestDocOpen(false)}
+        claimId={claimId}
+        defaultTitle={requestDocPrefill.title}
+        defaultReason={requestDocPrefill.reason}
+      />
+      <DocumentPreviewModal
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+        documentTitle={previewTitle}
+      />
+      <UploadDocumentContentModal
+        open={uploadOpen}
+        onClose={() => setUploadOpen(false)}
+        claimId={claimId}
+      />
+
       <div className="card card-pad bg-gradient-to-r from-danger-500/5 to-warn-500/5 border-l-4 border-l-danger-500">
         <div className="flex flex-wrap items-start gap-3 justify-between">
           <div>
@@ -49,13 +158,28 @@ export default function DocumentsPhotosPage() {
               AI блокує автоматичне погодження до отримання документа.
             </p>
           </div>
-          <DeferredActionButton
-            hint="Запит документів у клієнта — потрібен backend write-гейт"
-            className="btn-primary"
-            badge="demo"
-          >
-            Запросити у клієнта
-          </DeferredActionButton>
+          <div className="flex flex-wrap gap-2 justify-end">
+            <button
+              type="button"
+              data-testid="upload-doc-open"
+              onClick={() => setUploadOpen(true)}
+              className="btn-secondary inline-flex items-center gap-1.5"
+              title="Завантажити синтетичний документ у БД (текстовий зміст, без файлу)"
+            >
+              <Icon name="upload" size={14} />
+              Завантажити документ
+            </button>
+            <button
+              type="button"
+              data-testid="request-missing-doc-open"
+              onClick={openRequestForBumper}
+              className="btn-primary inline-flex items-center gap-1.5"
+              title="Зафіксувати внутрішній запит на цей документ (без листа клієнту)"
+            >
+              <Icon name="check" size={14} />
+              Запит у журналі
+            </button>
+          </div>
         </div>
       </div>
 
@@ -95,7 +219,7 @@ export default function DocumentsPhotosPage() {
                       p.missing ? 'text-danger-600 font-semibold' : 'text-ink-500',
                     )}
                   >
-                    {p.missing ? 'Запросити у клієнта' : `AI conf ${p.confidence}%`}
+                    {p.missing ? 'Потрібен запит' : `AI conf ${p.confidence}%`}
                   </div>
                 </div>
               ))}
@@ -183,25 +307,34 @@ export default function DocumentsPhotosPage() {
           </section>
 
           <div className="grid gap-2">
-            <DeferredActionButton
-              hint="Запит фото у клієнта — потрібен backend write-гейт"
-              className="btn-primary"
-              badge="demo"
+            <button
+              type="button"
+              onClick={openRequestForPhoto}
+              className="btn-primary inline-flex items-center justify-center gap-1.5"
+              title="Внутрішній запит на додаткові фото (без листа клієнту)"
             >
-              Запросити фото
-            </DeferredActionButton>
-            <DeferredActionButton
-              hint="Перегляд оригіналу документа — read-only demo"
-              className="btn-secondary"
+              <Icon name="check" size={14} />
+              Запросити фото у журналі
+            </button>
+            <button
+              type="button"
+              onClick={openPreviewForSelected}
+              className="btn-secondary inline-flex items-center justify-center gap-1.5"
+              title="Перегляд деталей вибраного документа"
             >
-              Переглянути оригінал
-            </DeferredActionButton>
-            <DeferredActionButton
-              hint="Підтвердження документа — потрібен backend write-гейт"
-              className="btn-secondary"
+              <Icon name="file" size={14} />
+              Переглянути деталі
+            </button>
+            <button
+              type="button"
+              onClick={confirmCurrentDocument}
+              disabled={!selectedDocumentId || confirming}
+              className="btn-secondary inline-flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Зафіксувати підтвердження документа у БД + аудиті"
             >
-              Підтвердити документ
-            </DeferredActionButton>
+              <Icon name="check" size={14} />
+              {confirming ? 'Збереження…' : 'Підтвердити документ'}
+            </button>
           </div>
         </aside>
       </div>

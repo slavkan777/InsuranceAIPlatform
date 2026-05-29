@@ -5,7 +5,6 @@ import { demoSaga } from '@/features/demo/demoSaga';
 import { documentsSaga } from '@/features/documents/documentsSaga';
 import { claimsSaga } from '@/features/claims/claimsSaga';
 import { loadClaimsQueue, loadClaimsSummary } from '@/features/claims/claimsSlice';
-import { loadClaimDetail } from '@/features/claims/claimWorkspaceSlice';
 import { loadDemoScenario } from '@/features/demo/demoSlice';
 
 export function* rootSaga() {
@@ -16,9 +15,12 @@ export function* rootSaga() {
     fork(documentsSaga),
     fork(claimsSaga),
   ]);
-  // Kick off initial data loads; sagas are already listening by this point
+  // Kick off initial data loads that don't depend on a route param. Per-claim
+  // detail is loaded by ClaimShell's useEffect on route mount — boot-time
+  // `loadClaimDetail('CLM-1006')` was removed because it locked Redux state
+  // on CLM-1006 forever, causing every claim detail page to render CLM-1006
+  // data regardless of URL (PostManualV4 bug).
   yield put(loadClaimsQueue());
   yield put(loadClaimsSummary());
-  yield put(loadClaimDetail('CLM-1006'));
   yield put(loadDemoScenario());
 }

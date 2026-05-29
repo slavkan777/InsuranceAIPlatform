@@ -19,7 +19,7 @@ interface DeferredActionButtonProps {
  */
 export function DeferredActionButton({
   children,
-  hint = 'Доступно після backend write-гейту · read-only demo',
+  hint = 'З’явиться у наступному релізі.',
   className,
   badge,
 }: DeferredActionButtonProps) {

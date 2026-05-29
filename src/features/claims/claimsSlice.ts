@@ -41,12 +41,15 @@ const initialState: ClaimsState = {
   list: claimRows,
   selectedId: 'CLM-1006',
   search: '',
+  // All filters default to 'Усі' (any) so the list shows everything on first
+  // paint. Slava bug 4: a default eventType of 'ДТП' silently hid every claim
+  // whose event_type wasn't exactly 'ДТП' — including freshly created ones.
   filters: {
     status: 'Усі',
     risk: 'Усі',
-    eventType: 'ДТП',
+    eventType: 'Усі',
     aiStatus: 'Усі',
-    date: '7 днів',
+    date: 'Усі',
   },
   segment: 'Усі',
   loading: false,

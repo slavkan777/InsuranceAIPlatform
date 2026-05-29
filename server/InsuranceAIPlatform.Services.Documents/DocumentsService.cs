@@ -26,4 +26,9 @@ public sealed class DocumentsService : IDocumentsService
         string claimId, string kind, string title, string? docType,
         ActorContext actor, CancellationToken ct = default)
         => Task.FromResult(string.Empty); // no-op in skeleton
+
+    public Task<string> UploadDocumentContentAsync(
+        string claimId, string kind, string title, string? docType,
+        string content, ActorContext actor, CancellationToken ct = default)
+        => Task.FromResult(string.Empty); // no-op in skeleton
 }

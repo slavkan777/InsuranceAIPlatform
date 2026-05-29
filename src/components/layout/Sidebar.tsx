@@ -10,31 +10,39 @@ interface NavItem {
   disabled?: boolean;
 }
 
+// `end: true` is REQUIRED on every nav item that could otherwise prefix-match a
+// nested route. Without it, /claims would highlight at the same time as
+// /claims/CLM-1006/documents and the sidebar shows two active items (Slava bug 1).
+//
+// Each claim-detail sub-route also gets `end: true` so the parent "Робоче місце
+// випадку" link doesn't activate twice when you navigate to /claims/CLM-1006/documents.
 const navItems: NavItem[] = [
   { to: '/', label: 'Огляд', icon: 'grid', end: true },
-  { to: '/claims', label: 'Автострахові випадки', icon: 'list' },
+  { to: '/claims', label: 'Автострахові випадки', icon: 'list', end: true },
+  { to: '/customers', label: 'Каталог клієнтів', icon: 'users', end: true },
   { to: '/claims/CLM-1006', label: 'Робоче місце випадку', icon: 'layers', end: true },
-  { to: '/claims/CLM-1006/documents', label: 'Документи та фото', icon: 'file' },
-  { to: '/claims/CLM-1006/ai-evidence', label: 'AI-перевірки', icon: 'cpu' },
-  { to: '/claims/CLM-1006/risks', label: 'Ризики та перевірки', icon: 'gauge' },
-  { to: '/claims/CLM-1006/audit', label: 'Аудит і витрати', icon: 'receipt' },
-  { to: '/claims/CLM-1006/customer-vehicle', label: 'Клієнти', icon: 'users' },
-  { to: '/claims/CLM-1006/policy', label: 'Поліси', icon: 'clipboard' },
-  { to: '#vehicles', label: 'Транспортні засоби', icon: 'car', disabled: true },
-  { to: '#settings', label: 'Налаштування', icon: 'settings', disabled: true },
+  { to: '/claims/CLM-1006/documents', label: 'Документи та фото', icon: 'file', end: true },
+  { to: '/claims/CLM-1006/ai-evidence', label: 'AI-перевірки', icon: 'cpu', end: true },
+  { to: '/claims/CLM-1006/risks', label: 'Ризики та перевірки', icon: 'gauge', end: true },
+  { to: '/claims/CLM-1006/approval', label: 'Людське погодження', icon: 'userCheck', end: true },
+  { to: '/claims/CLM-1006/audit', label: 'Аудит і витрати', icon: 'receipt', end: true },
+  { to: '/claims/CLM-1006/customer-vehicle', label: 'Клієнти', icon: 'users', end: true },
+  { to: '/claims/CLM-1006/policy', label: 'Поліси', icon: 'clipboard', end: true },
+  { to: '#vehicles', label: 'Транспортні засоби (наступний реліз)', icon: 'car', disabled: true },
+  { to: '#settings', label: 'Налаштування (наступний реліз)', icon: 'settings', disabled: true },
 ];
 
 const systemStatus = [
   { id: 'ui', label: 'Інтерфейс', tone: 'good' as const, text: 'працює' },
-  { id: 'api', label: 'API', tone: 'demo' as const, text: 'mock' },
-  { id: 'ai', label: 'AI-модуль', tone: 'demo' as const, text: 'demo' },
-  { id: 'search', label: 'Пошуковий індекс', tone: 'demo' as const, text: 'mock' },
-  { id: 'storage', label: 'Сховище документів', tone: 'demo' as const, text: 'demo' },
+  { id: 'api', label: 'BFF / API', tone: 'good' as const, text: 'локально' },
+  { id: 'db', label: 'Локальна БД', tone: 'good' as const, text: 'LocalDB' },
+  { id: 'ai', label: 'AI (advisory)', tone: 'demo' as const, text: 'mock | DeepSeek opt-in' },
+  { id: 'storage', label: 'Сховище файлів', tone: 'demo' as const, text: 'метадані' },
 ];
 
 export function Sidebar() {
   return (
-    <aside className="w-72 shrink-0 bg-[#0b1220] text-ink-200 flex flex-col border-r border-white/5">
+    <aside data-testid="sidebar" className="w-72 shrink-0 bg-[#0b1220] text-ink-200 flex flex-col border-r border-white/5">
       <div className="px-5 py-5 flex items-center gap-3 border-b border-white/5">
         <div className="w-10 h-10 rounded-xl bg-brand-600 grid place-items-center font-bold text-white text-[15px] tracking-tight shadow-[0_4px_14px_rgba(37,99,235,0.45)] ring-1 ring-brand-400/40">
           IA
@@ -65,11 +73,12 @@ export function Sidebar() {
                 <NavLink
                   to={item.to}
                   end={item.end}
+                  data-testid={`sidebar-link-${item.to}`}
                   className={({ isActive }) =>
                     clsx(
                       'flex items-center gap-3 pl-3 pr-3 py-2 rounded-lg text-sm border-l-[3px] transition-colors focus-ring',
                       isActive
-                        ? 'bg-brand-600/20 text-white border-brand-500 font-medium'
+                        ? 'bg-brand-600/20 text-white border-brand-500 font-medium sidebar-link-active'
                         : 'text-ink-300 hover:bg-white/[0.05] border-transparent',
                     )
                   }
@@ -127,7 +136,7 @@ export function Sidebar() {
           </div>
           <div className="mt-3 pt-3 border-t border-white/10">
             <p className="text-[10px] leading-snug text-ink-500">
-              Frontend prototype · synthetic data · mocked AI workflow
+              Локальне демо · синтетичні дані · AI порадницький, людина вирішує
             </p>
           </div>
         </div>

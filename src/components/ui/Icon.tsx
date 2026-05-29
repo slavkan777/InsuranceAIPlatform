@@ -21,7 +21,15 @@ export type IconName =
   | 'search'
   | 'bell'
   | 'help'
-  | 'play';
+  | 'play'
+  | 'x'
+  | 'check'
+  | 'download'
+  | 'upload'
+  | 'plus'
+  | 'logOut'
+  | 'info'
+  | 'edit';
 
 const shapes: Record<IconName, ReactElement> = {
   car: (
@@ -150,6 +158,43 @@ const shapes: Record<IconName, ReactElement> = {
     </>
   ),
   play: <path d="M7 5l11 7-11 7z" fill="currentColor" stroke="none" />,
+  x: <path d="M6 6l12 12M18 6L6 18" />,
+  check: <path d="M5 12.5l4.5 4.5L19 7.5" />,
+  download: (
+    <>
+      <path d="M12 4v11" />
+      <path d="M7 11l5 5 5-5" />
+      <path d="M4 19h16" />
+    </>
+  ),
+  upload: (
+    <>
+      <path d="M12 20V9" />
+      <path d="M7 13l5-5 5 5" />
+      <path d="M4 4h16" />
+    </>
+  ),
+  plus: <path d="M12 5v14M5 12h14" />,
+  logOut: (
+    <>
+      <path d="M10 4H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h4" />
+      <path d="M15 8l4 4-4 4" />
+      <path d="M9 12h10" />
+    </>
+  ),
+  info: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <path d="M12 11v5" />
+      <circle cx="12" cy="8" r="0.6" fill="currentColor" />
+    </>
+  ),
+  edit: (
+    <>
+      <path d="M4 20h4l11-11-4-4L4 16z" />
+      <path d="M14 6l4 4" />
+    </>
+  ),
 };
 
 export function Icon({

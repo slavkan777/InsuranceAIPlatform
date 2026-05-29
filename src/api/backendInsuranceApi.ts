@@ -701,6 +701,105 @@ export const backendInsuranceApi = {
       {},
     );
   },
+
+  /**
+   * POST /api/claims/{claimId}/ai-decision
+   * Records an auditable AI decision derived from the latest AI run.
+   * Audit + outbox only. Never authorises payout, reject, fraud, or status change.
+   */
+  async recordAiDecision(
+    claimId: string,
+    body: import('./insuranceApi.types').RecordAiDecisionBody,
+    idempotencyKey?: string,
+  ): Promise<import('./insuranceApi.types').AiDecisionRecordedResult> {
+    return apiPost(`/api/claims/${claimId}/ai-decision`, body, idempotencyKey);
+  },
+
+  // -------------------------------------------------------------------------
+  // Synthetic-sandbox endpoints (gate V0.1: realistic local DB sandbox)
+  // -------------------------------------------------------------------------
+
+  /**
+   * POST /api/claims — creates a new synthetic claim row in the claims domain.
+   * No real PII, no real money. Customer is either supplied or auto-picked
+   * from the synthetic directory.
+   */
+  async createClaim(
+    body: import('./insuranceApi.types').CreateClaimBody,
+    idempotencyKey?: string,
+  ): Promise<import('./insuranceApi.types').CreateClaimResult> {
+    return apiPost(`/api/claims`, body, idempotencyKey);
+  },
+
+  /**
+   * POST /api/claims/{claimId}/documents/upload — DB-backed text content upload.
+   * No binary, no blob, no external storage. Plain nvarchar(max) field.
+   */
+  async uploadDocumentContent(
+    claimId: string,
+    body: import('./insuranceApi.types').UploadDocumentContentBody,
+    idempotencyKey?: string,
+  ): Promise<import('./insuranceApi.types').CommandResult> {
+    return apiPost(`/api/claims/${claimId}/documents/upload`, body, idempotencyKey);
+  },
+
+  /**
+   * POST /api/claims/{claimId}/payout-simulation — DB-only payout/settlement
+   * simulation. NEVER performs a real money transfer; SimulationOnly=true.
+   */
+  async createPayoutSimulation(
+    claimId: string,
+    body: import('./insuranceApi.types').CreatePayoutSimulationBody,
+    idempotencyKey?: string,
+  ): Promise<import('./insuranceApi.types').PayoutSimulationResultDto> {
+    return apiPost(`/api/claims/${claimId}/payout-simulation`, body, idempotencyKey);
+  },
+
+  /** GET /api/claims/{claimId}/payout-simulations — list of simulations for a claim. */
+  async listPayoutSimulations(
+    claimId: string,
+  ): Promise<import('./insuranceApi.types').PayoutSimulationSummaryDto[]> {
+    return apiFetch(`/api/claims/${claimId}/payout-simulations`);
+  },
+
+  /** GET /api/customers — paginated synthetic customer directory. */
+  async listCustomers(
+    search?: string | null,
+    page = 1,
+    pageSize = 25,
+  ): Promise<import('./insuranceApi.types').CustomerListResultDto> {
+    const params = new URLSearchParams();
+    if (search) params.set('search', search);
+    params.set('page', String(page));
+    params.set('pageSize', String(pageSize));
+    return apiFetch(`/api/customers?${params.toString()}`);
+  },
+
+  /** GET /api/customers/{customerId} — single synthetic customer by id. */
+  async getCustomerById(
+    customerId: string,
+  ): Promise<import('./insuranceApi.types').CustomerSummaryDto | null> {
+    try {
+      return await apiFetch<import('./insuranceApi.types').CustomerSummaryDto>(
+        `/api/customers/${customerId}`,
+      );
+    } catch (e) {
+      if (e instanceof BackendApiError && e.status === 404) return null;
+      throw e;
+    }
+  },
+
+  /**
+   * POST /api/customers — creates a new synthetic customer row. ID is allocated
+   * server-side (next free CUST-T0XXX after the seed). Row is always
+   * IsSynthetic=true; UI never has a path to write real PII.
+   */
+  async createCustomer(
+    body: import('./insuranceApi.types').CreateCustomerBody,
+    idempotencyKey?: string,
+  ): Promise<import('./insuranceApi.types').CreateCustomerResult> {
+    return apiPost(`/api/customers`, body, idempotencyKey);
+  },
 };
 
 // ---------------------------------------------------------------------------

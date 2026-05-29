@@ -2,7 +2,9 @@ using InsuranceAIPlatform.Api.Middleware;
 using InsuranceAIPlatform.Api.Services;
 using InsuranceAIPlatform.BuildingBlocks;
 using InsuranceAIPlatform.Services.Claims;
+using InsuranceAIPlatform.Services.Claims.Persistence;
 using InsuranceAIPlatform.Services.CustomersPolicies;
+using InsuranceAIPlatform.Services.CustomersPolicies.Persistence;
 using InsuranceAIPlatform.Services.Documents;
 using InsuranceAIPlatform.Services.Documents.Persistence;
 using InsuranceAIPlatform.Services.AiAnalysis;
@@ -37,7 +39,10 @@ var connectionString =
 builder.Services.AddSingleton<IClock, SystemClock>();
 
 // In-memory claim service — singleton, deterministic, no DB dependency.
-builder.Services.AddSingleton<IClaimReadService, InMemoryClaimReadService>();
+// HybridClaimReadService wraps it and additionally pulls DB-only synthetic claims
+// created via POST /api/claims (see ClaimWriteController).
+builder.Services.AddSingleton<InMemoryClaimReadService>();
+builder.Services.AddSingleton<IClaimReadService, HybridClaimReadService>();
 
 // Internal service skeletons (Stage-2): registered in-process behind the BFF.
 // Each is a boundary marker only — no AI provider, no data ownership yet.
@@ -59,6 +64,8 @@ builder.Services
 builder.Services.AddApprovalPersistence(connectionString);
 builder.Services.AddDocumentsPersistence(connectionString);
 builder.Services.AddAuditCostPersistence(connectionString);
+builder.Services.AddClaimsPersistence(connectionString);
+builder.Services.AddCustomersPoliciesPersistence(connectionString);
 
 // -----------------------------------------------------------------------
 // AI provider mode selection.

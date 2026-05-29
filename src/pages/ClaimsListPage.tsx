@@ -1,9 +1,12 @@
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { MetricCard } from '@/components/ui/MetricCard';
 import { StatusPill } from '@/components/ui/StatusPill';
 import { SectionHeader } from '@/components/ui/SectionHeader';
-import { DeferredActionButton } from '@/components/ui/DeferredActionButton';
+import { Icon } from '@/components/ui/Icon';
+import { NewClaimModal } from '@/components/claim/NewClaimModal';
+import { ImportDocumentMetadataModal } from '@/components/claim/ImportDocumentMetadataModal';
 import { claimRows } from '@/data/mock/claims';
 import { claimsListMetrics } from '@/data/mock/dashboard';
 import {
@@ -11,6 +14,7 @@ import {
   setSegment,
   setFilter,
   setSelected,
+  loadClaimsQueue,
 } from '@/features/claims/claimsSlice';
 import {
   selectClaimsState,
@@ -18,7 +22,10 @@ import {
   selectClaimsApiMode,
   selectClaimsError,
 } from '@/features/claims/claimsSelectors';
+import { pushToast } from '@/features/ui/uiFeedbackSlice';
+import { buildCsv, downloadBlob, localDateStamp } from '@/utils/csv';
 import clsx from '@/utils/clsx';
+import type { ClaimRow } from '@/types';
 
 export default function ClaimsListPage() {
   const navigate = useNavigate();
@@ -28,13 +35,54 @@ export default function ClaimsListPage() {
   // the static mock when the store list is empty so MOCK MODE stays byte-identical
   // to the accepted baseline.
   const storeRows = useAppSelector(selectClaimsQueue);
-  const rows = storeRows && storeRows.length > 0 ? storeRows : claimRows;
+  const sourceRows = storeRows && storeRows.length > 0 ? storeRows : claimRows;
   const apiMode = useAppSelector(selectClaimsApiMode);
   const claimsError = useAppSelector(selectClaimsError);
+  const [newClaimOpen, setNewClaimOpen] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+
+  // Refresh the queue from the backend on every mount and every time a refresh
+  // is signalled (e.g. after a successful create). Without this, mock rows
+  // persist forever in backend mode and Slava bug 4 ("created claim not in
+  // search") reproduces.
+  useEffect(() => {
+    dispatch(loadClaimsQueue());
+  }, [dispatch]);
+
+  // Apply UI search/filter/segment to the source rows. Previously the table
+  // rendered `rows.map(...)` unfiltered — the search box and dropdowns did
+  // literally nothing. This is the actual fix for Slava bug 4.
+  const rows = useMemo(() => filterClaimRows(sourceRows, search, segment, filters),
+    [sourceRows, search, segment, filters]);
 
   function openClaim(id: string) {
     dispatch(setSelected(id));
     navigate(`/claims/${id}`);
+  }
+
+  function handleExportCsv() {
+    const csv = buildCsv<ClaimRow>(rows, [
+      { header: 'ClaimId', accessor: (r) => r.id },
+      { header: 'Customer', accessor: (r) => r.customer },
+      { header: 'Vehicle', accessor: (r) => r.vehicle },
+      { header: 'EventType', accessor: (r) => r.eventType },
+      { header: 'Status', accessor: (r) => r.status },
+      { header: 'Documents', accessor: (r) => r.documentsCount },
+      { header: 'AiStatus', accessor: (r) => r.aiStatus },
+      { header: 'Risk', accessor: (r) => r.risk },
+      { header: 'Sla', accessor: (r) => r.sla },
+      { header: 'NextAction', accessor: (r) => r.nextAction },
+      { header: 'Updated', accessor: (r) => r.updated },
+    ]);
+    const filename = `claims-${localDateStamp()}.csv`;
+    downloadBlob(csv, filename);
+    dispatch(
+      pushToast({
+        tone: 'success',
+        title: `Експортовано ${rows.length} рядків.`,
+        detail: `Файл ${filename} збережено у завантаженнях браузера.`,
+      }),
+    );
   }
 
   return (
@@ -44,36 +92,60 @@ export default function ClaimsListPage() {
         subtitle="53 активних · 8 з високим ризиком · 5 чекають людського рішення"
         actions={
           <>
-            <DeferredActionButton
-              className="btn-secondary"
-              hint="Експорт CSV — доступний після backend-гейту"
-              badge="demo"
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              className="btn-secondary inline-flex items-center gap-1.5"
+              title="Експортувати поточний список у CSV (локально, у вашому браузері)"
             >
+              <Icon name="download" size={14} />
               Експорт CSV
-            </DeferredActionButton>
-            <DeferredActionButton
-              className="btn-secondary"
-              hint="Імпорт документів — потрібен backend write-гейт"
-              badge="demo"
+            </button>
+            <button
+              type="button"
+              onClick={() => setImportOpen(true)}
+              className="btn-secondary inline-flex items-center gap-1.5"
+              title="Імпорт метаданих документа (без бінарного завантаження)"
             >
-              Імпорт документів
-            </DeferredActionButton>
-            <DeferredActionButton
-              className="btn-primary"
-              hint="Створення кейсу — потрібен backend write-гейт"
-              badge="demo"
+              <Icon name="upload" size={14} />
+              Імпорт документа
+            </button>
+            <button
+              type="button"
+              data-testid="new-claim-open"
+              onClick={() => setNewClaimOpen(true)}
+              className="btn-primary inline-flex items-center gap-1.5"
+              title="Створення нового синтетичного кейсу (локальний sandbox)"
             >
-              + Новий випадок
-            </DeferredActionButton>
+              <Icon name="plus" size={14} />
+              Новий випадок
+            </button>
           </>
         }
       />
+
+      <NewClaimModal
+        open={newClaimOpen}
+        onClose={() => {
+          setNewClaimOpen(false);
+          // After a successful (or cancelled) close, refresh the queue. Cheap
+          // and idempotent — the saga is `takeLatest` so duplicate dispatches
+          // get cancelled cleanly.
+          dispatch(loadClaimsQueue());
+        }}
+      />
+      <ImportDocumentMetadataModal
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+      />
+      <div data-testid="claims-list-page" />
 
       <section className="card card-pad grid md:grid-cols-6 gap-3">
         <label className="flex flex-col gap-1 md:col-span-2">
           <span className="metric-label">Пошук</span>
           <input
             type="search"
+            data-testid="claims-search"
             value={search}
             onChange={(e) => dispatch(setSearch(e.target.value))}
             placeholder="Toyota Camry, Роберт Джонсон..."
@@ -159,10 +231,18 @@ export default function ClaimsListPage() {
                     <th className="table-th">Наступна дія</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-ink-100">
+                <tbody className="divide-y divide-ink-100" data-testid="claims-table-body">
+                  {rows.length === 0 && (
+                    <tr>
+                      <td colSpan={9} className="table-td text-center text-ink-500 py-8" data-testid="claims-empty">
+                        Жодного кейсу не знайдено за поточними фільтрами.
+                      </td>
+                    </tr>
+                  )}
                   {rows.map((row) => (
                     <tr
                       key={row.id}
+                      data-testid={`claim-row-${row.id}`}
                       onClick={() => openClaim(row.id)}
                       className="cursor-pointer hover:bg-ink-50 transition-colors"
                     >
@@ -247,4 +327,49 @@ export default function ClaimsListPage() {
       </div>
     </div>
   );
+}
+
+/**
+ * Applies the visible UI controls (search input, filter dropdowns, segment
+ * chips) to the source row set. Previously the table rendered `sourceRows`
+ * directly — the search box and dropdowns had no effect on what was shown.
+ *
+ * Filter semantics:
+ *   - search: case-insensitive substring over id / customer / vehicle
+ *   - status: exact match unless 'Усі'
+ *   - risk:   exact match unless 'Усі'
+ *   - eventType: exact match unless 'Усі'
+ *   - aiStatus:  exact match unless 'Усі'
+ *   - date:   no-op for now (string-formatted relative time is not filterable
+ *             without the original ISO timestamp; tracked as Phase-2 polish)
+ *
+ * Segment semantics:
+ *   - 'Усі'           : no extra filter
+ *   - 'ДТП'           : eventType === 'ДТП'
+ *   - 'Високий ризик'  : risk === 'Високий'
+ *   - 'Чекає AI'       : aiStatus === 'Обробляється'
+ *   - 'Чекає рішення'  : status === 'В роботі'
+ */
+export function filterClaimRows(
+  sourceRows: ClaimRow[],
+  search: string,
+  segment: 'Усі' | 'ДТП' | 'Високий ризик' | 'Чекає AI' | 'Чекає рішення',
+  filters: { status: string; risk: string; eventType: string; aiStatus: string; date: string },
+): ClaimRow[] {
+  const q = (search ?? '').trim().toLowerCase();
+  return sourceRows.filter((r) => {
+    if (q.length > 0) {
+      const hay = `${r.id} ${r.customer} ${r.vehicle}`.toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    if (filters.status && filters.status !== 'Усі' && r.status !== filters.status) return false;
+    if (filters.risk && filters.risk !== 'Усі' && r.risk !== filters.risk) return false;
+    if (filters.eventType && filters.eventType !== 'Усі' && r.eventType !== filters.eventType) return false;
+    if (filters.aiStatus && filters.aiStatus !== 'Усі' && r.aiStatus !== filters.aiStatus) return false;
+    if (segment === 'ДТП' && r.eventType !== 'ДТП') return false;
+    if (segment === 'Високий ризик' && r.risk !== 'Високий') return false;
+    if (segment === 'Чекає AI' && r.aiStatus !== 'Обробляється') return false;
+    if (segment === 'Чекає рішення' && r.status !== 'В роботі') return false;
+    return true;
+  });
 }

@@ -8,6 +8,7 @@ import type {
   CreatePayoutSimulationBody,
   PayoutSimulationResultDto,
 } from '@/api/insuranceApi.types';
+import { useI18n } from '@/i18n/useI18n';
 
 interface PayoutSimulationModalProps {
   open: boolean;
@@ -20,12 +21,6 @@ interface PayoutSimulationModalProps {
   defaultDecisionSource?: 'Human' | 'AI-advisory' | 'Hybrid';
   onCreated?: (result: PayoutSimulationResultDto) => void;
 }
-
-const SOURCE_OPTIONS = [
-  { value: 'Human', label: 'Людське рішення' },
-  { value: 'AI-advisory', label: 'AI-порадницьке (підтверджено людиною)' },
-  { value: 'Hybrid', label: 'Гібридне (людина + AI)' },
-];
 
 /**
  * Creates a DB-only payout/settlement simulation row. NO real money transfer.
@@ -42,7 +37,15 @@ export function PayoutSimulationModal({
   defaultDecisionSource = 'Human',
   onCreated,
 }: PayoutSimulationModalProps) {
+  const { t } = useI18n();
   const dispatch = useAppDispatch();
+
+  const SOURCE_OPTIONS = [
+    { value: 'Human', label: t.ui.payoutSourceHuman },
+    { value: 'AI-advisory', label: t.ui.payoutSourceAiAdvisory },
+    { value: 'Hybrid', label: t.ui.payoutSourceHybrid },
+  ];
+
   const [amount, setAmount] = useState(String(defaultAmount));
   const [deductible, setDeductible] = useState(String(defaultDeductible));
   const [currency, setCurrency] = useState('USD');
@@ -70,11 +73,11 @@ export function PayoutSimulationModal({
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (amountNum <= 0) {
-      setError('Сума виплати має бути додатня.');
+      setError(t.ui.payoutSimErrorAmountPositive);
       return;
     }
     if (deductibleNum < 0) {
-      setError('Франшиза не може бути від’ємна.');
+      setError(t.ui.payoutSimErrorDeductibleNegative);
       return;
     }
     setSubmitting(true);
@@ -93,7 +96,7 @@ export function PayoutSimulationModal({
       dispatch(
         pushToast({
           tone: 'success',
-          title: `Симуляція виплати #${result.simulationId} створена.`,
+          title: `${t.ui.payoutSimToastTitle} #${result.simulationId}`,
           detail:
             `${result.amount} ${result.currency} (net ${result.netPayoutAmount}). ` +
             'SimulationOnly=true; реальної виплати не виконано.',
@@ -113,8 +116,8 @@ export function PayoutSimulationModal({
       open={open}
       onClose={() => !submitting && onClose()}
       size="lg"
-      title="Симуляція виплати (DB-only)"
-      description="Створює запис у approval.PayoutSimulations з прапором SimulationOnly=true. Реальної виплати, листа клієнту або зміни статусу кейсу не виконується."
+      title={t.ui.payoutSimTitle}
+      description={t.ui.payoutSimDescription}
       footer={
         <>
           <button
@@ -124,7 +127,7 @@ export function PayoutSimulationModal({
             disabled={submitting}
             className="btn-ghost px-3 py-1.5 text-sm disabled:opacity-50"
           >
-            Скасувати
+            {t.ui.payoutSimCancel}
           </button>
           <button
             type="submit"
@@ -134,7 +137,7 @@ export function PayoutSimulationModal({
             className="btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-sm disabled:opacity-50"
           >
             <Icon name="check" size={14} />
-            {submitting ? 'Створення…' : 'Зафіксувати симуляцію'}
+            {submitting ? t.ui.payoutSimSubmitting : t.ui.payoutSimSubmit}
           </button>
         </>
       }
@@ -143,7 +146,7 @@ export function PayoutSimulationModal({
         <div className="grid sm:grid-cols-3 gap-3">
           <div>
             <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-              Сума виплати *
+              {t.ui.payoutSimLabelAmount}
             </label>
             <input
               type="number"
@@ -159,7 +162,7 @@ export function PayoutSimulationModal({
           </div>
           <div>
             <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-              Франшиза
+              {t.ui.payoutSimLabelDeductible}
             </label>
             <input
               type="number"
@@ -173,7 +176,7 @@ export function PayoutSimulationModal({
           </div>
           <div>
             <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-              Валюта
+              {t.ui.payoutSimLabelCurrency}
             </label>
             <select
               value={currency}
@@ -188,14 +191,14 @@ export function PayoutSimulationModal({
           </div>
         </div>
         <div className="rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 flex items-center justify-between text-sm">
-          <span className="text-brand-800 font-semibold">Чиста виплата (net):</span>
+          <span className="text-brand-800 font-semibold">{t.ui.payoutSimNetLabel}</span>
           <span className="font-mono text-lg font-bold text-brand-700">
             {net.toLocaleString('uk-UA', { maximumFractionDigits: 2 })} {currency}
           </span>
         </div>
         <div>
           <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-            Джерело рішення
+            {t.ui.payoutSimLabelDecisionSource}
           </label>
           <select
             value={decisionSource}
@@ -209,20 +212,20 @@ export function PayoutSimulationModal({
           </select>
           {defaultSourceAiRunId ? (
             <p className="text-[10px] text-ink-500 mt-1">
-              Пов’язаний AI run: <span className="font-mono">{defaultSourceAiRunId}</span>
+              {t.ui.payoutSimLinkedRun} <span className="font-mono">{defaultSourceAiRunId}</span>
             </p>
           ) : null}
         </div>
         <div>
           <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-            Нотатки (опціонально)
+            {t.ui.payoutSimLabelNotes}
           </label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             disabled={submitting}
             rows={2}
-            placeholder="Контекст рішення, посилання на докази, рівень впевненості..."
+            placeholder={t.ui.payoutSimPlaceholderNotes}
             className="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm focus-ring resize-none"
           />
         </div>
@@ -233,11 +236,7 @@ export function PayoutSimulationModal({
         ) : null}
         <div className="rounded-lg border border-warn-200 bg-warn-50 px-3 py-2.5 text-[11px] text-warn-800 leading-snug flex items-start gap-2">
           <span className="mt-0.5 shrink-0"><Icon name="shield" size={12} /></span>
-          <span>
-            <strong>Локальна симуляція.</strong> SimulationOnly=true гарантовано на рівні
-            схеми. Жодних реальних транзакцій, жодних повідомлень клієнту, жодних змін статусу
-            кейсу. Аудит-журнал і outbox-event записуються для трасування.
-          </span>
+          <span>{t.ui.payoutSimSandboxNote}</span>
         </div>
       </form>
     </Modal>

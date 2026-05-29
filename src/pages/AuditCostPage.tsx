@@ -7,6 +7,7 @@ import {
   selectWorkspaceAudit,
   selectWorkspaceRisks,
 } from '@/features/claims/claimWorkspaceSelectors';
+import { useI18n } from '@/i18n/useI18n';
 import clsx from '@/utils/clsx';
 
 const resultTone = {
@@ -23,6 +24,8 @@ const stepDotTone: Record<string, string> = {
 };
 
 export default function AuditCostPage() {
+  const { t } = useI18n();
+
   // --- store selectors (with mock fallback) ---
   const claimDetailFromStore = useAppSelector(selectClaimDetail);
   const c = claimDetailFromStore ?? goldenClaim;
@@ -40,27 +43,29 @@ export default function AuditCostPage() {
   const risksFromStore = useAppSelector(selectWorkspaceRisks);
   const aiPipelineSteps = risksFromStore?.pipeline ?? mockAiPipelineSteps;
 
+  const runMetrics = [
+    { label: t.audit.metricRunId, value: runId, mono: true },
+    { label: t.audit.metricTraceId, value: traceId, mono: true },
+    { label: t.audit.metricModel, value: model },
+    { label: t.audit.metricTokens, value: tokens.toLocaleString('uk-UA'), mono: true },
+    { label: t.audit.metricCost, value: `$${cost.toFixed(4)}`, mono: true },
+    { label: t.audit.metricDuration, value: `${durationSec} с`, mono: true },
+  ];
+
   return (
     <div className="flex flex-col gap-5">
       <section className="card card-pad flex flex-wrap items-center gap-x-6 gap-y-3 justify-between">
         <div>
-          <h2 className="text-xl font-bold text-ink-900">Аудит і витрати AI-запуску</h2>
+          <h2 className="text-xl font-bold text-ink-900">{t.audit.pageHeading}</h2>
           <p className="text-sm text-ink-500 mt-1">
-            {c.id} · повний слід виконання · governance evidence
+            {c.id} · {t.audit.pageSubheadingTrail}
           </p>
         </div>
-        <StatusPill tone="good">Запуск успішний</StatusPill>
+        <StatusPill tone="good">{t.audit.runSuccess}</StatusPill>
       </section>
 
       <section className="grid grid-cols-2 lg:grid-cols-6 gap-3">
-        {[
-          { label: 'Run ID', value: runId, mono: true },
-          { label: 'Trace ID', value: traceId, mono: true },
-          { label: 'Модель', value: model },
-          { label: 'Токени', value: tokens.toLocaleString('uk-UA'), mono: true },
-          { label: 'Вартість', value: `$${cost.toFixed(4)}`, mono: true },
-          { label: 'Час', value: `${durationSec} с`, mono: true },
-        ].map((item) => (
+        {runMetrics.map((item) => (
           <div key={item.label} className="card card-pad">
             <div className="metric-label">{item.label}</div>
             <div
@@ -76,7 +81,7 @@ export default function AuditCostPage() {
       </section>
 
       <section className="card card-pad">
-        <div className="section-title mb-4">Хід AI-запуску</div>
+        <div className="section-title mb-4">{t.audit.sectionPipeline}</div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-2">
           {aiPipelineSteps.map((step) => (
             <div key={step.id} className="rounded-xl border border-ink-100 bg-ink-50 p-3 text-center">
@@ -95,16 +100,16 @@ export default function AuditCostPage() {
       <div className="grid xl:grid-cols-3 gap-5">
         <section className="card overflow-hidden xl:col-span-2">
           <div className="px-5 py-4 border-b border-ink-100">
-            <div className="section-title">Audit trail</div>
-            <p className="text-sm text-ink-500 mt-0.5">Усі дії з повним слідом</p>
+            <div className="section-title">{t.audit.sectionAuditTrail}</div>
+            <p className="text-sm text-ink-500 mt-0.5">{t.audit.auditTrailSubtitle}</p>
           </div>
           <table className="w-full">
             <thead className="bg-ink-50/80">
               <tr>
-                <th className="table-th">Час</th>
-                <th className="table-th">Актор</th>
-                <th className="table-th">Дія</th>
-                <th className="table-th text-right">Рез.</th>
+                <th className="table-th">{t.audit.thTime}</th>
+                <th className="table-th">{t.audit.thActor}</th>
+                <th className="table-th">{t.audit.thAction}</th>
+                <th className="table-th text-right">{t.audit.thResult}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-100">
@@ -126,7 +131,7 @@ export default function AuditCostPage() {
 
         <aside className="flex flex-col gap-5">
           <section className="card card-pad">
-            <div className="section-title mb-3">Розподіл витрат</div>
+            <div className="section-title mb-3">{t.audit.sectionCostBreakdown}</div>
             <ul className="space-y-2">
               {costDistribution.map((row) => {
                 const value = parseFloat(row.value.replace('$', ''));
@@ -150,24 +155,26 @@ export default function AuditCostPage() {
           </section>
 
           <section className="card card-pad bg-gradient-to-br from-good-500/5 to-white border-good-200">
-            <div className="metric-label text-good-600">Governance</div>
+            <div className="metric-label text-good-600">{t.audit.governanceLabel}</div>
             <h4 className="text-sm font-semibold text-ink-900 mt-1">
-              AI підпорядковується процедурі
+              {t.audit.governanceHeading}
             </h4>
             <ul className="text-sm text-ink-700 mt-2 space-y-1">
               <li>
-                · Авто-погодження:{' '}
-                <span className="font-semibold text-danger-600">НЕ ДОЗВОЛЕНО</span>
+                · {t.audit.govAutoApproveLabel}{' '}
+                <span className="font-semibold text-danger-600">{t.audit.govAutoApproveValue}</span>
               </li>
               <li>
-                · Людська перевірка:{' '}
-                <span className="font-semibold text-good-600">ОБОВ'ЯЗКОВА</span>
+                · {t.audit.govHumanReviewLabel}{' '}
+                <span className="font-semibold text-good-600">{t.audit.govHumanReviewValue}</span>
               </li>
               <li>
-                · Логи рішень: <span className="font-semibold text-good-600">ТАК</span>
+                · {t.audit.govDecisionLogsLabel}{' '}
+                <span className="font-semibold text-good-600">{t.audit.govDecisionLogsValue}</span>
               </li>
               <li>
-                · Replay: <span className="font-semibold text-good-600">ТАК</span>
+                · {t.audit.govReplayLabel}{' '}
+                <span className="font-semibold text-good-600">{t.audit.govReplayValue}</span>
               </li>
             </ul>
           </section>

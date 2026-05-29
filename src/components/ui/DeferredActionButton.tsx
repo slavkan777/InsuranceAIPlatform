@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import clsx from '@/utils/clsx';
+import { useI18n } from '@/i18n/useI18n';
 
 interface DeferredActionButtonProps {
   children: ReactNode;
@@ -19,16 +20,19 @@ interface DeferredActionButtonProps {
  */
 export function DeferredActionButton({
   children,
-  hint = 'З’явиться у наступному релізі.',
+  hint,
   className,
   badge,
 }: DeferredActionButtonProps) {
+  const { t } = useI18n();
+  const resolvedHint = hint ?? t.ui.deferredHint;
+
   return (
     <button
       type="button"
       disabled
       aria-disabled="true"
-      title={hint}
+      title={resolvedHint}
       className={clsx('cursor-not-allowed opacity-60', className)}
     >
       {children}

@@ -5,6 +5,7 @@ import { Icon } from '@/components/ui/Icon';
 import { pushToast } from '@/features/ui/uiFeedbackSlice';
 import { insuranceApi } from '@/api/insuranceApi';
 import type { CreateCustomerBody, CreateCustomerResult } from '@/api/insuranceApi.types';
+import { useI18n } from '@/i18n/useI18n';
 
 interface CreateCustomerModalProps {
   open: boolean;
@@ -21,6 +22,7 @@ interface CreateCustomerModalProps {
  */
 export function CreateCustomerModal({ open, onClose, onCreated }: CreateCustomerModalProps) {
   const dispatch = useAppDispatch();
+  const { t } = useI18n();
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -48,11 +50,11 @@ export function CreateCustomerModal({ open, onClose, onCreated }: CreateCustomer
     e.preventDefault();
     const trimmed = fullName.trim();
     if (trimmed.length === 0) {
-      setError('Заповніть повне ім’я (синтетичне, без реальних даних).');
+      setError(t.customers.errorNameRequired);
       return;
     }
     if (trimmed.length > 200) {
-      setError('Повне ім’я має бути не довше 200 символів.');
+      setError(t.customers.errorNameTooLong);
       return;
     }
     setSubmitting(true);
@@ -70,7 +72,7 @@ export function CreateCustomerModal({ open, onClose, onCreated }: CreateCustomer
       dispatch(
         pushToast({
           tone: 'success',
-          title: `Створено клієнта ${result.customerId}.`,
+          title: `${t.customers.toastCreatedPrefix} ${result.customerId}${t.customers.toastCreatedSuffix}`,
           detail: result.message,
         }),
       );
@@ -78,7 +80,7 @@ export function CreateCustomerModal({ open, onClose, onCreated }: CreateCustomer
       onClose();
       onCreated?.(result);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Невідома помилка.';
+      const msg = err instanceof Error ? err.message : t.customers.errorUnknown;
       setError(msg);
       setSubmitting(false);
     }
@@ -89,8 +91,8 @@ export function CreateCustomerModal({ open, onClose, onCreated }: CreateCustomer
       open={open}
       onClose={handleClose}
       size="md"
-      title="Створити нового синтетичного клієнта"
-      description="Створює новий рядок у customers_policies.SyntheticCustomers з IsSynthetic=true. Локальний sandbox — без реальних персональних даних."
+      title={t.customers.modalTitle}
+      description={t.customers.modalDescription}
       footer={
         <>
           <button
@@ -100,7 +102,7 @@ export function CreateCustomerModal({ open, onClose, onCreated }: CreateCustomer
             disabled={submitting}
             className="btn-ghost px-3 py-1.5 text-sm disabled:opacity-50"
           >
-            Скасувати
+            {t.customers.cancelButton}
           </button>
           <button
             type="submit"
@@ -110,7 +112,7 @@ export function CreateCustomerModal({ open, onClose, onCreated }: CreateCustomer
             className="btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-sm disabled:opacity-50"
           >
             <Icon name="plus" size={14} />
-            {submitting ? 'Створення…' : 'Створити клієнта'}
+            {submitting ? t.customers.submitButtonBusy : t.customers.submitButtonIdle}
           </button>
         </>
       }
@@ -118,7 +120,7 @@ export function CreateCustomerModal({ open, onClose, onCreated }: CreateCustomer
       <form id="create-customer-form" onSubmit={handleSubmit} className="space-y-3 text-sm">
         <div>
           <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-            Повне імʼя *
+            {t.customers.labelFullName}
           </label>
           <input
             type="text"
@@ -127,14 +129,14 @@ export function CreateCustomerModal({ open, onClose, onCreated }: CreateCustomer
             onChange={(e) => setFullName(e.target.value)}
             disabled={submitting}
             required
-            placeholder="Synthetic Customer Smith"
+            placeholder={t.customers.placeholderFullName}
             className="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm focus-ring"
           />
         </div>
         <div className="grid sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-              Email (опц.)
+              {t.customers.labelEmail}
             </label>
             <input
               type="email"
@@ -142,13 +144,13 @@ export function CreateCustomerModal({ open, onClose, onCreated }: CreateCustomer
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={submitting}
-              placeholder="testuser@synthetic.invalid"
+              placeholder={t.customers.placeholderEmail}
               className="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm focus-ring font-mono"
             />
           </div>
           <div>
             <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-              Телефон (опц.)
+              {t.customers.labelPhone}
             </label>
             <input
               type="text"
@@ -156,14 +158,14 @@ export function CreateCustomerModal({ open, onClose, onCreated }: CreateCustomer
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               disabled={submitting}
-              placeholder="+380501234567"
+              placeholder={t.customers.placeholderPhone}
               className="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm focus-ring font-mono"
             />
           </div>
         </div>
         <div>
           <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-            Адреса (опц.)
+            {t.customers.labelAddress}
           </label>
           <input
             type="text"
@@ -171,7 +173,7 @@ export function CreateCustomerModal({ open, onClose, onCreated }: CreateCustomer
             value={addressLine}
             onChange={(e) => setAddressLine(e.target.value)}
             disabled={submitting}
-            placeholder="Київ, вул. Грушевського 5"
+            placeholder={t.customers.placeholderAddress}
             className="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm focus-ring"
           />
         </div>
@@ -182,10 +184,7 @@ export function CreateCustomerModal({ open, onClose, onCreated }: CreateCustomer
         ) : null}
         <div className="rounded-lg border border-ink-200 bg-ink-50 px-3 py-2 text-[11px] text-ink-600 leading-snug flex items-start gap-2">
           <span className="mt-0.5 shrink-0"><Icon name="shield" size={12} /></span>
-          <span>
-            ID присвоюється сервером (CUST-T0XXX, наступний після сидованого діапазону).
-            Запис позначається IsSynthetic=true; UI ніколи не пише реальні PII.
-          </span>
+          <span>{t.customers.idHintText}</span>
         </div>
       </form>
     </Modal>

@@ -6,20 +6,12 @@ import { Icon } from '@/components/ui/Icon';
 import { pushToast } from '@/features/ui/uiFeedbackSlice';
 import { insuranceApi } from '@/api/insuranceApi';
 import type { CreateClaimBody } from '@/api/insuranceApi.types';
+import { useI18n } from '@/i18n/useI18n';
 
 interface NewClaimModalProps {
   open: boolean;
   onClose: () => void;
 }
-
-const EVENT_TYPE_OPTIONS = [
-  'ДТП',
-  'Паркування',
-  'Зіткнення',
-  'Пошкодження',
-  'Скло',
-  'Угон',
-];
 
 /**
  * Creates a new synthetic claim row in the DB via POST /api/claims. All fields
@@ -27,9 +19,19 @@ const EVENT_TYPE_OPTIONS = [
  * navigates to the newly-created claim detail.
  */
 export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const today = new Date().toISOString().slice(0, 10);
+
+  const EVENT_TYPE_OPTIONS = [
+    'ДТП',
+    'Паркування',
+    'Зіткнення',
+    'Пошкодження',
+    'Скло',
+    'Угон',
+  ];
 
   const [customerName, setCustomerName] = useState('');
   const [customerId, setCustomerId] = useState('');
@@ -64,7 +66,7 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!vehicle.trim() || !location.trim()) {
-      setError('Заповніть «Авто» та «Локація» (обов’язкові поля).');
+      setError(t.ui.newClaimErrorRequired);
       return;
     }
     setSubmitting(true);
@@ -85,7 +87,7 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
       dispatch(
         pushToast({
           tone: 'success',
-          title: `Створено новий синтетичний кейс ${result.claimId}.`,
+          title: `${t.ui.newClaimToastTitle} ${result.claimId}.`,
           detail: `${result.message} cmd=${result.commandId.slice(0, 14)}…`,
         }),
       );
@@ -104,8 +106,8 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
       open={open}
       onClose={handleClose}
       size="lg"
-      title="Створити новий синтетичний кейс"
-      description="Створює новий рядок у БД claims.Claims з повним audit + outbox. Локальний sandbox — без реальних персональних даних, без реальної виплати, без зовнішніх повідомлень."
+      title={t.ui.newClaimTitle}
+      description={t.ui.newClaimDescription}
       footer={
         <>
           <button
@@ -115,7 +117,7 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
             disabled={submitting}
             className="btn-ghost px-3 py-1.5 text-sm disabled:opacity-50"
           >
-            Скасувати
+            {t.ui.newClaimCancel}
           </button>
           <button
             type="submit"
@@ -125,7 +127,7 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
             className="btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-sm disabled:opacity-50"
           >
             <Icon name="plus" size={14} />
-            {submitting ? 'Створення…' : 'Створити кейс'}
+            {submitting ? t.ui.newClaimSubmitting : t.ui.newClaimSubmit}
           </button>
         </>
       }
@@ -134,7 +136,7 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
         <div className="grid sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-              Клієнт (опціонально)
+              {t.ui.newClaimLabelCustomerName}
             </label>
             <input
               type="text"
@@ -142,14 +144,14 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
               disabled={submitting}
-              placeholder="Напр. Synthetic Customer 042"
+              placeholder={t.ui.newClaimPlaceholderCustomerName}
               className="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm focus-ring"
             />
-            <p className="text-[10px] text-ink-500 mt-1">Порожньо → буде обрано першого синтетичного клієнта.</p>
+            <p className="text-[10px] text-ink-500 mt-1">{t.ui.newClaimHelperCustomerName}</p>
           </div>
           <div>
             <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-              ID клієнта (опціонально)
+              {t.ui.newClaimLabelCustomerId}
             </label>
             <input
               type="text"
@@ -165,7 +167,7 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
         <div className="grid sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-              Авто *
+              {t.ui.newClaimLabelVehicle}
             </label>
             <input
               type="text"
@@ -180,7 +182,7 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
           </div>
           <div>
             <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-              VIN (опціонально)
+              {t.ui.newClaimLabelVin}
             </label>
             <input
               type="text"
@@ -195,7 +197,7 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
         <div className="grid sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-              Тип події *
+              {t.ui.newClaimLabelEventType}
             </label>
             <select
               value={eventType}
@@ -210,7 +212,7 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
           </div>
           <div>
             <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-              Дата події *
+              {t.ui.newClaimLabelEventDate}
             </label>
             <input
               type="date"
@@ -224,7 +226,7 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
         </div>
         <div>
           <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-            Локація *
+            {t.ui.newClaimLabelLocation}
           </label>
           <input
             type="text"
@@ -233,20 +235,20 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
             onChange={(e) => setLocation(e.target.value)}
             disabled={submitting}
             required
-            placeholder="Київ, проспект Перемоги 50"
+            placeholder={t.ui.newClaimPlaceholderLocation}
             className="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm focus-ring"
           />
         </div>
         <div>
           <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-            Опис (опціонально)
+            {t.ui.newClaimLabelDescription}
           </label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             disabled={submitting}
             rows={2}
-            placeholder="Короткий опис обставин події (синтетичний)."
+            placeholder={t.ui.newClaimPlaceholderDescription}
             className="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm focus-ring resize-none"
           />
         </div>
@@ -257,10 +259,7 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
         ) : null}
         <div className="rounded-lg border border-ink-200 bg-ink-50 px-3 py-2 text-[11px] text-ink-600 leading-snug flex items-start gap-2">
           <span className="mt-0.5 shrink-0"><Icon name="shield" size={12} /></span>
-          <span>
-            Кейс створюється у локальній БД sandbox. Без реальних персональних даних,
-            без реальної виплати, без зовнішніх повідомлень. Дія записується в audit + outbox.
-          </span>
+          <span>{t.ui.newClaimSandboxNote}</span>
         </div>
       </form>
     </Modal>

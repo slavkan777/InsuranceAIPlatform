@@ -8,6 +8,7 @@ import type {
   CustomerSummaryDto,
 } from '@/api/insuranceApi.types';
 import clsx from '@/utils/clsx';
+import { useI18n } from '@/i18n/useI18n';
 
 const PAGE_SIZE = 25;
 
@@ -15,10 +16,11 @@ const PAGE_SIZE = 25;
  * Customers directory — paginated list of all synthetic test customers
  * (IsSynthetic=true rows in customers_policies.SyntheticCustomers). Includes
  * a case-insensitive substring search over name / email / id, and a
- * "Створити нового клієнта" action that opens CreateCustomerModal. After
+ * "Create customer" action that opens CreateCustomerModal. After
  * a successful creation the list is reloaded.
  */
 export default function CustomersDirectoryPage() {
+  const { t } = useI18n();
   const [search, setSearch] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [page, setPage] = useState(1);
@@ -31,8 +33,8 @@ export default function CustomersDirectoryPage() {
   const [reloadTick, setReloadTick] = useState(0);
 
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(search), 250);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => setDebouncedSearch(search), 250);
+    return () => clearTimeout(timer);
   }, [search]);
 
   useEffect(() => {
@@ -67,18 +69,18 @@ export default function CustomersDirectoryPage() {
   return (
     <div className="flex flex-col gap-5" data-testid="customers-directory-page">
       <SectionHeader
-        title="Каталог клієнтів"
-        subtitle="Локальний каталог синтетичних клієнтів · IsSynthetic=true · без реальних персональних даних"
+        title={t.customers.pageTitle}
+        subtitle={t.customers.pageSubtitle}
         actions={
           <button
             type="button"
             data-testid="create-customer-open"
             onClick={() => setCreateOpen(true)}
             className="btn-primary inline-flex items-center gap-1.5"
-            title="Створити нового синтетичного клієнта (локальний sandbox)"
+            title={t.customers.createButtonTitle}
           >
             <Icon name="plus" size={14} />
-            Створити клієнта
+            {t.customers.createButtonLabel}
           </button>
         }
       />
@@ -106,16 +108,16 @@ export default function CustomersDirectoryPage() {
               data-testid="customers-search"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Пошук за ім’ям, email або ID (CUST-T0042)…"
+              placeholder={t.customers.searchPlaceholder}
               className="w-full pl-9 pr-3 py-2 rounded-lg border border-ink-200 bg-white text-sm focus-ring"
             />
           </div>
           <div className="text-xs text-ink-500" data-testid="customers-meta">
             {loading
-              ? 'Завантаження…'
+              ? t.customers.metaLoading
               : result
-                ? `${result.total} знайдено · сторінка ${result.page}/${totalPages}`
-                : 'Готово до пошуку'}
+                ? `${result.total} ${t.customers.metaFoundPrefix} ${result.page}${t.customers.metaFoundSeparator}${totalPages}`
+                : t.customers.metaReady}
           </div>
         </div>
 
@@ -129,12 +131,12 @@ export default function CustomersDirectoryPage() {
           <table className="w-full" data-testid="customers-table">
             <thead className="bg-ink-50/80">
               <tr>
-                <th className="table-th">ID</th>
-                <th className="table-th">Повне імʼя</th>
-                <th className="table-th">Email</th>
-                <th className="table-th">Телефон</th>
-                <th className="table-th">Клієнт з</th>
-                <th className="table-th text-right">Попередніх кейсів</th>
+                <th className="table-th">{t.customers.colId}</th>
+                <th className="table-th">{t.customers.colFullName}</th>
+                <th className="table-th">{t.customers.colEmail}</th>
+                <th className="table-th">{t.customers.colPhone}</th>
+                <th className="table-th">{t.customers.colCustomerSince}</th>
+                <th className="table-th text-right">{t.customers.colPriorCases}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-ink-100">
@@ -144,7 +146,7 @@ export default function CustomersDirectoryPage() {
               {result && result.items.length === 0 && (
                 <tr>
                   <td colSpan={6} className="table-td text-center text-ink-500 py-8" data-testid="customers-empty">
-                    Жодного клієнта не знайдено. Спробуйте інший пошук.
+                    {t.customers.emptyState}
                   </td>
                 </tr>
               )}
@@ -160,10 +162,12 @@ export default function CustomersDirectoryPage() {
               disabled={page <= 1 || loading}
               className="btn-ghost px-3 py-1.5 text-xs disabled:opacity-40"
             >
-              ← Назад
+              {t.customers.paginationBack}
             </button>
             <div className="text-xs text-ink-600">
-              Сторінка <span className="font-mono font-semibold">{result.page}</span> з{' '}
+              {t.customers.paginationPageLabel}{' '}
+              <span className="font-mono font-semibold">{result.page}</span>{' '}
+              {t.customers.paginationPageOf}{' '}
               <span className="font-mono font-semibold">{totalPages}</span>
             </div>
             <button
@@ -172,7 +176,7 @@ export default function CustomersDirectoryPage() {
               disabled={page >= totalPages || loading}
               className="btn-ghost px-3 py-1.5 text-xs disabled:opacity-40"
             >
-              Далі →
+              {t.customers.paginationNext}
             </button>
           </div>
         )}
@@ -183,11 +187,7 @@ export default function CustomersDirectoryPage() {
           <span className="mt-0.5 shrink-0 text-ink-400">
             <Icon name="info" size={14} />
           </span>
-          <p>
-            Цей каталог — локальна синтетична база (rows with IsSynthetic=true).
-            Реальні персональні дані не зберігаються. Записи можна використовувати при
-            створенні нового синтетичного кейсу (через форму «Створити кейс»).
-          </p>
+          <p>{t.customers.syntheticNoteText}</p>
         </div>
       </section>
     </div>

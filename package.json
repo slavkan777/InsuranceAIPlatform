@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Auto Insurance Claim AI Workbench — frontend walking skeleton (portfolio mockup).",
+  "description": "Auto Insurance Claim AI Workbench — React frontend for the claims operations platform.",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",

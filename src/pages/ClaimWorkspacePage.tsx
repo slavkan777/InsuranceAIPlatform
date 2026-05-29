@@ -11,6 +11,7 @@ import {
   stoInvoiceLines,
 } from '@/data/mock/claim-1006';
 import { selectClaimDetail } from '@/features/claims/claimWorkspaceSelectors';
+import { useI18n } from '@/i18n/useI18n';
 import clsx from '@/utils/clsx';
 
 const GOLDEN_CLAIM_ID = 'CLM-1006';
@@ -42,6 +43,7 @@ export default function ClaimWorkspacePage() {
   const navigate = useNavigate();
   const { claimId = '' } = useParams();
   const claimDetail = useAppSelector(selectClaimDetail);
+  const { t } = useI18n();
 
   const isLoadedForThisRoute = claimDetail?.id === claimId;
   const isGoldenClaim = isLoadedForThisRoute && claimId === GOLDEN_CLAIM_ID;
@@ -55,7 +57,9 @@ export default function ClaimWorkspacePage() {
           className="card card-pad text-sm text-ink-600"
           data-testid="claim-detail-loading"
         >
-          Завантаження даних кейса <span className="font-mono">{claimId}</span>…
+          {t.claimWorkspace.loadingPrefix}{' '}
+          <span className="font-mono">{claimId}</span>
+          {t.claimWorkspace.loadingSuffix}
         </div>
       </div>
     );
@@ -68,34 +72,35 @@ export default function ClaimWorkspacePage() {
       <div className="grid xl:grid-cols-[1fr_360px] gap-5">
         <div className="flex flex-col gap-5">
           <section className="card card-pad" data-testid="claim-detail-description">
-            <div className="section-title mb-2">Опис події</div>
+            <div className="section-title mb-2">{t.claimWorkspace.sectionDescription}</div>
             <p
               className="text-ink-800"
               data-testid="claim-detail-description-text"
             >
-              {c.description || '— опис не введено —'}
+              {c.description || t.claimWorkspace.descriptionFallback}
             </p>
             <div className="text-sm text-ink-500 mt-2">
-              Місце:{' '}
+              {t.claimWorkspace.labelLocation}:{' '}
               <span data-testid="claim-detail-location">{c.location || '—'}</span> ·{' '}
-              Дата події:{' '}
+              {t.claimWorkspace.labelEventDate}:{' '}
               <span data-testid="claim-detail-event-date">{c.eventDate}</span> ·{' '}
-              Тип події:{' '}
+              {t.claimWorkspace.labelEventType}:{' '}
               <span data-testid="claim-detail-event-type">{c.eventType}</span>
             </div>
             <div className="text-sm text-ink-500 mt-1">
-              Клієнт:{' '}
+              {t.claimWorkspace.labelCustomer}:{' '}
               <span data-testid="claim-detail-customer">{c.customer}</span>
               {c.customerId ? (
                 <span className="text-ink-400"> ({c.customerId})</span>
               ) : null}
               {' · '}
-              Транспорт:{' '}
+              {t.claimWorkspace.labelVehicle}:{' '}
               <span data-testid="claim-detail-vehicle">{c.vehicle}</span>
               {c.vehicleVin ? (
                 <span className="text-ink-400">
                   {' '}
-                  · VIN <span data-testid="claim-detail-vin">{c.vehicleVin}</span>
+                  · {t.claimWorkspace.labelVin}{' '}
+                  <span data-testid="claim-detail-vin">{c.vehicleVin}</span>
                 </span>
               ) : null}
             </div>
@@ -108,24 +113,24 @@ export default function ClaimWorkspacePage() {
               <div className="grid md:grid-cols-2 gap-5">
                 <section className="card card-pad">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="section-title">Перевірка полісу</div>
-                    <StatusPill tone="good">Покриття активне</StatusPill>
+                    <div className="section-title">{t.claimWorkspace.sectionPolicyCheck}</div>
+                    <StatusPill tone="good">{t.claimWorkspace.policyStatusActive}</StatusPill>
                   </div>
                   <div className="text-base font-semibold text-ink-900">
                     Auto Comprehensive
                   </div>
                   <div className="text-sm text-ink-500 mt-1">
-                    Дійсний: 01.01.2026 — 31.12.2026 · ДТП дата у періоді
+                    {t.claimWorkspace.policyValidity}
                   </div>
                   <dl className="grid grid-cols-2 gap-3 mt-4 text-sm">
                     <div>
-                      <dt className="metric-label">Франшиза</dt>
+                      <dt className="metric-label">{t.claimWorkspace.policyLabelDeductible}</dt>
                       <dd className="font-semibold text-ink-900 mt-1 font-mono">
                         ${c.deductible}
                       </dd>
                     </div>
                     <div>
-                      <dt className="metric-label">Ліміт</dt>
+                      <dt className="metric-label">{t.claimWorkspace.policyLabelLimit}</dt>
                       <dd className="font-semibold text-ink-900 mt-1 font-mono">
                         $50 000
                       </dd>
@@ -135,9 +140,9 @@ export default function ClaimWorkspacePage() {
 
                 <section className="card card-pad">
                   <div className="flex items-center justify-between mb-3">
-                    <div className="section-title">Комплектність документів</div>
+                    <div className="section-title">{t.claimWorkspace.sectionDocuments}</div>
                     <StatusPill tone="warn">
-                      {c.documentsReceived} із {c.documentsTotal}
+                      {c.documentsReceived} {t.claimWorkspace.documentsOf} {c.documentsTotal}
                     </StatusPill>
                   </div>
                   <ProgressBar
@@ -146,21 +151,21 @@ export default function ClaimWorkspacePage() {
                     tone="warn"
                   />
                   <p className="text-sm text-ink-600 mt-3">
-                    Відсутнє:{' '}
+                    {t.claimWorkspace.documentsLabelMissing}:{' '}
                     <span className="text-ink-900 font-medium">
                       {c.missingDocument}
                     </span>
                   </p>
                   <p className="text-xs text-danger-600 mt-1">
-                    AI оцінив комплектність як НЕДОСТАТНЮ для виплати
+                    {t.claimWorkspace.documentsAiNote}
                   </p>
                 </section>
               </div>
 
               <section className="card card-pad">
                 <div className="flex items-center justify-between mb-3">
-                  <div className="section-title">Фото пошкоджень</div>
-                  <span className="chip">3 з 4 фото підтверджено</span>
+                  <div className="section-title">{t.claimWorkspace.sectionDamagePhotos}</div>
+                  <span className="chip">{t.claimWorkspace.photosChip}</span>
                 </div>
                 <div className="grid grid-cols-3 gap-3">
                   {damagePhotos.map((p) => (
@@ -195,7 +200,7 @@ export default function ClaimWorkspacePage() {
                         )}
                       >
                         {p.missing
-                          ? 'Фото відсутнє · запросити'
+                          ? t.claimWorkspace.photoMissingLabel
                           : `AI conf ${p.confidence}%`}
                       </div>
                     </div>
@@ -206,12 +211,12 @@ export default function ClaimWorkspacePage() {
               <section className="card card-pad">
                 <div className="flex flex-wrap items-baseline justify-between mb-3 gap-2">
                   <div>
-                    <div className="section-title">Рахунок СТО</div>
+                    <div className="section-title">{t.claimWorkspace.sectionInvoice}</div>
                     <p className="text-sm text-ink-500 mt-0.5">
-                      СТО «Авто-Експерт» · виставлено 19.05.2026
+                      {t.claimWorkspace.invoiceSubtitle}
                     </p>
                   </div>
-                  <StatusPill tone="warn">+38% від медіани</StatusPill>
+                  <StatusPill tone="warn">{t.claimWorkspace.invoiceAboveMedian}</StatusPill>
                 </div>
                 <table className="w-full text-sm">
                   <tbody className="divide-y divide-ink-100">
@@ -224,7 +229,9 @@ export default function ClaimWorkspacePage() {
                       </tr>
                     ))}
                     <tr className="bg-ink-50">
-                      <td className="py-2.5 px-2 font-semibold text-ink-900">Сума</td>
+                      <td className="py-2.5 px-2 font-semibold text-ink-900">
+                        {t.claimWorkspace.invoiceTotalLabel}
+                      </td>
                       <td className="py-2.5 px-2 text-right font-mono font-bold text-ink-900">
                         ${c.estimate.toLocaleString('uk-UA')}
                       </td>
@@ -239,15 +246,13 @@ export default function ClaimWorkspacePage() {
               className="card card-pad"
               data-testid="claim-detail-sandbox-notice"
             >
-              <div className="section-title mb-2">Локальний sandbox кейс</div>
+              <div className="section-title mb-2">{t.claimWorkspace.sectionSandbox}</div>
               <p className="text-sm text-ink-600">
-                Нещодавно створений локальний кейс. Документи, AI-аналіз, фото
-                та інша рішенська інформація з'являться поетапно — заповнюються
-                з відповідних вкладок (Документи, AI-докази, Погодження).
+                {t.claimWorkspace.sandboxBody}
               </p>
               <dl className="grid grid-cols-2 gap-3 mt-4 text-sm">
                 <div>
-                  <dt className="metric-label">Статус</dt>
+                  <dt className="metric-label">{t.claimWorkspace.sandboxLabelStatus}</dt>
                   <dd
                     className="font-semibold text-ink-900 mt-1"
                     data-testid="claim-detail-status"
@@ -256,7 +261,7 @@ export default function ClaimWorkspacePage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="metric-label">Ризик</dt>
+                  <dt className="metric-label">{t.claimWorkspace.sandboxLabelRisk}</dt>
                   <dd
                     className="font-semibold text-ink-900 mt-1"
                     data-testid="claim-detail-risk"
@@ -265,7 +270,7 @@ export default function ClaimWorkspacePage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="metric-label">Поліс</dt>
+                  <dt className="metric-label">{t.claimWorkspace.sandboxLabelPolicy}</dt>
                   <dd className="font-semibold text-ink-900 mt-1">
                     {c.policy}
                     {c.policyId ? (
@@ -277,7 +282,7 @@ export default function ClaimWorkspacePage() {
                   </dd>
                 </div>
                 <div>
-                  <dt className="metric-label">SLA</dt>
+                  <dt className="metric-label">{t.claimWorkspace.sandboxLabelSla}</dt>
                   <dd className="font-semibold text-ink-900 mt-1">
                     {c.slaDeadline}
                   </dd>
@@ -291,21 +296,26 @@ export default function ClaimWorkspacePage() {
           {isGoldenClaim ? (
             <>
               <section className="card card-pad">
-                <div className="metric-label mb-1 text-ai-600">AI-РЕКОМЕНДАЦІЯ</div>
+                <div className="metric-label mb-1 text-ai-600">
+                  {t.claimWorkspace.aiRecommendationLabel}
+                </div>
                 <h4 className="text-base font-semibold text-ink-900">
-                  Запросити додаткове фото
+                  {t.claimWorkspace.aiRecommendationHeading}
                 </h4>
                 <p className="text-sm text-ink-600 mt-2 leading-snug">
-                  Запросити у клієнта фото пошкодження заднього бампера перед
-                  погодженням виплати.
+                  {t.claimWorkspace.aiRecommendationBody}
                 </p>
                 <div className="mt-4">
-                  <ProgressBar value={c.confidence} tone="ai" label="Впевненість" />
+                  <ProgressBar
+                    value={c.confidence}
+                    tone="ai"
+                    label={t.claimWorkspace.aiConfidenceLabel}
+                  />
                 </div>
               </section>
 
               <section className="card card-pad">
-                <div className="section-title mb-2">Ключові ризики</div>
+                <div className="section-title mb-2">{t.claimWorkspace.sectionKeyRisks}</div>
                 <ul className="space-y-2 text-sm">
                   {keyRisks.map((r) => (
                     <li key={r} className="flex gap-2 items-start">
@@ -316,14 +326,14 @@ export default function ClaimWorkspacePage() {
                   <li className="flex gap-2 items-start">
                     <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-good-500 shrink-0" />
                     <span className="text-ink-700 leading-snug">
-                      Покриття за полісом підтверджено
+                      {t.claimWorkspace.keyRiskCoverageConfirmed}
                     </span>
                   </li>
                 </ul>
               </section>
 
               <section className="card card-pad">
-                <div className="section-title mb-2">Докази</div>
+                <div className="section-title mb-2">{t.claimWorkspace.sectionEvidence}</div>
                 <div className="flex flex-wrap gap-1.5">
                   {evidenceTabs.map((e) => (
                     <span key={e} className="chip">
@@ -335,30 +345,31 @@ export default function ClaimWorkspacePage() {
             </>
           ) : (
             <section className="card card-pad" data-testid="claim-detail-context">
-              <div className="section-title mb-2">Швидкий контекст</div>
+              <div className="section-title mb-2">{t.claimWorkspace.sectionQuickContext}</div>
               <p className="text-sm text-ink-600">
-                Поглиблений контекст (AI-рекомендація, ключові ризики, докази)
-                з'явиться після першого запуску AI-аналізу для цього кейса.
+                {t.claimWorkspace.quickContextBody}
               </p>
             </section>
           )}
 
           <section className="card card-pad bg-gradient-to-br from-brand-50 to-white border-brand-200">
-            <div className="metric-label text-brand-700">Наступна дія</div>
+            <div className="metric-label text-brand-700">
+              {t.claimWorkspace.nextActionLabel}
+            </div>
             <h4 className="text-base font-semibold text-ink-900 mt-1">
               {isGoldenClaim
-                ? 'Запросити фото пошкодження'
-                : 'Зібрати документи'}
+                ? t.claimWorkspace.nextActionHeadingGolden
+                : t.claimWorkspace.nextActionHeadingDefault}
             </h4>
             <p className="text-sm text-ink-600 mt-2 leading-snug">
-              Кнопка нижче відкриває збір документів по цьому випадку.
+              {t.claimWorkspace.nextActionBody}
             </p>
             <button
               onClick={() => navigate(`/claims/${claimId}/documents`)}
               className="btn-primary w-full mt-4"
               data-testid="open-documents-collection"
             >
-              Відкрити збір документів
+              {t.claimWorkspace.btnOpenDocuments}
             </button>
           </section>
         </aside>
@@ -370,21 +381,21 @@ export default function ClaimWorkspacePage() {
           className="btn-ghost"
           data-testid="back-to-list"
         >
-          Повернутись до списку
+          {t.claimWorkspace.btnBackToList}
         </button>
         <button
           onClick={() => navigate(`/claims/${claimId}/ai-evidence`)}
           className="btn-secondary"
           data-testid="open-ai-evidence"
         >
-          Передати на перевірку
+          {t.claimWorkspace.btnSendForReview}
         </button>
         <button
           onClick={() => navigate(`/claims/${claimId}/approval`)}
           className="btn-primary"
           data-testid="open-approval"
         >
-          Підготувати рішення
+          {t.claimWorkspace.btnPrepareDecision}
         </button>
       </div>
     </div>

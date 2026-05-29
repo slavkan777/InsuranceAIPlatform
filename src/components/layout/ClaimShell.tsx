@@ -4,22 +4,25 @@ import clsx from '@/utils/clsx';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { loadClaimDetail } from '@/features/claims/claimWorkspaceSlice';
 import { selectClaimDetail } from '@/features/claims/claimWorkspaceSelectors';
-
-const tabs = [
-  { to: '', label: 'Робоче місце', end: true },
-  { to: 'documents', label: 'Документи та фото' },
-  { to: 'ai-evidence', label: 'AI-докази' },
-  { to: 'risks', label: 'Ризики' },
-  { to: 'approval', label: 'Погодження' },
-  { to: 'audit', label: 'Audit & Cost' },
-  { to: 'policy', label: 'Поліс' },
-  { to: 'customer-vehicle', label: 'Клієнт + ТЗ' },
-];
+import { useI18n } from '@/i18n/useI18n';
 
 export function ClaimShell() {
+  const { t } = useI18n();
   const { claimId } = useParams();
   const dispatch = useAppDispatch();
   const claimDetail = useAppSelector(selectClaimDetail);
+
+  // Module-level tabs array moved inside the component so it can reference `t`.
+  const tabs = [
+    { to: '', label: t.claimShell.tabOverview, end: true },
+    { to: 'documents', label: t.claimShell.tabDocuments },
+    { to: 'ai-evidence', label: t.claimShell.tabAiEvidence },
+    { to: 'risks', label: t.claimShell.tabRisks },
+    { to: 'approval', label: t.claimShell.tabApproval },
+    { to: 'audit', label: t.claimShell.tabAudit },
+    { to: 'policy', label: t.claimShell.tabPolicy },
+    { to: 'customer-vehicle', label: t.claimShell.tabCustomerVehicle },
+  ];
 
   // Fire the saga whenever the route claimId changes — this is the single
   // source of truth for "which claim's data lives in Redux right now".
@@ -41,7 +44,7 @@ export function ClaimShell() {
     <div className="flex flex-col gap-5 min-w-0">
       <div className="flex flex-wrap items-center gap-3 text-sm">
         <NavLink to="/claims" className="text-ink-500 hover:text-brand-700">
-          ← Повернутись до списку
+          {t.claimShell.backToList}
         </NavLink>
         <span className="text-ink-300">/</span>
         <span className="font-semibold text-ink-900" data-testid="claim-shell-id">
@@ -59,11 +62,11 @@ export function ClaimShell() {
 
       <nav className="bg-white border border-ink-100 rounded-xl px-1.5 py-1 shadow-card overflow-x-auto">
         <ul className="flex gap-1 min-w-max">
-          {tabs.map((t) => (
-            <li key={t.to || 'root'}>
+          {tabs.map((tab) => (
+            <li key={tab.to || 'root'}>
               <NavLink
-                to={t.to}
-                end={t.end}
+                to={tab.to}
+                end={tab.end}
                 className={({ isActive }) =>
                   clsx(
                     'inline-flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors',
@@ -73,7 +76,7 @@ export function ClaimShell() {
                   )
                 }
               >
-                {t.label}
+                {tab.label}
               </NavLink>
             </li>
           ))}

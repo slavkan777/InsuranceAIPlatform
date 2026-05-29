@@ -7,9 +7,11 @@ import {
   selectClaimDetail,
   selectWorkspaceCustomerVehicle,
 } from '@/features/claims/claimWorkspaceSelectors';
+import { useI18n } from '@/i18n/useI18n';
 
 export default function CustomerVehiclePage() {
   const navigate = useNavigate();
+  const { t } = useI18n();
 
   // --- store selectors (with mock fallback) ---
   const claimDetailFromStore = useAppSelector(selectClaimDetail);
@@ -23,12 +25,12 @@ export default function CustomerVehiclePage() {
     <div className="flex flex-col gap-5">
       <section className="card card-pad flex flex-wrap items-center gap-x-6 gap-y-3 justify-between">
         <div>
-          <h2 className="text-xl font-bold text-ink-900">Клієнт і транспортний засіб</h2>
+          <h2 className="text-xl font-bold text-ink-900">{t.customerVehicle.pageTitle}</h2>
           <p className="text-sm text-ink-500 mt-1">
-            {c.customer} · {c.vehicle} · контекст для {c.id}
+            {c.customer} · {c.vehicle} · {t.customerVehicle.pageSubtitleContext} {c.id}
           </p>
         </div>
-        <StatusPill tone="good">Активний клієнт</StatusPill>
+        <StatusPill tone="good">{t.customerVehicle.activeCustomerPill}</StatusPill>
       </section>
 
       <div className="grid xl:grid-cols-2 gap-5">
@@ -40,30 +42,30 @@ export default function CustomerVehiclePage() {
             <div>
               <h3 className="text-lg font-semibold text-ink-900">{c.customer}</h3>
               <p className="text-xs text-ink-500 mt-0.5">
-                Клієнт з 2021 · <span className="font-mono">{c.customerId}</span>
+                {t.customerVehicle.customerSince} · <span className="font-mono">{c.customerId}</span>
               </p>
             </div>
           </div>
           <dl className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <dt className="metric-label">Телефон</dt>
+              <dt className="metric-label">{t.customerVehicle.customerPhone}</dt>
               <dd className="font-mono text-ink-800 mt-1">+1 (555) ***-2147</dd>
             </div>
             <div>
-              <dt className="metric-label">Email</dt>
+              <dt className="metric-label">{t.customerVehicle.customerEmail}</dt>
               <dd className="font-mono text-ink-800 mt-1">robert.j****@demo.com</dd>
             </div>
             <div>
-              <dt className="metric-label">Адреса</dt>
-              <dd className="text-ink-800 mt-1">Бориспіль, Україна</dd>
+              <dt className="metric-label">{t.customerVehicle.customerAddress}</dt>
+              <dd className="text-ink-800 mt-1">{t.customerVehicle.customerAddressValue}</dd>
             </div>
             <div>
-              <dt className="metric-label">Ризик-профіль</dt>
-              <dd className="text-ink-800 mt-1">Середній (62/100)</dd>
+              <dt className="metric-label">{t.customerVehicle.customerRiskProfile}</dt>
+              <dd className="text-ink-800 mt-1">{t.customerVehicle.customerRiskValue}</dd>
             </div>
             <div>
-              <dt className="metric-label">Поліси</dt>
-              <dd className="text-ink-800 mt-1">1 активний</dd>
+              <dt className="metric-label">{t.customerVehicle.customerPolicies}</dt>
+              <dd className="text-ink-800 mt-1">{t.customerVehicle.customerPoliciesValue}</dd>
             </div>
           </dl>
         </section>
@@ -74,30 +76,30 @@ export default function CustomerVehiclePage() {
             <div>
               <h3 className="text-lg font-semibold text-ink-900">{c.vehicle}</h3>
               <p className="text-xs text-ink-500 mt-0.5">
-                Седан · <span className="font-mono">{c.vehicleVin}</span> · Застрахован.
+                {t.customerVehicle.vehicleSubtitle} · <span className="font-mono">{c.vehicleVin}</span> · {t.customerVehicle.vehicleInsured}
               </p>
             </div>
           </div>
           <dl className="grid grid-cols-2 gap-3 text-sm">
             <div>
-              <dt className="metric-label">Пробіг</dt>
-              <dd className="font-mono text-ink-800 mt-1">47 200 км</dd>
+              <dt className="metric-label">{t.customerVehicle.vehicleMileage}</dt>
+              <dd className="font-mono text-ink-800 mt-1">{t.customerVehicle.vehicleMileageValue}</dd>
             </div>
             <div>
-              <dt className="metric-label">Колір</dt>
-              <dd className="text-ink-800 mt-1">Сріблястий</dd>
+              <dt className="metric-label">{t.customerVehicle.vehicleColor}</dt>
+              <dd className="text-ink-800 mt-1">{t.customerVehicle.vehicleColorValue}</dd>
             </div>
             <div>
-              <dt className="metric-label">Реєстрація</dt>
-              <dd className="text-ink-800 mt-1">2021</dd>
+              <dt className="metric-label">{t.customerVehicle.vehicleRegistration}</dt>
+              <dd className="text-ink-800 mt-1">{t.customerVehicle.vehicleRegistrationValue}</dd>
             </div>
             <div>
-              <dt className="metric-label">Застрах. вартість</dt>
-              <dd className="font-mono text-ink-800 mt-1">$24 800</dd>
+              <dt className="metric-label">{t.customerVehicle.vehicleInsuredValue}</dt>
+              <dd className="font-mono text-ink-800 mt-1">{t.customerVehicle.vehicleInsuredValueValue}</dd>
             </div>
             <div>
-              <dt className="metric-label">Категорія ризику</dt>
-              <dd className="text-ink-800 mt-1">Низька</dd>
+              <dt className="metric-label">{t.customerVehicle.vehicleRiskCategory}</dt>
+              <dd className="text-ink-800 mt-1">{t.customerVehicle.vehicleRiskCategoryValue}</dd>
             </div>
           </dl>
         </section>
@@ -105,7 +107,7 @@ export default function CustomerVehiclePage() {
 
       <div className="grid xl:grid-cols-3 gap-5">
         <section className="card card-pad">
-          <div className="section-title mb-3">Попередні випадки</div>
+          <div className="section-title mb-3">{t.customerVehicle.priorClaimsTitle}</div>
           <ul className="space-y-3">
             {previousClaims.length > 0 ? (
               previousClaims.map((p) => (
@@ -119,13 +121,13 @@ export default function CustomerVehiclePage() {
                 </li>
               ))
             ) : (
-              <li className="text-sm text-ink-500">Попередніх випадків немає</li>
+              <li className="text-sm text-ink-500">{t.customerVehicle.priorClaimsEmpty}</li>
             )}
           </ul>
         </section>
 
         <section className="card card-pad">
-          <div className="section-title mb-3">Історія комунікації</div>
+          <div className="section-title mb-3">{t.customerVehicle.communicationHistoryTitle}</div>
           <ul className="space-y-3">
             {communicationHistory.map((row, idx) => (
               <li key={idx} className="flex items-center justify-between gap-3 text-sm">
@@ -140,26 +142,28 @@ export default function CustomerVehiclePage() {
         </section>
 
         <section className="card card-pad">
-          <div className="section-title mb-3">Пов'язані поліси</div>
+          <div className="section-title mb-3">{t.customerVehicle.relatedPoliciesTitle}</div>
           <div className="rounded-lg border border-ink-100 p-3 bg-ink-50">
             <div className="font-semibold text-ink-900">Auto Comprehensive</div>
             <div className="text-xs text-ink-500 mt-0.5">
-              <span className="font-mono">{c.policyId}</span> · до 31.12.2026
+              <span className="font-mono">{c.policyId}</span> · {t.customerVehicle.policyValidThrough}
             </div>
             <button
               type="button"
               onClick={() => navigate('/claims/CLM-1006/policy')}
               className="btn-ghost mt-2 text-xs"
             >
-              → Деталі
+              {t.customerVehicle.policyDetailsLink}
             </button>
           </div>
           <div className="mt-4">
-            <div className="section-title mb-2">Документи клієнта</div>
+            <div className="section-title mb-2">{t.customerVehicle.customerDocumentsTitle}</div>
             <p className="text-sm text-ink-700">
-              12 документів · паспорт, посвідчення, реєстрація, заяви
+              {t.customerVehicle.customerDocumentsCount} · {t.customerVehicle.customerDocumentsTypes}
             </p>
-            <p className="text-xs text-ink-500 mt-1">Останнє оновлення: 19.05.2026</p>
+            <p className="text-xs text-ink-500 mt-1">
+              {t.customerVehicle.customerDocumentsLastUpdated} {t.customerVehicle.customerDocumentsDate}
+            </p>
           </div>
         </section>
       </div>
@@ -167,12 +171,12 @@ export default function CustomerVehiclePage() {
       <div className="card card-pad bg-gradient-to-r from-warn-500/5 to-ink-50 border-warn-200">
         <div className="flex flex-wrap items-center gap-3 justify-between">
           <div>
-            <div className="metric-label text-warn-700">Privacy · Demo</div>
+            <div className="metric-label text-warn-700">{t.customerVehicle.privacyLabel}</div>
             <p className="text-sm text-ink-700 mt-1">
-              Дані синтетичні для demo. Жодних реальних PII клієнта.
+              {t.customerVehicle.privacyNote}
             </p>
           </div>
-          <StatusPill tone="warn">PII МАСКОВАНІ</StatusPill>
+          <StatusPill tone="warn">{t.customerVehicle.piiMaskedPill}</StatusPill>
         </div>
       </div>
     </div>

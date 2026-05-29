@@ -5,6 +5,7 @@ import { Icon } from '@/components/ui/Icon';
 import { pushToast } from '@/features/ui/uiFeedbackSlice';
 import { insuranceApi } from '@/api/insuranceApi';
 import type { CreateDocumentMetadataBody } from '@/api/insuranceApi.types';
+import { useI18n } from '@/i18n/useI18n';
 
 interface ImportDocumentMetadataModalProps {
   open: boolean;
@@ -13,32 +14,34 @@ interface ImportDocumentMetadataModalProps {
   claimId?: string;
 }
 
-const DOC_KIND_OPTIONS = [
-  { value: 'document', label: 'Документ (PDF/довідка)' },
-  { value: 'photo', label: 'Фото пошкодження' },
-  { value: 'note', label: 'Внутрішня нотатка' },
-];
-
-const DOC_TYPE_OPTIONS = [
-  { value: '', label: '— оберіть тип —' },
-  { value: 'PoliceReport', label: 'Поліцейський звіт' },
-  { value: 'DriverLicense', label: 'Посвідчення водія' },
-  { value: 'Estimate', label: 'Кошторис ремонту' },
-  { value: 'DamagePhoto', label: 'Фото пошкоджень' },
-  { value: 'OtherDocument', label: 'Інший документ' },
-];
-
 /**
  * Document metadata-only import. NO binary upload, NO blob storage, NO OCR.
  * Calls POST /api/claims/{claimId}/document-metadata which writes a metadata
- * row + audit + outbox locally. Safe for portfolio demo.
+ * row + audit + outbox locally. Safe for the demo.
  */
 export function ImportDocumentMetadataModal({
   open,
   onClose,
   claimId = 'CLM-1006',
 }: ImportDocumentMetadataModalProps) {
+  const { t } = useI18n();
   const dispatch = useAppDispatch();
+
+  const DOC_KIND_OPTIONS = [
+    { value: 'document', label: t.ui.importKindDocument },
+    { value: 'photo', label: t.ui.importKindPhoto },
+    { value: 'note', label: t.ui.importKindNote },
+  ];
+
+  const DOC_TYPE_OPTIONS = [
+    { value: '', label: t.ui.importDocTypePlaceholder },
+    { value: 'PoliceReport', label: t.ui.importDocTypePoliceReport },
+    { value: 'DriverLicense', label: t.ui.importDocTypeDriverLicense },
+    { value: 'Estimate', label: t.ui.importDocTypeEstimate },
+    { value: 'DamagePhoto', label: t.ui.importDocTypeDamagePhoto },
+    { value: 'OtherDocument', label: t.ui.importDocTypeOther },
+  ];
+
   const [kind, setKind] = useState('document');
   const [title, setTitle] = useState('');
   const [docType, setDocType] = useState('');
@@ -62,7 +65,7 @@ export function ImportDocumentMetadataModal({
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!title.trim()) {
-      setError('Вкажіть назву документа.');
+      setError(t.ui.importDocErrorRequired);
       return;
     }
     setSubmitting(true);
@@ -82,7 +85,7 @@ export function ImportDocumentMetadataModal({
       dispatch(
         pushToast({
           tone: 'success',
-          title: 'Метадані документа збережено.',
+          title: t.ui.importDocToastTitle,
           detail: `${result.message} cmd=${result.commandId.slice(0, 14)}…`,
         }),
       );
@@ -99,8 +102,8 @@ export function ImportDocumentMetadataModal({
     <Modal
       open={open}
       onClose={handleClose}
-      title="Імпорт документа (метадані)"
-      description="Створює запис метаданих у БД для кейсу. Бінарне завантаження не виконується — лише довідкові поля. Аудит-журнал і outbox оновлюються."
+      title={t.ui.importDocTitle}
+      description={t.ui.importDocDescription}
       footer={
         <>
           <button
@@ -109,7 +112,7 @@ export function ImportDocumentMetadataModal({
             disabled={submitting}
             className="btn-ghost px-3 py-1.5 text-sm disabled:opacity-50"
           >
-            Скасувати
+            {t.ui.importDocCancel}
           </button>
           <button
             type="submit"
@@ -118,7 +121,7 @@ export function ImportDocumentMetadataModal({
             className="btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-sm disabled:opacity-50"
           >
             <Icon name="upload" size={14} />
-            {submitting ? 'Збереження…' : 'Зберегти метадані'}
+            {submitting ? t.ui.importDocSubmitting : t.ui.importDocSubmit}
           </button>
         </>
       }
@@ -126,7 +129,7 @@ export function ImportDocumentMetadataModal({
       <form id="import-doc-form" onSubmit={handleSubmit} className="space-y-3 text-sm">
         <div>
           <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-            Тип запису
+            {t.ui.importDocLabelKind}
           </label>
           <select
             value={kind}
@@ -143,20 +146,20 @@ export function ImportDocumentMetadataModal({
         </div>
         <div>
           <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-            Назва
+            {t.ui.importDocLabelTitle}
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             disabled={submitting}
-            placeholder="Напр. Поліцейський звіт DTP-2026-1234"
+            placeholder={t.ui.importDocPlaceholderTitle}
             className="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm focus-ring disabled:bg-ink-50"
           />
         </div>
         <div>
           <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-            Тип документа (опціонально)
+            {t.ui.importDocLabelDocType}
           </label>
           <select
             value={docType}
@@ -180,9 +183,9 @@ export function ImportDocumentMetadataModal({
           </div>
         ) : null}
         <div className="rounded-lg border border-ink-200 bg-ink-50 px-3 py-2 text-[11px] text-ink-600 leading-snug">
-          Запис створює лише довідковий рядок у таблиці документів кейсу
-          {' '}<span className="font-mono text-ink-800">{claimId}</span>.
-          Жодних файлів не завантажується.
+          {t.ui.importDocSandboxNotePrefix}{' '}
+          <span className="font-mono text-ink-800">{claimId}</span>.{' '}
+          {t.ui.importDocSandboxNoteSuffix}
         </div>
       </form>
     </Modal>

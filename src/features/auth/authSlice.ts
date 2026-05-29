@@ -3,8 +3,8 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 // -----------------------------------------------------------------------
 // Demo-local auth — NOT production
 // -----------------------------------------------------------------------
-// This is a local/demo authentication mechanism for the portfolio reviewer
-// click-through. It does not use any production identity provider, no Azure AD,
+// This is a local/demo authentication mechanism for the demo click-through.
+// It does not use any production identity provider, no Azure AD,
 // no Entra ID, no OAuth provider, no Key Vault. Credentials are hard-coded
 // in the source (visible to the operator under the login form). The session
 // is persisted in localStorage and is reversible via the logout control.
@@ -88,8 +88,8 @@ const slice = createSlice({
       } else {
         state.isAuthenticated = false;
         state.user = null;
-        state.loginError =
-          'Невірний логін або пароль. Скористайтесь підказкою під формою (демо-режим).';
+        // Stable code; the visible message is localized in LoginPage (t.login.errorInvalid).
+        state.loginError = 'invalid';
         persistToStorage(null);
       }
     },

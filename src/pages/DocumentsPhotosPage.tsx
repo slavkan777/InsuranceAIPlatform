@@ -21,6 +21,7 @@ import { UploadDocumentContentModal } from '@/components/claim/UploadDocumentCon
 import { pushToast } from '@/features/ui/uiFeedbackSlice';
 import { insuranceApi } from '@/api/insuranceApi';
 import clsx from '@/utils/clsx';
+import { useI18n } from '@/i18n/useI18n';
 
 const statusIcon = {
   ok: { ch: '✓', color: 'bg-good-500 text-white' },
@@ -30,6 +31,7 @@ const statusIcon = {
 
 export default function DocumentsPhotosPage() {
   const dispatch = useAppDispatch();
+  const { t } = useI18n();
   const { claimId: routeClaimId } = useParams<{ claimId: string }>();
   const claimId = routeClaimId ?? 'CLM-1006';
 
@@ -52,15 +54,14 @@ export default function DocumentsPhotosPage() {
     reason: string;
   }>({ title: '', reason: '' });
   const [previewOpen, setPreviewOpen] = useState(false);
-  const [previewTitle, setPreviewTitle] = useState('Документ');
+  const [previewTitle, setPreviewTitle] = useState(t.documents.defaultDocumentTitle);
   const [confirming, setConfirming] = useState(false);
   const [uploadOpen, setUploadOpen] = useState(false);
 
   function openRequestForBumper() {
     setRequestDocPrefill({
-      title: c.missingDocument || 'Додаткове фото пошкодження заднього бампера',
-      reason:
-        'AI блокує автоматичне погодження до отримання документа. Внутрішній запит для адʼюстера.',
+      title: c.missingDocument || t.documents.requestBumperTitle,
+      reason: t.documents.requestBumperReason,
     });
     setRequestDocOpen(true);
   }
@@ -69,16 +70,16 @@ export default function DocumentsPhotosPage() {
     const missing = damagePhotos.find((p) => p.missing);
     setRequestDocPrefill({
       title: missing
-        ? `Фото — ${missing.label}`
-        : 'Додаткове фото пошкодження',
-      reason: 'Потрібен повний фото-пакет для AI-аналізу.',
+        ? `${t.documents.requestPhotoPrefix} ${missing.label}`
+        : t.documents.requestPhotoDefaultTitle,
+      reason: t.documents.requestPhotoReason,
     });
     setRequestDocOpen(true);
   }
 
   function openPreviewForSelected() {
     const sel = documentsChecklist.find((d) => d.id === selectedDocumentId);
-    setPreviewTitle(sel?.label ?? 'Документ');
+    setPreviewTitle(sel?.label ?? t.documents.defaultDocumentTitle);
     setPreviewOpen(true);
   }
 
@@ -88,7 +89,7 @@ export default function DocumentsPhotosPage() {
       dispatch(
         pushToast({
           tone: 'warning',
-          title: 'Оберіть документ у списку, щоб підтвердити його.',
+          title: t.documents.toastSelectDocTitle,
         }),
       );
       return;
@@ -100,7 +101,7 @@ export default function DocumentsPhotosPage() {
         claimId,
         {
           kind: 'document-review',
-          title: `Підтверджено: ${sel.label}`,
+          title: `${t.documents.confirmDocApiPrefix} ${sel.label}`,
           docType: 'ReviewedConfirmation',
         },
         idempKey,
@@ -109,16 +110,16 @@ export default function DocumentsPhotosPage() {
       dispatch(
         pushToast({
           tone: 'success',
-          title: 'Документ підтверджено.',
+          title: t.documents.toastConfirmSuccessTitle,
           detail: `${result.message} cmd=${result.commandId.slice(0, 14)}…`,
         }),
       );
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Невідома помилка.';
+      const msg = err instanceof Error ? err.message : t.documents.toastUnknownError;
       dispatch(
         pushToast({
           tone: 'error',
-          title: 'Не вдалося підтвердити документ.',
+          title: t.documents.toastConfirmErrorTitle,
           detail: msg,
         }),
       );
@@ -150,12 +151,12 @@ export default function DocumentsPhotosPage() {
       <div className="card card-pad bg-gradient-to-r from-danger-500/5 to-warn-500/5 border-l-4 border-l-danger-500">
         <div className="flex flex-wrap items-start gap-3 justify-between">
           <div>
-            <div className="metric-label text-danger-600">Відсутній документ</div>
+            <div className="metric-label text-danger-600">{t.documents.missingDocLabel}</div>
             <h3 className="text-base font-semibold text-ink-900 mt-1">
-              Додаткове фото пошкодження заднього бампера — відсутнє
+              {t.documents.missingDocHeading}
             </h3>
             <p className="text-sm text-ink-600 mt-2">
-              AI блокує автоматичне погодження до отримання документа.
+              {t.documents.missingDocBody}
             </p>
           </div>
           <div className="flex flex-wrap gap-2 justify-end">
@@ -164,20 +165,20 @@ export default function DocumentsPhotosPage() {
               data-testid="upload-doc-open"
               onClick={() => setUploadOpen(true)}
               className="btn-secondary inline-flex items-center gap-1.5"
-              title="Завантажити синтетичний документ у БД (текстовий зміст, без файлу)"
+              title={t.documents.uploadDocTooltip}
             >
               <Icon name="upload" size={14} />
-              Завантажити документ
+              {t.documents.uploadDocBtn}
             </button>
             <button
               type="button"
               data-testid="request-missing-doc-open"
               onClick={openRequestForBumper}
               className="btn-primary inline-flex items-center gap-1.5"
-              title="Зафіксувати внутрішній запит на цей документ (без листа клієнту)"
+              title={t.documents.requestDocTooltip}
             >
               <Icon name="check" size={14} />
-              Запит у журналі
+              {t.documents.requestDocBtn}
             </button>
           </div>
         </div>
@@ -188,10 +189,10 @@ export default function DocumentsPhotosPage() {
           <section className="card card-pad">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <div className="section-title">Фото пошкоджень</div>
-                <p className="text-sm text-ink-500 mt-0.5">2 з 3 фото підтверджено</p>
+                <div className="section-title">{t.documents.photosTitle}</div>
+                <p className="text-sm text-ink-500 mt-0.5">{t.documents.photosSubtitle}</p>
               </div>
-              <StatusPill tone="warn">потрібен задній бампер</StatusPill>
+              <StatusPill tone="warn">{t.documents.photosPillNeedsRear}</StatusPill>
             </div>
             <div className="grid grid-cols-3 gap-3">
               {damagePhotos.map((p) => (
@@ -219,7 +220,7 @@ export default function DocumentsPhotosPage() {
                       p.missing ? 'text-danger-600 font-semibold' : 'text-ink-500',
                     )}
                   >
-                    {p.missing ? 'Потрібен запит' : `AI conf ${p.confidence}%`}
+                    {p.missing ? t.documents.photoMissingStatus : `${t.documents.photoAiConf} ${p.confidence}%`}
                   </div>
                 </div>
               ))}
@@ -228,7 +229,7 @@ export default function DocumentsPhotosPage() {
 
           <section className="card card-pad">
             <div className="flex items-center justify-between mb-3">
-              <div className="section-title">Контрольний список документів</div>
+              <div className="section-title">{t.documents.checklistTitle}</div>
               <span className="chip">
                 {c.documentsReceived}/{c.documentsTotal}
               </span>
@@ -273,7 +274,7 @@ export default function DocumentsPhotosPage() {
                         readOnly
                         className="rounded border-ink-300 accent-brand-600"
                       />
-                      {reviewed ? 'Переглянуто' : 'До перевірки'}
+                      {reviewed ? t.documents.checklistReviewed : t.documents.checklistPending}
                     </label>
                   </li>
                 );
@@ -284,26 +285,26 @@ export default function DocumentsPhotosPage() {
 
         <aside className="flex flex-col gap-5">
           <section className="card card-pad">
-            <div className="metric-label mb-2">Прев'ю · Поліцейський звіт</div>
+            <div className="metric-label mb-2">{t.documents.policeReportLabel}</div>
             <div className="rounded-xl bg-ink-950 text-ink-200 p-4 text-xs font-mono leading-relaxed">
               <div className="text-brand-300">NoБРС-2026/05/441</div>
-              <div>Дата: 18.05.2026 · 14:32</div>
-              <div>Локація: Бориспіль, Київська 24</div>
-              <div>Інспектор: Іваненко О.М.</div>
+              <div>{t.documents.policeReportDate}</div>
+              <div>{t.documents.policeReportLocation}</div>
+              <div>{t.documents.policeReportInspector}</div>
               <div className="mt-2 text-ink-300">
-                Учасники: 2 · Постраждалі: 0 · Винуватець: Сторона Б
+                {t.documents.policeReportParticipants}
               </div>
             </div>
             <div className="mt-3">
-              <div className="section-title mb-2">Витягнуто</div>
+              <div className="section-title mb-2">{t.documents.extractedTitle}</div>
               <ul className="text-sm text-ink-700 space-y-1">
-                <li>· Дата ДТП</li>
-                <li>· Локація</li>
-                <li>· Винуватець</li>
-                <li>· Інспектор</li>
+                <li>{t.documents.extractedAccidentDate}</li>
+                <li>{t.documents.extractedLocation}</li>
+                <li>{t.documents.extractedAtFault}</li>
+                <li>{t.documents.extractedInspector}</li>
               </ul>
             </div>
-            <ProgressBar value={95} tone="good" label="Впевненість" />
+            <ProgressBar value={95} tone="good" label={t.documents.progressConfidence} />
           </section>
 
           <div className="grid gap-2">
@@ -311,29 +312,29 @@ export default function DocumentsPhotosPage() {
               type="button"
               onClick={openRequestForPhoto}
               className="btn-primary inline-flex items-center justify-center gap-1.5"
-              title="Внутрішній запит на додаткові фото (без листа клієнту)"
+              title={t.documents.requestPhotoTooltip}
             >
               <Icon name="check" size={14} />
-              Запросити фото у журналі
+              {t.documents.requestPhotoBtn}
             </button>
             <button
               type="button"
               onClick={openPreviewForSelected}
               className="btn-secondary inline-flex items-center justify-center gap-1.5"
-              title="Перегляд деталей вибраного документа"
+              title={t.documents.viewDetailsTooltip}
             >
               <Icon name="file" size={14} />
-              Переглянути деталі
+              {t.documents.viewDetailsBtn}
             </button>
             <button
               type="button"
               onClick={confirmCurrentDocument}
               disabled={!selectedDocumentId || confirming}
               className="btn-secondary inline-flex items-center justify-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Зафіксувати підтвердження документа у БД + аудиті"
+              title={t.documents.confirmDocTooltip}
             >
               <Icon name="check" size={14} />
-              {confirming ? 'Збереження…' : 'Підтвердити документ'}
+              {confirming ? t.documents.confirmDocSaving : t.documents.confirmDocBtn}
             </button>
           </div>
         </aside>

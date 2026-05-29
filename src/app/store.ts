@@ -9,12 +9,14 @@ import approvalReducer from '@/features/approval/approvalSlice';
 import demoReducer from '@/features/demo/demoSlice';
 import authReducer from '@/features/auth/authSlice';
 import uiFeedbackReducer from '@/features/ui/uiFeedbackSlice';
+import i18nReducer from '@/features/i18n/i18nSlice';
 
 const sagaMiddleware = createSagaMiddleware();
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
+    i18n: i18nReducer,
     claims: claimsReducer,
     claimWorkspace: claimWorkspaceReducer,
     documents: documentsReducer,

@@ -26,10 +26,12 @@ import { pushToast } from '@/features/ui/uiFeedbackSlice';
 import { buildCsv, downloadBlob, localDateStamp } from '@/utils/csv';
 import clsx from '@/utils/clsx';
 import type { ClaimRow } from '@/types';
+import { useI18n } from '@/i18n/useI18n';
 
 export default function ClaimsListPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { t } = useI18n();
   const { search, segment, filters } = useAppSelector(selectClaimsState);
   // Source rows from the saga-loaded store (backend data in backend-mode); fall back to
   // the static mock when the store list is empty so MOCK MODE stays byte-identical
@@ -79,8 +81,8 @@ export default function ClaimsListPage() {
     dispatch(
       pushToast({
         tone: 'success',
-        title: `Експортовано ${rows.length} рядків.`,
-        detail: `Файл ${filename} збережено у завантаженнях браузера.`,
+        title: `${t.claimsList.toastExportTitle} ${rows.length} ${t.claimsList.toastExportTitleSuffix}`,
+        detail: `${filename} — ${t.claimsList.toastExportDetail}`,
       }),
     );
   }
@@ -88,37 +90,37 @@ export default function ClaimsListPage() {
   return (
     <div className="flex flex-col gap-6">
       <SectionHeader
-        title="Автострахові випадки"
-        subtitle="53 активних · 8 з високим ризиком · 5 чекають людського рішення"
+        title={t.claimsList.pageTitle}
+        subtitle={t.claimsList.pageSubtitle}
         actions={
           <>
             <button
               type="button"
               onClick={handleExportCsv}
               className="btn-secondary inline-flex items-center gap-1.5"
-              title="Експортувати поточний список у CSV (локально, у вашому браузері)"
+              title={t.claimsList.btnExportCsvTitle}
             >
               <Icon name="download" size={14} />
-              Експорт CSV
+              {t.claimsList.btnExportCsv}
             </button>
             <button
               type="button"
               onClick={() => setImportOpen(true)}
               className="btn-secondary inline-flex items-center gap-1.5"
-              title="Імпорт метаданих документа (без бінарного завантаження)"
+              title={t.claimsList.btnImportDocTitle}
             >
               <Icon name="upload" size={14} />
-              Імпорт документа
+              {t.claimsList.btnImportDoc}
             </button>
             <button
               type="button"
               data-testid="new-claim-open"
               onClick={() => setNewClaimOpen(true)}
               className="btn-primary inline-flex items-center gap-1.5"
-              title="Створення нового синтетичного кейсу (локальний sandbox)"
+              title={t.claimsList.btnNewClaimTitle}
             >
               <Icon name="plus" size={14} />
-              Новий випадок
+              {t.claimsList.btnNewClaim}
             </button>
           </>
         }
@@ -142,24 +144,24 @@ export default function ClaimsListPage() {
 
       <section className="card card-pad grid md:grid-cols-6 gap-3">
         <label className="flex flex-col gap-1 md:col-span-2">
-          <span className="metric-label">Пошук</span>
+          <span className="metric-label">{t.claimsList.filterSearchLabel}</span>
           <input
             type="search"
             data-testid="claims-search"
             value={search}
             onChange={(e) => dispatch(setSearch(e.target.value))}
-            placeholder="Toyota Camry, Роберт Джонсон..."
+            placeholder={t.claimsList.filterSearchPlaceholder}
             className="rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm focus-ring"
           />
         </label>
         {(
           [
-            ['status', 'Статус', ['Усі', 'В роботі', 'Збір документів', 'Готова', 'Завершено']],
-            ['risk', 'Ризик', ['Усі', 'Низький', 'Середній', 'Високий']],
-            ['eventType', 'Тип події', ['Усі', 'ДТП', 'Паркування', 'Зіткнення', 'Пошкодження']],
-            ['date', 'Дата', ['Сьогодні', '7 днів', '30 днів']],
-            ['aiStatus', 'AI-статус', ['Усі', 'AI-перевірено', 'Обробляється']],
-          ] as const
+            ['status', t.claimsList.filterStatusLabel, ['Усі', 'В роботі', 'Збір документів', 'Готова', 'Завершено']],
+            ['risk', t.claimsList.filterRiskLabel, ['Усі', 'Низький', 'Середній', 'Високий']],
+            ['eventType', t.claimsList.filterEventTypeLabel, ['Усі', 'ДТП', 'Паркування', 'Зіткнення', 'Пошкодження']],
+            ['date', t.claimsList.filterDateLabel, ['Сьогодні', '7 днів', '30 днів']],
+            ['aiStatus', t.claimsList.filterAiStatusLabel, ['Усі', 'AI-перевірено', 'Обробляється']],
+          ] as [keyof typeof filters, string, readonly string[]][]
         ).map(([key, label, options]) => (
           <label key={key} className="flex flex-col gap-1">
             <span className="metric-label">{label}</span>
@@ -183,30 +185,30 @@ export default function ClaimsListPage() {
           <section className="card overflow-hidden">
             <div className="px-5 py-4 flex flex-wrap items-center justify-between gap-3 border-b border-ink-100">
               <div>
-                <h3 className="text-base font-semibold text-ink-900">Черга автострахових випадків</h3>
+                <h3 className="text-base font-semibold text-ink-900">{t.claimsList.queueTitle}</h3>
                 <p className="text-xs text-ink-500 mt-0.5">
-                  Сортовано за SLA
+                  {t.claimsList.queueSortedBySla}
                   {apiMode === 'mock-fallback' && (
                     <span className="ml-2 text-warn-600" title={claimsError ?? undefined}>
-                      · демо-дані (бекенд недоступний)
+                      {t.claimsList.queueDemoFallback}
                     </span>
                   )}
                 </p>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {([
-                  ['Усі', '53'],
-                  ['ДТП', '32'],
-                  ['Високий ризик', '7'],
-                  ['Чекає AI', '4'],
-                  ['Чекає рішення', '5'],
-                ] as const).map(([label, count]) => (
+                  ['Усі', t.claimsList.segAll, '53'],
+                  ['ДТП', t.claimsList.segAccident, '32'],
+                  ['Високий ризик', t.claimsList.segHighRisk, '7'],
+                  ['Чекає AI', t.claimsList.segAwaitingAi, '4'],
+                  ['Чекає рішення', t.claimsList.segAwaitingDecision, '5'],
+                ] as [typeof segment, string, string][]).map(([segKey, label, count]) => (
                   <button
-                    key={label}
-                    onClick={() => dispatch(setSegment(label as never))}
+                    key={segKey}
+                    onClick={() => dispatch(setSegment(segKey))}
                     className={clsx(
                       'px-2.5 py-1 rounded-md text-xs font-semibold transition-colors',
-                      segment === label
+                      segment === segKey
                         ? 'bg-ink-900 text-white'
                         : 'bg-ink-100 text-ink-600 hover:bg-ink-200',
                     )}
@@ -220,22 +222,22 @@ export default function ClaimsListPage() {
               <table className="w-full">
                 <thead className="bg-ink-50/80">
                   <tr>
-                    <th className="table-th">Номер</th>
-                    <th className="table-th">Клієнт · Авто</th>
-                    <th className="table-th">Тип</th>
-                    <th className="table-th">Статус</th>
-                    <th className="table-th">Док.</th>
-                    <th className="table-th">AI-статус</th>
-                    <th className="table-th">Ризик</th>
-                    <th className="table-th">SLA</th>
-                    <th className="table-th">Наступна дія</th>
+                    <th className="table-th">{t.claimsList.thClaimId}</th>
+                    <th className="table-th">{t.claimsList.thCustomerVehicle}</th>
+                    <th className="table-th">{t.claimsList.thType}</th>
+                    <th className="table-th">{t.claimsList.thStatus}</th>
+                    <th className="table-th">{t.claimsList.thDocs}</th>
+                    <th className="table-th">{t.claimsList.thAiStatus}</th>
+                    <th className="table-th">{t.claimsList.thRisk}</th>
+                    <th className="table-th">{t.claimsList.thSla}</th>
+                    <th className="table-th">{t.claimsList.thNextAction}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-ink-100" data-testid="claims-table-body">
                   {rows.length === 0 && (
                     <tr>
                       <td colSpan={9} className="table-td text-center text-ink-500 py-8" data-testid="claims-empty">
-                        Жодного кейсу не знайдено за поточними фільтрами.
+                        {t.claimsList.emptyState}
                       </td>
                     </tr>
                   )}

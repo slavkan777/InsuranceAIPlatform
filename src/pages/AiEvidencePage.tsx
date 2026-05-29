@@ -28,9 +28,11 @@ import {
   selectWorkspaceAiEvidence,
 } from '@/features/claims/claimWorkspaceSelectors';
 import clsx from '@/utils/clsx';
+import { useI18n } from '@/i18n/useI18n';
 
 export default function AiEvidencePage() {
   const dispatch = useAppDispatch();
+  const { t } = useI18n();
 
   // --- store selectors (with mock fallback) ---
   const claimDetailFromStore = useAppSelector(selectClaimDetail);
@@ -80,17 +82,17 @@ export default function AiEvidencePage() {
       dispatch(
         pushToast({
           tone: 'success',
-          title: 'AI-рішення зафіксовано у журналі.',
-          detail: `Джерело: AI · cmd=${result.commandId.slice(0, 14)}… · run=${result.aiRunId}`,
+          title: t.aiEvidence.toastDecisionSuccessTitle,
+          detail: `${t.aiEvidence.toastDecisionSuccessDetail}${result.commandId.slice(0, 14)}…${t.aiEvidence.toastDecisionSuccessRun}${result.aiRunId}`,
         }),
       );
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Невідома помилка.';
+      const msg = err instanceof Error ? err.message : String(err);
       setAiDecisionError(msg);
       dispatch(
         pushToast({
           tone: 'error',
-          title: 'Не вдалося зафіксувати AI-рішення.',
+          title: t.aiEvidence.toastDecisionErrorTitle,
           detail: msg,
         }),
       );
@@ -113,9 +115,9 @@ export default function AiEvidencePage() {
       {/* ---------- Header / run controls ---------- */}
       <section className="card card-pad flex flex-wrap items-center gap-x-6 gap-y-3 justify-between">
         <div>
-          <h2 className="text-xl font-bold text-ink-900">AI-аналіз та докази</h2>
+          <h2 className="text-xl font-bold text-ink-900">{t.aiEvidence.pageTitle}</h2>
           <p className="text-sm text-ink-500 mt-1">
-            {c.id} · Trace:{' '}
+            {c.id} · {t.aiEvidence.pageSubtitleTrace}{' '}
             <span className="font-mono text-brand-700">{c.traceId}</span> ·{' '}
             <span
               className={clsx(
@@ -126,17 +128,17 @@ export default function AiEvidencePage() {
                     ? 'bg-ink-100 text-ink-600'
                     : 'bg-warn-100 text-warn-700',
               )}
-              title="AI-провайдер, який повернув останній прогон"
+              title={t.aiEvidence.pageSubtitleProviderTooltip}
             >
               {providerMode}
             </span>{' '}
             · <span className="font-mono text-ink-600">{modelName}</span> ·{' '}
-            {displayTokens.toLocaleString('uk-UA')} токенів · ${displayCost.toFixed(4)} {currencyCode}
+            {displayTokens.toLocaleString('uk-UA')} {t.aiEvidence.pageSubtitleTokens} · ${displayCost.toFixed(4)} {currencyCode}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <label className="flex items-center gap-2 text-sm text-ink-600">
-            Мін. впевненість
+            {t.aiEvidence.minConfidenceLabel}
             <input
               type="range"
               min={50}
@@ -152,23 +154,25 @@ export default function AiEvidencePage() {
             data-testid="run-ai-analysis"
             onClick={() => dispatch(runAiAnalysis(c.id))}
             disabled={status === 'running'}
-            title="Запустити advisory-only AI-аналіз через BFF (Mock за замовчуванням; DeepSeek тільки за явним opt-in)"
+            title={t.aiEvidence.runButtonTooltip}
             className="btn-primary"
           >
-            {status === 'running' ? `Запускаємо ${progressPct}%` : 'Запустити AI-аналіз'}
+            {status === 'running'
+              ? `${t.aiEvidence.runButtonRunning} ${progressPct}%`
+              : t.aiEvidence.runButtonIdle}
           </button>
         </div>
       </section>
 
       {status === 'running' && (
         <section className="card card-pad">
-          <ProgressBar value={progressPct} tone="ai" label="Хід AI-запуску" />
+          <ProgressBar value={progressPct} tone="ai" label={t.aiEvidence.progressLabel} />
         </section>
       )}
 
       {lastError && status === 'failed' && (
         <section className="card card-pad border-danger-200 bg-danger-500/5">
-          <div className="text-sm font-semibold text-danger-700">AI-аналіз не виконано</div>
+          <div className="text-sm font-semibold text-danger-700">{t.aiEvidence.errorTitle}</div>
           <div className="text-xs text-ink-600 mt-1">{lastError}</div>
         </section>
       )}
@@ -177,20 +181,20 @@ export default function AiEvidencePage() {
       <section className="card card-pad border-ai-200 bg-gradient-to-br from-ai-50 to-white">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
           <div>
-            <div className="metric-label text-ai-700">Advisory-only AI</div>
+            <div className="metric-label text-ai-700">{t.aiEvidence.advisoryBadge}</div>
             <h3 className="text-lg font-semibold text-ink-900 mt-0.5">
-              Останній прогон AI-аналізу
+              {t.aiEvidence.lastRunHeading}
             </h3>
           </div>
           <div className="flex flex-wrap items-center gap-2">
             {lastRunStatus === 'loading' && (
-              <span className="chip bg-ink-100 text-ink-600">Завантаження…</span>
+              <span className="chip bg-ink-100 text-ink-600">{t.aiEvidence.chipLoading}</span>
             )}
             {lastRunStatus === 'succeeded' && lastRun && (
               <>
                 <span className="chip bg-good-100 text-good-700">{lastRun.status}</span>
                 <span className="chip bg-ink-100 text-ink-600">
-                  conf {lastRun.confidenceScore}%
+                  {t.aiEvidence.chipConfPrefix} {lastRun.confidenceScore}%
                 </span>
                 <span
                   className={clsx(
@@ -202,15 +206,15 @@ export default function AiEvidencePage() {
                         : 'bg-good-100 text-good-700',
                   )}
                 >
-                  risk {lastRun.riskLevel}
+                  {t.aiEvidence.chipRiskPrefix} {lastRun.riskLevel}
                 </span>
               </>
             )}
             {lastRunStatus === 'succeeded' && !lastRun && (
-              <span className="chip bg-ink-100 text-ink-600">Прогонів ще немає</span>
+              <span className="chip bg-ink-100 text-ink-600">{t.aiEvidence.chipNoRuns}</span>
             )}
             {lastRunStatus === 'failed' && (
-              <span className="chip bg-danger-100 text-danger-700">Помилка завантаження</span>
+              <span className="chip bg-danger-100 text-danger-700">{t.aiEvidence.chipLoadError}</span>
             )}
           </div>
         </div>
@@ -220,23 +224,23 @@ export default function AiEvidencePage() {
             <div className="space-y-3">
               <div>
                 <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1">
-                  Зведення
+                  {t.aiEvidence.sectionSummary}
                 </div>
                 <p className="text-sm text-ink-800">{lastRun.summaryText}</p>
               </div>
               <div>
                 <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1">
-                  Рекомендована дія (порадницька)
+                  {t.aiEvidence.sectionRecommendedAction}
                 </div>
                 <p className="text-sm text-ink-800">{lastRun.recommendedAction.action}</p>
                 <p className="text-xs text-ink-500 mt-1">
-                  Обґрунтування: {lastRun.recommendedAction.rationale} · conf{' '}
+                  {t.aiEvidence.rationalePrefix} {lastRun.recommendedAction.rationale} · {t.aiEvidence.confSuffix}{' '}
                   {lastRun.recommendedAction.confidenceScore}%
                 </p>
               </div>
               <div>
                 <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1">
-                  Поліс / покриття
+                  {t.aiEvidence.sectionPolicy}
                 </div>
                 <p className="text-sm text-ink-800">{lastRun.policyCoverageExplanation}</p>
               </div>
@@ -245,7 +249,7 @@ export default function AiEvidencePage() {
             <div className="space-y-3">
               <div>
                 <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1">
-                  Знахідки ({lastRun.findings.length})
+                  {t.aiEvidence.sectionFindings} ({lastRun.findings.length})
                 </div>
                 <ul className="space-y-1.5">
                   {lastRun.findings.map((f) => (
@@ -269,23 +273,23 @@ export default function AiEvidencePage() {
               </div>
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div>
-                  <div className="text-ink-500 uppercase tracking-wide">Докази</div>
+                  <div className="text-ink-500 uppercase tracking-wide">{t.aiEvidence.counterEvidence}</div>
                   <div className="text-ink-800 font-semibold mt-0.5">
                     {lastRun.evidence.length}
                   </div>
                 </div>
                 <div>
-                  <div className="text-ink-500 uppercase tracking-wide">Ризики</div>
+                  <div className="text-ink-500 uppercase tracking-wide">{t.aiEvidence.counterRisks}</div>
                   <div className="text-ink-800 font-semibold mt-0.5">{lastRun.risks.length}</div>
                 </div>
                 <div>
-                  <div className="text-ink-500 uppercase tracking-wide">Токени</div>
+                  <div className="text-ink-500 uppercase tracking-wide">{t.aiEvidence.counterTokens}</div>
                   <div className="text-ink-800 font-semibold mt-0.5 font-mono">
                     {lastRun.costTrace.tokens.toLocaleString('uk-UA')}
                   </div>
                 </div>
                 <div>
-                  <div className="text-ink-500 uppercase tracking-wide">Cost</div>
+                  <div className="text-ink-500 uppercase tracking-wide">{t.aiEvidence.counterCost}</div>
                   <div className="text-ink-800 font-semibold mt-0.5 font-mono">
                     ${lastRun.costTrace.estimatedCost.toFixed(6)} {lastRun.costTrace.currencyCode}
                   </div>
@@ -295,34 +299,49 @@ export default function AiEvidencePage() {
               {/* Guardrail authority pills — must all be FALSE; rendered as read-only chips */}
               <div>
                 <div className="text-xs font-semibold text-ink-500 uppercase tracking-wide mb-1.5">
-                  Guardrails (порадницький режим)
+                  {t.aiEvidence.guardrailsHeading}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
-                  <GuardrailPill label="advisoryOnly" value={lastRun.guardrails.advisoryOnly} positive />
+                  <GuardrailPill label="advisoryOnly" value={lastRun.guardrails.advisoryOnly} positive
+                    expectTrueText={t.aiEvidence.guardrailExpectTrue}
+                    expectFalseNote={t.aiEvidence.guardrailExpectFalseNote}
+                  />
                   <GuardrailPill
                     label="requiresHumanReview"
                     value={lastRun.guardrails.requiresHumanReview}
                     positive
+                    expectTrueText={t.aiEvidence.guardrailExpectTrue}
+                    expectFalseNote={t.aiEvidence.guardrailExpectFalseNote}
                   />
                   <GuardrailPill
                     label="canApprovePayout"
                     value={lastRun.guardrails.canApprovePayout}
+                    expectTrueText={t.aiEvidence.guardrailExpectTrue}
+                    expectFalseNote={t.aiEvidence.guardrailExpectFalseNote}
                   />
                   <GuardrailPill
                     label="canRejectClaim"
                     value={lastRun.guardrails.canRejectClaim}
+                    expectTrueText={t.aiEvidence.guardrailExpectTrue}
+                    expectFalseNote={t.aiEvidence.guardrailExpectFalseNote}
                   />
                   <GuardrailPill
                     label="canAccuseFraudFinal"
                     value={lastRun.guardrails.canAccuseFraudFinal}
+                    expectTrueText={t.aiEvidence.guardrailExpectTrue}
+                    expectFalseNote={t.aiEvidence.guardrailExpectFalseNote}
                   />
                   <GuardrailPill
                     label="canSendCustomerMessage"
                     value={lastRun.guardrails.canSendCustomerMessage}
+                    expectTrueText={t.aiEvidence.guardrailExpectTrue}
+                    expectFalseNote={t.aiEvidence.guardrailExpectFalseNote}
                   />
                   <GuardrailPill
                     label="canChangeClaimStatus"
                     value={lastRun.guardrails.canChangeClaimStatus}
+                    expectTrueText={t.aiEvidence.guardrailExpectTrue}
+                    expectFalseNote={t.aiEvidence.guardrailExpectFalseNote}
                   />
                 </div>
                 <p className="text-xs text-ink-500 mt-2 italic">{lastRun.notice}</p>
@@ -331,12 +350,11 @@ export default function AiEvidencePage() {
           </div>
         ) : lastRunStatus === 'idle' || lastRunStatus === 'loading' ? (
           <div className="text-sm text-ink-500">
-            Очікуємо першу відповідь BFF (GET /api/claims/{c.id}/ai-analysis)…
+            {t.aiEvidence.waitingBff}{c.id}{t.aiEvidence.waitingBffSuffix}
           </div>
         ) : (
           <div className="text-sm text-ink-600">
-            Для цього кейсу AI-прогонів ще немає. Натисніть «Запустити AI-аналіз», щоб виконати
-            advisory-only прогон.
+            {t.aiEvidence.noRunsYet}
           </div>
         )}
       </section>
@@ -345,14 +363,14 @@ export default function AiEvidencePage() {
       <section className="card card-pad border-ai-200">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <div className="metric-label text-ai-700">AI-рішення у журналі (sandbox)</div>
+            <div className="metric-label text-ai-700">{t.aiEvidence.decisionBadge}</div>
             <h3 className="text-base font-semibold text-ink-900 mt-0.5">
-              Зафіксувати AI-рекомендацію як аудитоване рішення
+              {t.aiEvidence.decisionHeading}
             </h3>
             <p className="text-xs text-ink-500 mt-1 leading-snug max-w-xl">
-              Створює запис у журналі аудиту з джерелом{' '}
-              <span className="font-mono">Source=AI</span> та відповідний outbox-event.
-              Виплата не виконується, лист клієнту не надсилається, статус кейсу не змінюється.
+              {t.aiEvidence.decisionDescription}
+              <span className="font-mono">Source=AI</span>
+              {t.aiEvidence.decisionDescriptionSuffix}
             </p>
           </div>
           <button
@@ -362,15 +380,15 @@ export default function AiEvidencePage() {
             disabled={!lastRun || recordingDecision}
             title={
               lastRun
-                ? 'Зафіксувати AI-рекомендацію останнього прогону у журналі (без виплати/повідомлень)'
-                : 'Спершу виконайте AI-аналіз — без прогону неможливо створити AI-рішення'
+                ? t.aiEvidence.decisionButtonTooltipReady
+                : t.aiEvidence.decisionButtonTooltipNoRun
             }
             className="btn-primary inline-flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Icon name="cpu" size={14} />
             {recordingDecision
-              ? 'Збереження…'
-              : 'Зафіксувати AI-рішення'}
+              ? t.aiEvidence.decisionButtonSaving
+              : t.aiEvidence.decisionButtonIdle}
           </button>
         </div>
 
@@ -378,37 +396,37 @@ export default function AiEvidencePage() {
           <div data-testid="ai-decision-recorded" className="mt-4 rounded-lg border border-good-200 bg-good-50 px-3 py-2.5 text-sm">
             <div className="flex items-center gap-2 text-good-800 font-semibold">
               <Icon name="check" size={14} />
-              Збережено · advisory-only · <span data-testid="ai-decision-source">{lastAiDecision.source}</span>
+              {t.aiEvidence.decisionSavedBanner} <span data-testid="ai-decision-source">{lastAiDecision.source}</span>
             </div>
             <div className="grid sm:grid-cols-2 gap-x-4 gap-y-1 mt-2 text-xs text-ink-700">
               <div>
-                <span className="text-ink-500">cmd </span>
+                <span className="text-ink-500">{t.aiEvidence.decisionLabelCmd} </span>
                 <span className="font-mono text-ink-900">{lastAiDecision.commandId}</span>
               </div>
               <div>
-                <span className="text-ink-500">audit </span>
+                <span className="text-ink-500">{t.aiEvidence.decisionLabelAudit} </span>
                 <span className="font-mono text-ink-900">
                   {lastAiDecision.auditEventId ?? '—'}
                 </span>
               </div>
               <div>
-                <span className="text-ink-500">outbox </span>
+                <span className="text-ink-500">{t.aiEvidence.decisionLabelOutbox} </span>
                 <span className="font-mono text-ink-900">
                   {lastAiDecision.outboxMessageId ?? '—'}
                 </span>
               </div>
               <div>
-                <span className="text-ink-500">runId </span>
+                <span className="text-ink-500">{t.aiEvidence.decisionLabelRunId} </span>
                 <span className="font-mono text-ink-900">{lastAiDecision.aiRunId}</span>
               </div>
               <div>
-                <span className="text-ink-500">provider </span>
+                <span className="text-ink-500">{t.aiEvidence.decisionLabelProvider} </span>
                 <span className="font-mono text-ink-900">
                   {lastAiDecision.providerMode} / {lastAiDecision.modelName}
                 </span>
               </div>
               <div>
-                <span className="text-ink-500">source </span>
+                <span className="text-ink-500">{t.aiEvidence.decisionLabelSource} </span>
                 <span className="font-mono text-ai-700 font-semibold">
                   {lastAiDecision.source}
                 </span>
@@ -424,7 +442,7 @@ export default function AiEvidencePage() {
           </div>
         ) : !lastRun ? (
           <div className="mt-4 rounded-lg border border-ink-200 bg-ink-50 px-3 py-2.5 text-xs text-ink-600">
-            Спершу виконайте «Запустити AI-аналіз» — без прогону немає що фіксувати.
+            {t.aiEvidence.decisionNoRunHint}
           </div>
         ) : null}
       </section>
@@ -435,9 +453,9 @@ export default function AiEvidencePage() {
           <section className="card card-pad">
             <div className="flex items-center justify-between mb-3">
               <div>
-                <div className="section-title">AI-знахідки (mock-візуалізація)</div>
+                <div className="section-title">{t.aiEvidence.findingsTitle}</div>
                 <p className="text-sm text-ink-500 mt-0.5">
-                  {keyFindings.length} висновки після обробки документів
+                  {keyFindings.length} {t.aiEvidence.findingsSubtitle}
                 </p>
               </div>
             </div>
@@ -476,18 +494,18 @@ export default function AiEvidencePage() {
           <section className="card overflow-hidden">
             <div className="px-5 py-4 border-b border-ink-100 flex items-center justify-between gap-3">
               <div>
-                <div className="section-title">Витягнуті сутності</div>
-                <p className="text-sm text-ink-500 mt-0.5">Дані з усіх джерел, нормалізовано</p>
+                <div className="section-title">{t.aiEvidence.entitiesTitle}</div>
+                <p className="text-sm text-ink-500 mt-0.5">{t.aiEvidence.entitiesSubtitle}</p>
               </div>
-              <span className="chip">{filteredEntities.length} полів</span>
+              <span className="chip">{filteredEntities.length} {t.aiEvidence.entitiesChipSuffix}</span>
             </div>
             <table className="w-full">
               <thead className="bg-ink-50/80">
                 <tr>
-                  <th className="table-th">Поле</th>
-                  <th className="table-th">Значення</th>
-                  <th className="table-th">Джерело</th>
-                  <th className="table-th text-right">Впевн.</th>
+                  <th className="table-th">{t.aiEvidence.entitiesColField}</th>
+                  <th className="table-th">{t.aiEvidence.entitiesColValue}</th>
+                  <th className="table-th">{t.aiEvidence.entitiesColSource}</th>
+                  <th className="table-th text-right">{t.aiEvidence.entitiesColConfidence}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-ink-100">
@@ -515,7 +533,7 @@ export default function AiEvidencePage() {
                 {filteredEntities.length === 0 && (
                   <tr>
                     <td colSpan={4} className="table-td text-center text-ink-500 py-6">
-                      Жодне поле не відповідає поточному фільтру впевненості.
+                      {t.aiEvidence.entitiesEmptyState}
                     </td>
                   </tr>
                 )}
@@ -526,7 +544,7 @@ export default function AiEvidencePage() {
 
         <aside className="flex flex-col gap-5">
           <section className="card card-pad">
-            <div className="section-title mb-3">Докази</div>
+            <div className="section-title mb-3">{t.aiEvidence.evidenceTitle}</div>
             <div className="flex flex-wrap gap-1.5">
               {evidenceTabs.map((tab) => (
                 <button
@@ -544,12 +562,13 @@ export default function AiEvidencePage() {
               ))}
             </div>
             <div className="mt-4 rounded-lg bg-ink-50 border border-ink-100 p-3 text-sm text-ink-700">
-              Вибраний доказ: <span className="font-semibold text-ink-900">{selectedEvidence}</span>
+              {t.aiEvidence.evidenceSelectedPrefix}{' '}
+              <span className="font-semibold text-ink-900">{selectedEvidence}</span>
             </div>
           </section>
 
           <section className="card card-pad">
-            <div className="section-title mb-3">Впевненість моделі</div>
+            <div className="section-title mb-3">{t.aiEvidence.modelConfidenceTitle}</div>
             <div className="space-y-3">
               {modelConfidence.map((m) => (
                 <ProgressBar
@@ -576,10 +595,14 @@ function GuardrailPill({
   label,
   value,
   positive,
+  expectTrueText,
+  expectFalseNote,
 }: {
   label: string;
   value: boolean;
   positive?: boolean;
+  expectTrueText: string;
+  expectFalseNote: string;
 }) {
   // Expected for safety: positive=true OR (positive=false AND value=false)
   const safe = positive ? value === true : value === false;
@@ -591,8 +614,8 @@ function GuardrailPill({
       )}
       title={
         positive
-          ? `Очікуємо ${label}=true`
-          : `Очікуємо ${label}=false — AI ніколи не отримує цей дозвіл`
+          ? `${expectTrueText} ${label}=true`
+          : `${expectTrueText} ${label}=false — ${expectFalseNote}`
       }
     >
       {label}={String(value)}

@@ -5,6 +5,7 @@ import { Icon } from '@/components/ui/Icon';
 import { pushToast } from '@/features/ui/uiFeedbackSlice';
 import { insuranceApi } from '@/api/insuranceApi';
 import type { UploadDocumentContentBody } from '@/api/insuranceApi.types';
+import { useI18n } from '@/i18n/useI18n';
 
 interface UploadDocumentContentModalProps {
   open: boolean;
@@ -14,23 +15,6 @@ interface UploadDocumentContentModalProps {
   onUploaded?: (commandId: string) => void;
 }
 
-const KIND_OPTIONS = [
-  { value: 'police-report', label: 'Поліцейський звіт' },
-  { value: 'customer-statement', label: 'Заява клієнта' },
-  { value: 'estimate', label: 'Кошторис СТО' },
-  { value: 'note', label: 'Внутрішня нотатка' },
-  { value: 'damage-summary', label: 'Опис пошкоджень' },
-];
-
-const DOC_TYPE_OPTIONS = [
-  { value: '', label: '— оберіть тип —' },
-  { value: 'PoliceReport', label: 'Поліцейський звіт' },
-  { value: 'CustomerStatement', label: 'Заява клієнта' },
-  { value: 'Estimate', label: 'Кошторис ремонту' },
-  { value: 'InternalNote', label: 'Внутрішня нотатка' },
-  { value: 'OtherDocument', label: 'Інший документ' },
-];
-
 const SAMPLE_TEMPLATES: Record<string, string> = {
   'police-report':
     'ДТП на перехресті Київська 24, 18.05.2026 14:32.\n' +
@@ -38,7 +22,7 @@ const SAMPLE_TEMPLATES: Record<string, string> = {
     'Видимі пошкодження: задній бампер, задні двері.\n' +
     'Поліцейський: Іваненко О.М.',
   'customer-statement':
-    'Я, [синтетичне ім’я], підтверджую факт ДТП 18.05.2026 о 14:32.\n' +
+    'Я, [синтетичне імʼя], підтверджую факт ДТП 18.05.2026 о 14:32.\n' +
     'Автомобіль: Toyota Camry 2021. Пошкодження: задній бампер.\n' +
     'Свідомі помилки протоколу відсутні.',
   estimate:
@@ -60,7 +44,26 @@ export function UploadDocumentContentModal({
   claimId = 'CLM-1006',
   onUploaded,
 }: UploadDocumentContentModalProps) {
+  const { t } = useI18n();
   const dispatch = useAppDispatch();
+
+  const KIND_OPTIONS = [
+    { value: 'police-report', label: t.ui.uploadKindPoliceReport },
+    { value: 'customer-statement', label: t.ui.uploadKindCustomerStatement },
+    { value: 'estimate', label: t.ui.uploadKindEstimate },
+    { value: 'note', label: t.ui.uploadKindInternalNote },
+    { value: 'damage-summary', label: t.ui.uploadKindDamageSummary },
+  ];
+
+  const DOC_TYPE_OPTIONS = [
+    { value: '', label: t.ui.uploadDocTypePlaceholder },
+    { value: 'PoliceReport', label: t.ui.uploadDocTypePoliceReport },
+    { value: 'CustomerStatement', label: t.ui.uploadDocTypeCustomerStatement },
+    { value: 'Estimate', label: t.ui.uploadDocTypeEstimate },
+    { value: 'InternalNote', label: t.ui.uploadDocTypeInternalNote },
+    { value: 'OtherDocument', label: t.ui.uploadDocTypeOther },
+  ];
+
   const [kind, setKind] = useState('police-report');
   const [title, setTitle] = useState('');
   const [docType, setDocType] = useState('');
@@ -91,7 +94,7 @@ export function UploadDocumentContentModal({
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!title.trim() || !content.trim()) {
-      setError('Заповніть «Назва» та «Зміст» (обов’язкові).');
+      setError(t.ui.uploadDocErrorRequired);
       return;
     }
     setSubmitting(true);
@@ -108,7 +111,7 @@ export function UploadDocumentContentModal({
       dispatch(
         pushToast({
           tone: 'success',
-          title: 'Документ збережено в БД.',
+          title: t.ui.uploadDocToastTitle,
           detail: `${result.message} cmd=${result.commandId.slice(0, 14)}…`,
         }),
       );
@@ -126,8 +129,8 @@ export function UploadDocumentContentModal({
       open={open}
       onClose={() => !submitting && onClose()}
       size="lg"
-      title="Завантажити документ (синтетичний)"
-      description="Зберігає у БД синтетичний текстовий документ (без файлу, без OCR, без зовнішнього сховища). Поле Content типу nvarchar(max). Реальні PII не використовуються."
+      title={t.ui.uploadDocTitle}
+      description={t.ui.uploadDocDescription}
       footer={
         <>
           <button
@@ -137,7 +140,7 @@ export function UploadDocumentContentModal({
             disabled={submitting}
             className="btn-ghost px-3 py-1.5 text-sm disabled:opacity-50"
           >
-            Скасувати
+            {t.ui.uploadDocCancel}
           </button>
           <button
             type="submit"
@@ -147,7 +150,7 @@ export function UploadDocumentContentModal({
             className="btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-sm disabled:opacity-50"
           >
             <Icon name="upload" size={14} />
-            {submitting ? 'Збереження…' : 'Зберегти у БД'}
+            {submitting ? t.ui.uploadDocSubmitting : t.ui.uploadDocSubmit}
           </button>
         </>
       }
@@ -156,7 +159,7 @@ export function UploadDocumentContentModal({
         <div className="grid sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-              Тип запису
+              {t.ui.uploadDocLabelKind}
             </label>
             <select
               value={kind}
@@ -171,7 +174,7 @@ export function UploadDocumentContentModal({
           </div>
           <div>
             <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-              Тип документа
+              {t.ui.uploadDocLabelDocType}
             </label>
             <select
               value={docType}
@@ -187,7 +190,7 @@ export function UploadDocumentContentModal({
         </div>
         <div>
           <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-            Назва *
+            {t.ui.uploadDocLabelTitle}
           </label>
           <input
             type="text"
@@ -202,14 +205,14 @@ export function UploadDocumentContentModal({
         <div>
           <div className="flex items-center justify-between mb-1.5">
             <label className="text-xs font-semibold text-ink-700 uppercase tracking-wide">
-              Зміст (текст) *
+              {t.ui.uploadDocLabelContent}
             </label>
             <button
               type="button"
               onClick={handleUseTemplate}
               className="text-[10px] text-brand-700 hover:text-brand-900 font-semibold uppercase tracking-wide"
             >
-              ↻ Підставити шаблон
+              {t.ui.uploadDocUseTemplate}
             </button>
           </div>
           <textarea
@@ -218,11 +221,11 @@ export function UploadDocumentContentModal({
             onChange={(e) => setContent(e.target.value)}
             disabled={submitting}
             rows={9}
-            placeholder="Текст звіту / заяви / нотатки. Зберігається в нвачар(макс)."
+            placeholder={t.ui.uploadDocPlaceholderContent}
             className="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-xs focus-ring font-mono resize-y"
           />
           <p className="text-[10px] text-ink-500 mt-1">
-            Довжина: {content.length} симв. (ліміт sandbox: 200 000).
+            {content.length} {t.ui.uploadDocHelperLength}
           </p>
         </div>
         {error ? (
@@ -233,9 +236,9 @@ export function UploadDocumentContentModal({
         <div className="rounded-lg border border-ink-200 bg-ink-50 px-3 py-2 text-[11px] text-ink-600 leading-snug flex items-start gap-2">
           <span className="mt-0.5 shrink-0"><Icon name="shield" size={12} /></span>
           <span>
-            Зміст пишеться у документ кейсу{' '}
-            <span className="font-mono text-ink-800">{claimId}</span> (поле Content типу
-            nvarchar(max)). Жодного завантаження файлу, жодного зовнішнього сервісу.
+            {t.ui.uploadDocSandboxNotePrefix}{' '}
+            <span className="font-mono text-ink-800">{claimId}</span>{' '}
+            {t.ui.uploadDocSandboxNoteSuffix}
           </span>
         </div>
       </form>

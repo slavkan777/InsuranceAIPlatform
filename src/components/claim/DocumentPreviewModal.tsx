@@ -1,5 +1,6 @@
 import { Modal } from '@/components/ui/Modal';
 import { Icon } from '@/components/ui/Icon';
+import { useI18n } from '@/i18n/useI18n';
 
 interface DocumentPreviewModalProps {
   open: boolean;
@@ -14,14 +15,17 @@ interface DocumentPreviewModalProps {
 export function DocumentPreviewModal({
   open,
   onClose,
-  documentTitle = 'Документ',
+  documentTitle,
 }: DocumentPreviewModalProps) {
+  const { t } = useI18n();
+  const resolvedTitle = documentTitle ?? t.ui.docPreviewDefaultTitle;
+
   return (
     <Modal
       open={open}
       onClose={onClose}
-      title="Перегляд оригіналу"
-      description="У цьому демо ми не зберігаємо файли — лише довідкові метадані. Реальний перегляд оригіналу буде доступний після підключення бінарного сховища (Azure Blob / S3 / on-prem)."
+      title={t.ui.docPreviewTitle}
+      description={t.ui.docPreviewDescription}
       footer={
         <button
           type="button"
@@ -29,7 +33,7 @@ export function DocumentPreviewModal({
           className="btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-sm"
         >
           <Icon name="check" size={14} />
-          Зрозуміло
+          {t.ui.docPreviewClose}
         </button>
       }
     >
@@ -40,18 +44,17 @@ export function DocumentPreviewModal({
           </span>
           <div>
             <div className="text-sm font-semibold text-ink-800">
-              {documentTitle}
+              {resolvedTitle}
             </div>
             <div className="text-[11px] text-ink-500 mt-1 leading-snug">
-              Оригінал не доступний у демо-режимі. Метадані документа
-              (тип, дата, статус перевірки) зберігаються у БД.
+              {t.ui.docPreviewNotAvailable}
             </div>
           </div>
         </div>
         <ul className="text-xs text-ink-600 space-y-1.5 list-disc pl-5">
-          <li>Демо-режим не приймає бінарні завантаження.</li>
-          <li>OCR/класифікація і виявлення цілісності — поза скоупом локального демо.</li>
-          <li>Журнал аудиту відображає, коли і ким переглядали метадані.</li>
+          <li>{t.ui.docPreviewBullet1}</li>
+          <li>{t.ui.docPreviewBullet2}</li>
+          <li>{t.ui.docPreviewBullet3}</li>
         </ul>
       </div>
     </Modal>

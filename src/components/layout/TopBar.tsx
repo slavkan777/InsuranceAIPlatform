@@ -7,10 +7,13 @@ import { selectAuthUser } from '@/features/auth/authSelectors';
 import { setSearch } from '@/features/claims/claimsSlice';
 import { pushToast } from '@/features/ui/uiFeedbackSlice';
 import { Icon } from '@/components/ui/Icon';
+import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
+import { useI18n } from '@/i18n/useI18n';
 
 export function TopBar() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { t } = useI18n();
   const demoActive = useAppSelector((s) => s.demo.active);
   const user = useAppSelector(selectAuthUser);
   const [searchValue, setSearchValue] = useState('');
@@ -36,14 +39,14 @@ export function TopBar() {
     dispatch(
       pushToast({
         tone: 'info',
-        title: 'Сесію демо-доступу завершено.',
-        detail: 'Локальний токен очищено.',
+        title: t.topbar.toastLogoutTitle,
+        detail: t.topbar.toastLogoutDetail,
       }),
     );
     navigate('/login', { replace: true });
   }
 
-  const initials = (user?.displayName ?? 'СК')
+  const initials = (user?.displayName ?? 'DA')
     .split(' ')
     .map((w) => w[0])
     .slice(0, 2)
@@ -60,8 +63,8 @@ export function TopBar() {
           type="search"
           value={searchValue}
           onChange={(e) => setSearchValue(e.target.value)}
-          placeholder="Пошук за номером, авто, клієнтом... (Enter)"
-          title="Натисніть Enter — пошук виконається у списку випадків"
+          placeholder={t.topbar.searchPlaceholder}
+          title={t.topbar.searchTitle}
           className="w-full pl-10 pr-14 py-2.5 rounded-xl bg-ink-50 border border-ink-200 text-sm focus-ring placeholder:text-ink-400"
         />
         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-ink-400 font-mono px-1.5 py-0.5 rounded border border-ink-200 bg-white">
@@ -72,10 +75,10 @@ export function TopBar() {
       <div className="flex items-center gap-2.5">
         <span className="hidden md:inline-flex items-center gap-2 px-2.5 py-1 rounded-md bg-good-50 border border-good-200 text-good-700 text-[11px] font-semibold uppercase tracking-wider">
           <span className="w-1.5 h-1.5 rounded-full bg-good-500 shadow-[0_0_8px_rgba(16,185,129,0.6)]" />
-          Система готова
+          {t.topbar.systemReady}
         </span>
         <span className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-ai-50 border border-ai-200 text-ai-800 text-[11px] font-semibold uppercase tracking-wider">
-          Local Sandbox
+          {t.topbar.envBadge}
         </span>
         <button
           onClick={handleRunDemo}
@@ -86,29 +89,30 @@ export function TopBar() {
           }
         >
           <Icon name={demoActive ? 'shield' : 'play'} size={15} />
-          {demoActive ? 'Зупинити демо' : 'Приклад використання'}
+          {demoActive ? t.topbar.stopWalkthrough : t.topbar.runWalkthrough}
         </button>
         <button
           type="button"
           disabled
-          title="Довідка з'явиться у наступному релізі"
+          title={t.topbar.helpDisabledTitle}
           className="w-9 h-9 rounded-lg text-ink-400 grid place-items-center transition cursor-not-allowed opacity-60"
-          aria-label="Довідка — поки що недоступна"
+          aria-label={t.topbar.helpAria}
         >
           <Icon name="help" size={18} />
         </button>
         <button
           type="button"
           disabled
-          title="Центр сповіщень з'явиться у наступному релізі"
+          title={t.topbar.notifDisabledTitle}
           className="relative w-9 h-9 rounded-lg text-ink-400 grid place-items-center transition cursor-not-allowed opacity-60"
-          aria-label="Сповіщення — поки що недоступні"
+          aria-label={t.topbar.notifAria}
         >
           <span className="absolute top-0.5 right-0.5 w-4 h-4 grid place-items-center rounded-full bg-danger-500 text-white text-[10px] font-bold">
             3
           </span>
           <Icon name="bell" size={18} />
         </button>
+        <LanguageSwitcher />
         <div
           className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-500 to-brand-800 grid place-items-center text-white text-sm font-semibold ring-1 ring-brand-300/30"
           title={user?.login ?? 'demo user'}
@@ -119,12 +123,12 @@ export function TopBar() {
           type="button"
           data-testid="logout-button"
           onClick={handleLogout}
-          title="Вихід з демо-сесії"
-          aria-label="Вийти з демо-сесії"
+          title={t.topbar.logoutTitle}
+          aria-label={t.topbar.logoutAria}
           className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-ink-200 hover:bg-ink-50 text-ink-700 text-xs font-semibold transition-colors"
         >
           <Icon name="logOut" size={14} />
-          Вихід
+          {t.topbar.logout}
         </button>
       </div>
     </header>

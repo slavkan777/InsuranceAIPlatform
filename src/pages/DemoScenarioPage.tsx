@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { SectionHeader } from '@/components/ui/SectionHeader';
+import { Icon, type IconName } from '@/components/ui/Icon';
 import { demoSteps as mockDemoSteps } from '@/data/mock/claim-1006';
 import {
   setDemoStep,
@@ -8,11 +9,13 @@ import {
   stopDemo,
 } from '@/features/demo/demoSlice';
 import { selectDemoScenario } from '@/features/demo/demoSelectors';
+import { useI18n } from '@/i18n/useI18n';
 import clsx from '@/utils/clsx';
 
 export default function DemoScenarioPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { t } = useI18n();
   const { active, currentStep } = useAppSelector((s) => s.demo);
 
   // --- store selector (with mock fallback) ---
@@ -24,11 +27,18 @@ export default function DemoScenarioPage() {
     navigate(route);
   }
 
+  const capabilities: { icon: IconName; tone: 'brand' | 'teal' | 'warn'; title: string; body: string }[] = [
+    { icon: 'layers', tone: 'brand', title: t.demo.cap1Title, body: t.demo.cap1Body },
+    { icon: 'cpu', tone: 'teal', title: t.demo.cap2Title, body: t.demo.cap2Body },
+    { icon: 'receipt', tone: 'warn', title: t.demo.cap3Title, body: t.demo.cap3Body },
+    { icon: 'grid', tone: 'brand', title: t.demo.cap4Title, body: t.demo.cap4Body },
+  ];
+
   return (
     <div className="flex flex-col gap-6">
       <SectionHeader
-        title="Demo Scenario — Auto Insurance Claim AI Workbench"
-        subtitle="7 кроків · ~6 хвилин · готово для портфоліо/interview"
+        title={t.demo.title}
+        subtitle={t.demo.subtitle}
         actions={
           <>
             <button
@@ -36,14 +46,14 @@ export default function DemoScenarioPage() {
               disabled={active}
               className="btn-primary"
             >
-              {active ? `Грає крок ${currentStep}/7` : '▶ Приклад використання'}
+              {active ? `${t.demo.playingStep} ${currentStep}/7` : t.demo.startWalkthrough}
             </button>
             <button
               onClick={() => dispatch(stopDemo())}
               disabled={!active}
               className="btn-secondary"
             >
-              ■ Зупинити
+              {t.demo.stopWalkthrough}
             </button>
           </>
         }
@@ -63,7 +73,7 @@ export default function DemoScenarioPage() {
             >
               {isActive && (
                 <span className="absolute top-2 right-3 text-[10px] font-bold text-brand-700 uppercase">
-                  ⏵ зараз
+                  {t.demo.nowPlaying}
                 </span>
               )}
               <div className="flex items-center gap-3 mb-3">
@@ -72,65 +82,48 @@ export default function DemoScenarioPage() {
                 </div>
                 <div>
                   <div className="text-[10px] uppercase tracking-wider text-ink-400">
-                    Крок {step.step} · {step.pdfRef}
+                    {t.demo.stepLabel} {step.step} · {step.pdfRef}
                   </div>
                   <div className="text-sm font-semibold text-ink-900">{step.title}</div>
                 </div>
               </div>
               <p className="text-xs text-ink-600 leading-snug">{step.caption}</p>
-              <div className="mt-3 text-xs font-medium text-brand-700">Перейти →</div>
+              <div className="mt-3 text-xs font-medium text-brand-700">{t.demo.openStep}</div>
             </button>
           );
         })}
       </section>
 
       <section className="card card-pad">
-        <div className="section-title mb-4">Архітектура системи</div>
-        <p className="text-sm text-ink-500 mb-4">Три шари — core + AI копілот + Azure</p>
-        <div className="grid md:grid-cols-3 gap-4">
-          {[
-            {
-              title: 'Core .NET',
-              subtitle: 'Insurance Operations Platform',
-              tone: 'brand',
-              items: ['CQRS / MediatR', 'Clean Architecture', 'Polly + OpenTelemetry'],
-            },
-            {
-              title: 'AI Document Intelligence',
-              subtitle: 'RAG · scoring · evidence',
-              tone: 'teal',
-              items: ['Document Classifier', 'Field Extractor', 'Risk + Recommender'],
-            },
-            {
-              title: 'AI provider / Infrastructure',
-              subtitle: 'Mock by default · DeepSeek opt-in · Azure-ready',
-              tone: 'warn',
-              items: [
-                'Mock provider (default)',
-                'Real DeepSeek (env opt-in)',
-                'Audit + Outbox',
-                'Azure / App Insights / Blob — planned',
-              ],
-            },
-          ].map((layer) => (
+        <div className="section-title mb-1">{t.demo.capabilitiesTitle}</div>
+        <p className="text-sm text-ink-500 mb-4">{t.demo.capabilitiesSubtitle}</p>
+        <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-4">
+          {capabilities.map((cap) => (
             <div
-              key={layer.title}
+              key={cap.title}
               className={clsx(
                 'rounded-xl border p-4',
-                layer.tone === 'brand'
+                cap.tone === 'brand'
                   ? 'bg-brand-50/60 border-brand-200'
-                  : layer.tone === 'teal'
+                  : cap.tone === 'teal'
                     ? 'bg-teal-500/10 border-teal-500/20'
                     : 'bg-warn-500/10 border-warn-500/20',
               )}
             >
-              <div className="text-sm font-semibold text-ink-900">{layer.title}</div>
-              <p className="text-xs text-ink-600 mt-1">{layer.subtitle}</p>
-              <ul className="mt-3 space-y-1 text-xs text-ink-700">
-                {layer.items.map((i) => (
-                  <li key={i}>· {i}</li>
-                ))}
-              </ul>
+              <span
+                className={clsx(
+                  'inline-flex w-9 h-9 rounded-lg items-center justify-center mb-3',
+                  cap.tone === 'brand'
+                    ? 'bg-brand-100 text-brand-700'
+                    : cap.tone === 'teal'
+                      ? 'bg-teal-500/15 text-teal-700'
+                      : 'bg-warn-500/15 text-warn-600',
+                )}
+              >
+                <Icon name={cap.icon} size={18} />
+              </span>
+              <div className="text-sm font-semibold text-ink-900">{cap.title}</div>
+              <p className="text-xs text-ink-600 mt-1.5 leading-snug">{cap.body}</p>
             </div>
           ))}
         </div>
@@ -138,24 +131,18 @@ export default function DemoScenarioPage() {
 
       <section className="card card-pad bg-gradient-to-br from-ink-900 to-ink-700 text-white">
         <div className="text-[11px] uppercase tracking-wider text-brand-300 font-semibold">
-          Portfolio message
+          {t.demo.valueTitle}
         </div>
-        <p className="text-lg font-semibold mt-2 leading-snug">
-          Детермінована система обробки claims з AI evidence,
-          <br />
-          human review та audit / cost governance.
-        </p>
-        <p className="text-xs text-ink-300 mt-3 font-mono">
-          Stack: .NET 9 · ASP.NET Core · EF Core · React + TS (active) · DeepSeek opt-in / Azure-ready (next)
-        </p>
+        <p className="text-lg font-semibold mt-2 leading-snug">{t.demo.valueBody}</p>
+        <p className="text-xs text-ink-300 mt-3 font-mono">{t.demo.techNote}</p>
       </section>
 
       <section className="card card-pad">
-        <div className="section-title mb-2">Plan: stack note</div>
+        <div className="section-title mb-2">{t.demo.environmentTitle}</div>
         <ul className="text-sm text-ink-700 space-y-1">
-          <li>· Цей walking skeleton — лише frontend з mock-даними.</li>
-          <li>· Наступна фаза — .NET backend (CQRS + Polly + OpenTelemetry).</li>
-          <li>· Після того — Azure deployment + реальні AI provider keys.</li>
+          {t.demo.environmentBullets.map((line) => (
+            <li key={line}>· {line}</li>
+          ))}
         </ul>
       </section>
     </div>

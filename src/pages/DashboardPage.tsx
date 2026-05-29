@@ -10,6 +10,7 @@ import { DeferredActionButton } from '@/components/ui/DeferredActionButton';
 import { NewClaimModal } from '@/components/claim/NewClaimModal';
 import { pushToast } from '@/features/ui/uiFeedbackSlice';
 import { buildCsv, downloadBlob, localDateStamp } from '@/utils/csv';
+import { useI18n } from '@/i18n/useI18n';
 import { DonutChart } from '@/components/charts/DonutChart';
 import { BarList } from '@/components/charts/BarList';
 import { LineChart } from '@/components/charts/LineChart';
@@ -39,6 +40,7 @@ const eventDot: Record<string, string> = {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const { t } = useI18n();
   const selectedId = useAppSelector(selectSelectedClaimId);
 
   // --- store selectors (with mock fallback) ---
@@ -49,11 +51,11 @@ export default function DashboardPage() {
   // Build overviewMetrics from summary when available; fall back to static mock
   const resolvedMetrics = summaryFromStore
     ? [
-        { id: 'new', label: 'НОВІ ДТП', value: String(summaryFromStore.totalActive), delta: `${summaryFromStore.aiAnalysisRunning} AI runs`, tone: 'info' as const, icon: 'car' as const },
-        { id: 'wait-doc', label: 'ОЧІКУЮТЬ РІШЕННЯ', value: String(summaryFromStore.pendingReview), delta: 'на розгляді', tone: 'warn' as const, icon: 'file' as const },
-        { id: 'ai-today', label: 'AI-ОБРОБЛЕНО СЬОГОДНІ', value: String(summaryFromStore.processedToday), delta: `+${summaryFromStore.aiAnalysisRunning} зараз`, tone: 'ai' as const, icon: 'cpu' as const },
-        { id: 'high-risk', label: 'ВИСОКИЙ РИЗИК', value: String(summaryFromStore.highRisk), delta: 'поточні', tone: 'danger' as const, icon: 'shield' as const },
-        { id: 'avg-time', label: 'СЕРЕДНІЙ ЧАС SLA', value: `${summaryFromStore.avgSlaRemainingHours} год`, delta: 'залишилось', tone: 'good' as const, icon: 'clock' as const },
+        { id: 'new', label: t.dashboard.metricNewClaims, value: String(summaryFromStore.totalActive), delta: `${summaryFromStore.aiAnalysisRunning} ${t.dashboard.metricNewClaimsDelta}`, tone: 'info' as const, icon: 'car' as const },
+        { id: 'wait-doc', label: t.dashboard.metricAwaitingDecision, value: String(summaryFromStore.pendingReview), delta: t.dashboard.metricAwaitingDecisionDelta, tone: 'warn' as const, icon: 'file' as const },
+        { id: 'ai-today', label: t.dashboard.metricAiProcessedToday, value: String(summaryFromStore.processedToday), delta: `+${summaryFromStore.aiAnalysisRunning} ${t.dashboard.metricAiProcessedTodayDelta}`, tone: 'ai' as const, icon: 'cpu' as const },
+        { id: 'high-risk', label: t.dashboard.metricHighRisk, value: String(summaryFromStore.highRisk), delta: t.dashboard.metricHighRiskDelta, tone: 'danger' as const, icon: 'shield' as const },
+        { id: 'avg-time', label: t.dashboard.metricAvgSla, value: `${summaryFromStore.avgSlaRemainingHours}${t.dashboard.metricAvgSlaDeltaSuffix}`, delta: t.dashboard.metricAvgSlaDelta, tone: 'good' as const, icon: 'clock' as const },
       ]
     : overviewMetrics;
 
@@ -83,8 +85,8 @@ export default function DashboardPage() {
     dispatch(
       pushToast({
         tone: 'success',
-        title: 'Експортовано 5 рядків.',
-        detail: `Файл ${filename} збережено у завантаженнях браузера.`,
+        title: t.dashboard.toastExportTitle,
+        detail: `${t.dashboard.toastExportDetailPrefix}${filename}${t.dashboard.toastExportDetailSuffix}`,
       }),
     );
   }
@@ -93,24 +95,24 @@ export default function DashboardPage() {
     <div className="flex flex-col gap-6">
       <NewClaimModal open={newClaimOpen} onClose={() => setNewClaimOpen(false)} />
       <SectionHeader
-        title="Огляд автострахових випадків"
-        subtitle="Операційна панель · Станом на 24 травня 2026, 22:48"
+        title={t.dashboard.overviewTitle}
+        subtitle={t.dashboard.overviewSubtitle}
         actions={
           <>
-            <DeferredActionButton className="btn-secondary" hint="Перемикач періоду з'явиться у наступному релізі">
-              Сьогодні
+            <DeferredActionButton className="btn-secondary" hint={t.dashboard.periodTodayHint}>
+              {t.dashboard.periodToday}
             </DeferredActionButton>
-            <DeferredActionButton className="btn-ghost" hint="Перемикач періоду з'явиться у наступному релізі">
-              7 днів
+            <DeferredActionButton className="btn-ghost" hint={t.dashboard.period7DaysHint}>
+              {t.dashboard.period7Days}
             </DeferredActionButton>
             <button
               type="button"
               onClick={handleExportCsv}
               className="btn-secondary inline-flex items-center gap-1.5"
-              title="Експортувати огляд черги у CSV (локально)"
+              title={t.dashboard.exportCsvTitle}
             >
               <Icon name="download" size={14} />
-              Експорт CSV
+              {t.dashboard.exportCsvLabel}
             </button>
           </>
         }
@@ -125,10 +127,10 @@ export default function DashboardPage() {
       <section className="card card-pad">
         <div className="flex flex-wrap items-end justify-between mb-4 gap-2">
           <div>
-            <div className="section-title mb-1">Життєвий цикл автострахового випадку</div>
-            <div className="text-sm text-ink-500">Розподіл активних випадків за фазами</div>
+            <div className="section-title mb-1">{t.dashboard.lifecycleTitle}</div>
+            <div className="text-sm text-ink-500">{t.dashboard.lifecycleSubtitle}</div>
           </div>
-          <span className="chip">{summaryFromStore ? `${summaryFromStore.totalActive} активних` : '53 активних'}</span>
+          <span className="chip">{summaryFromStore ? `${summaryFromStore.totalActive} ${t.dashboard.lifecycleActiveChip}` : t.dashboard.claimsQueueActiveDefault}</span>
         </div>
         <div className="flex items-center gap-1 overflow-x-auto pb-1">
           {lifecyclePhases.map((p, i) => {
@@ -174,27 +176,33 @@ export default function DashboardPage() {
         <section className="card xl:col-span-2 overflow-hidden self-start">
           <div className="px-5 py-4 flex flex-wrap items-center justify-between gap-2 border-b border-ink-100">
             <div>
-              <h3 className="text-base font-semibold text-ink-900">Черга автострахових випадків</h3>
-              <p className="text-xs text-ink-500 mt-0.5">{summaryFromStore ? `${summaryFromStore.totalActive} активних` : '53 активних'} · оновлено щохвилини</p>
+              <h3 className="text-base font-semibold text-ink-900">{t.dashboard.claimsQueueTitle}</h3>
+              <p className="text-xs text-ink-500 mt-0.5">{summaryFromStore ? `${summaryFromStore.totalActive} ${t.dashboard.claimsQueueSubtitleActive}` : t.dashboard.claimsQueueActiveDefault}{t.dashboard.claimsQueueSubtitleSuffix}</p>
             </div>
             <button
               type="button"
               onClick={() => setNewClaimOpen(true)}
               className="btn-primary inline-flex items-center gap-1.5"
-              title="Створення нового синтетичного кейсу (локальний sandbox)"
+              title={t.dashboard.newClaimButtonTitle}
             >
               <Icon name="plus" size={14} />
-              Створити випадок
+              {t.dashboard.newClaimButton}
             </button>
           </div>
           <div className="flex flex-wrap gap-1.5 px-5 py-3 border-b border-ink-100 text-xs text-ink-600">
-            {['Усі', 'ДТП', 'Високий ризик', 'Чекає AI', 'Чекає рішення'].map((seg, idx) => (
+            {[
+              t.dashboard.filterAll,
+              t.dashboard.filterRta,
+              t.dashboard.filterHighRisk,
+              t.dashboard.filterAwaitAi,
+              t.dashboard.filterAwaitDecision,
+            ].map((seg, idx) => (
               <button
                 key={seg}
                 type="button"
                 disabled
                 aria-disabled="true"
-                title="Фільтри активні у розділі «Автострахові випадки»"
+                title={t.dashboard.filterTabsTitle}
                 className={clsx(
                   'px-2.5 py-1 rounded-md font-medium cursor-not-allowed',
                   idx === 0 ? 'bg-ink-900 text-white' : 'bg-ink-100 text-ink-500',
@@ -208,14 +216,14 @@ export default function DashboardPage() {
             <table className="w-full">
               <thead className="bg-ink-50/80">
                 <tr>
-                  <th className="table-th">Номер</th>
-                  <th className="table-th">Клієнт · Авто</th>
-                  <th className="table-th">Тип події</th>
-                  <th className="table-th">Документи</th>
-                  <th className="table-th">AI-статус</th>
-                  <th className="table-th">Ризик</th>
-                  <th className="table-th">Наступна дія</th>
-                  <th className="table-th">Оновлено</th>
+                  <th className="table-th">{t.dashboard.thClaimNo}</th>
+                  <th className="table-th">{t.dashboard.thCustomerVehicle}</th>
+                  <th className="table-th">{t.dashboard.thEventType}</th>
+                  <th className="table-th">{t.dashboard.thDocuments}</th>
+                  <th className="table-th">{t.dashboard.thAiStatus}</th>
+                  <th className="table-th">{t.dashboard.thRisk}</th>
+                  <th className="table-th">{t.dashboard.thNextAction}</th>
+                  <th className="table-th">{t.dashboard.thUpdated}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-ink-100">
@@ -276,7 +284,7 @@ export default function DashboardPage() {
               onClick={() => navigate('/claims')}
               className="text-sm font-semibold text-brand-700 hover:text-brand-800 inline-flex items-center gap-1"
             >
-              Переглянути всі випадки <Icon name="arrowRight" size={14} />
+              {t.dashboard.viewAllClaims} <Icon name="arrowRight" size={14} />
             </button>
           </div>
         </section>
@@ -288,30 +296,30 @@ export default function DashboardPage() {
                 <Icon name="cpu" size={16} />
               </span>
               <h3 className="text-sm font-semibold text-ink-900">
-                AI-рекомендація для {c.id}
+                {t.dashboard.aiRecTitle} {c.id}
               </h3>
             </div>
             <div className="flex items-end justify-between gap-3 mb-2">
               <div>
-                <div className="metric-label">Ймовірна виплата</div>
+                <div className="metric-label">{t.dashboard.aiRecPayoutLabel}</div>
                 <div className="text-2xl font-bold text-ink-900 font-mono mt-0.5">
                   ${c.recommendedPayout.toLocaleString('uk-UA')}
                 </div>
               </div>
               <div className="text-right">
-                <div className="metric-label">Впевненість</div>
+                <div className="metric-label">{t.dashboard.aiRecConfidenceLabel}</div>
                 <div className="text-2xl font-bold text-ai-700 mt-0.5">{c.confidence}%</div>
               </div>
             </div>
             <ProgressBar value={c.confidence} tone="ai" />
             <div className="mt-3 flex items-center gap-2">
-              <span className="pill-ai">Рекомендація</span>
-              <span className="text-xs text-ink-500">людська перевірка обов'язкова</span>
+              <span className="pill-ai">{t.dashboard.aiRecPill}</span>
+              <span className="text-xs text-ink-500">{t.dashboard.aiRecAdvisory}</span>
             </div>
             <p className="text-sm text-ink-700 mt-3 leading-snug">
-              Запросити додаткове фото пошкодження заднього бампера перед погодженням виплати.
+              {t.dashboard.aiRecBody}
             </p>
-            <div className="section-title mt-4 mb-2">Ключові фактори</div>
+            <div className="section-title mt-4 mb-2">{t.dashboard.aiRecKeyFactors}</div>
             <ul className="space-y-1.5 text-sm">
               {keyFindings.slice(0, 3).map((f, idx) => (
                 <li key={idx} className="flex items-start gap-2">
@@ -333,12 +341,12 @@ export default function DashboardPage() {
               onClick={() => navigate('/claims/CLM-1006/ai-evidence')}
               className="mt-4 w-full inline-flex items-center justify-center gap-2 px-3.5 py-2 rounded-lg border border-ai-200 text-ai-700 hover:bg-ai-50 text-sm font-semibold transition-colors"
             >
-              Переглянути AI-аналіз <Icon name="arrowRight" size={15} />
+              {t.dashboard.aiRecViewButton} <Icon name="arrowRight" size={15} />
             </button>
           </section>
 
           <section className="card card-pad border-t-[3px] border-t-ink-600">
-            <div className="section-title mb-3">Аудит і витрати (сьогодні)</div>
+            <div className="section-title mb-3">{t.dashboard.auditTitle}</div>
             <dl className="space-y-2.5">
               {auditToday.map((r) => (
                 <div key={r.id} className="flex items-center justify-between text-sm">
@@ -354,12 +362,12 @@ export default function DashboardPage() {
               onClick={() => navigate('/claims/CLM-1006/audit')}
               className="mt-3 text-sm font-semibold text-brand-700 hover:text-brand-800 inline-flex items-center gap-1"
             >
-              Переглянути деталі <Icon name="arrowRight" size={14} />
+              {t.dashboard.auditViewDetails} <Icon name="arrowRight" size={14} />
             </button>
           </section>
 
           <section className="card card-pad">
-            <div className="section-title mb-3">Останні події</div>
+            <div className="section-title mb-3">{t.dashboard.recentEventsTitle}</div>
             <ol className="space-y-3">
               {recentEvents.map((e) => (
                 <li key={e.id} className="flex items-start gap-3 text-sm">
@@ -373,7 +381,7 @@ export default function DashboardPage() {
               onClick={() => navigate('/claims/CLM-1006/audit')}
               className="mt-3 text-sm font-semibold text-brand-700 hover:text-brand-800 inline-flex items-center gap-1"
             >
-              Переглянути журнал аудиту <Icon name="arrowRight" size={14} />
+              {t.dashboard.recentEventsViewAudit} <Icon name="arrowRight" size={14} />
             </button>
           </section>
         </div>
@@ -381,8 +389,8 @@ export default function DashboardPage() {
 
       <div className="grid lg:grid-cols-3 gap-5">
         <section className="card card-pad">
-          <div className="section-title mb-1">Випадки за типом події</div>
-          <div className="text-xs text-ink-400 mb-4">за 7 днів</div>
+          <div className="section-title mb-1">{t.dashboard.chartCaseTypeTitle}</div>
+          <div className="text-xs text-ink-400 mb-4">{t.dashboard.chartCaseTypeSubtitle}</div>
           <div className="flex items-center gap-5">
             <DonutChart data={caseTypeBreakdown} />
             <ul className="space-y-2 text-sm flex-1">
@@ -402,14 +410,14 @@ export default function DashboardPage() {
         </section>
 
         <section className="card card-pad">
-          <div className="section-title mb-1">AI-впевненість (розподіл)</div>
-          <div className="text-xs text-ink-400 mb-4">сьогодні · {c.id} = 78%</div>
+          <div className="section-title mb-1">{t.dashboard.chartConfidenceTitle}</div>
+          <div className="text-xs text-ink-400 mb-4">{t.dashboard.chartConfidenceSubtitle} · {c.id} {t.dashboard.chartConfidenceSubtitleSuffix}</div>
           <BarList data={confidenceDistribution} />
         </section>
 
         <section className="card card-pad">
-          <div className="section-title mb-1">Тренд обробки</div>
-          <div className="text-xs text-ink-400 mb-3">за 7 днів</div>
+          <div className="section-title mb-1">{t.dashboard.chartTrendTitle}</div>
+          <div className="text-xs text-ink-400 mb-3">{t.dashboard.chartTrendSubtitle}</div>
           <LineChart labels={processingTrend.labels} series={processingTrend.series} />
           <div className="flex items-center gap-4 mt-2 text-xs">
             {processingTrend.series.map((s) => (

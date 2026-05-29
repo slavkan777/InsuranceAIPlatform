@@ -5,6 +5,7 @@ import { Icon } from '@/components/ui/Icon';
 import { pushToast } from '@/features/ui/uiFeedbackSlice';
 import { insuranceApi } from '@/api/insuranceApi';
 import type { RequestMissingDocumentBody } from '@/api/insuranceApi.types';
+import { useI18n } from '@/i18n/useI18n';
 
 interface RequestMissingDocumentModalProps {
   open: boolean;
@@ -28,6 +29,7 @@ export function RequestMissingDocumentModal({
   defaultTitle = '',
   defaultReason = '',
 }: RequestMissingDocumentModalProps) {
+  const { t } = useI18n();
   const dispatch = useAppDispatch();
   const [title, setTitle] = useState(defaultTitle);
   const [reason, setReason] = useState(defaultReason);
@@ -51,7 +53,7 @@ export function RequestMissingDocumentModal({
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!title.trim()) {
-      setError('Вкажіть назву документа, який треба запросити.');
+      setError(t.ui.reqDocErrorRequired);
       return;
     }
     setSubmitting(true);
@@ -70,7 +72,7 @@ export function RequestMissingDocumentModal({
       dispatch(
         pushToast({
           tone: 'success',
-          title: 'Внутрішній запит зафіксовано.',
+          title: t.ui.reqDocToastTitle,
           detail: `${result.message} cmd=${result.commandId.slice(0, 14)}…`,
         }),
       );
@@ -86,8 +88,8 @@ export function RequestMissingDocumentModal({
     <Modal
       open={open}
       onClose={handleClose}
-      title="Запит на відсутній документ"
-      description="Створює внутрішній запис у журналі аудиту та outbox. Лист клієнту НЕ надсилається — це лише внутрішня нотатка для адʼюстера."
+      title={t.ui.reqDocTitle}
+      description={t.ui.reqDocDescription}
       footer={
         <>
           <button
@@ -96,7 +98,7 @@ export function RequestMissingDocumentModal({
             disabled={submitting}
             className="btn-ghost px-3 py-1.5 text-sm disabled:opacity-50"
           >
-            Скасувати
+            {t.ui.reqDocCancel}
           </button>
           <button
             type="submit"
@@ -105,7 +107,7 @@ export function RequestMissingDocumentModal({
             className="btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-sm disabled:opacity-50"
           >
             <Icon name="check" size={14} />
-            {submitting ? 'Збереження…' : 'Зафіксувати запит'}
+            {submitting ? t.ui.reqDocSubmitting : t.ui.reqDocSubmit}
           </button>
         </>
       }
@@ -117,27 +119,27 @@ export function RequestMissingDocumentModal({
       >
         <div>
           <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-            Назва документа
+            {t.ui.reqDocLabelTitle}
           </label>
           <input
             type="text"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             disabled={submitting}
-            placeholder="Напр. Фото пошкодження заднього бампера"
+            placeholder={t.ui.reqDocPlaceholderTitle}
             className="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm focus-ring disabled:bg-ink-50"
           />
         </div>
         <div>
           <label className="block text-xs font-semibold text-ink-700 uppercase tracking-wide mb-1.5">
-            Причина (опціонально)
+            {t.ui.reqDocLabelReason}
           </label>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             disabled={submitting}
             rows={2}
-            placeholder="Опишіть, чому документ необхідний для подальшого розгляду."
+            placeholder={t.ui.reqDocPlaceholderReason}
             className="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm focus-ring disabled:bg-ink-50 resize-none"
           />
         </div>
@@ -154,9 +156,9 @@ export function RequestMissingDocumentModal({
             <Icon name="shield" size={12} />
           </span>
           <span>
-            Запис створюється для кейсу{' '}
-            <span className="font-mono text-ink-800">{claimId}</span>.
-            Зовнішнє повідомлення клієнту не надсилається.
+            {t.ui.reqDocSandboxNotePrefix}{' '}
+            <span className="font-mono text-ink-800">{claimId}</span>.{' '}
+            {t.ui.reqDocSandboxNoteSuffix}
           </span>
         </div>
       </form>

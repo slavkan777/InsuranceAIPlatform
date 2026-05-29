@@ -169,10 +169,23 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// CORS origins are config-driven (Cors:AllowedOrigins) so the front-end / SWA origin
+// can be set per environment (appsettings.{Environment}.json) or overridden at runtime
+// via Cors__AllowedOrigins__N environment variables on the Container App.
+// Falls back to the local Vite dev origin when unset. No AllowCredentials → explicit
+// origins are safe and no wildcard is used.
+var corsAllowedOrigins = builder.Configuration
+    .GetSection("Cors:AllowedOrigins")
+    .Get<string[]>();
+if (corsAllowedOrigins is null || corsAllowedOrigins.Length == 0)
+{
+    corsAllowedOrigins = new[] { "http://localhost:5173" };
+}
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(ViteDevCors, policy => policy
-        .WithOrigins("http://localhost:5173")
+        .WithOrigins(corsAllowedOrigins)
         .AllowAnyHeader()
         .AllowAnyMethod());
 });

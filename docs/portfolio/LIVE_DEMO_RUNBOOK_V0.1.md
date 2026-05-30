@@ -25,9 +25,14 @@ Then open the frontend so the SPA + SWA edge are warm too.
 This sequence matches `GET /api/demo/scenario` (7 steps, `goldenClaimId: CLM-1006`). Screenshots: `screenshots/01-login … 05-audit-cost`.
 
 ## Mock vs live — explain it proactively
-- **Live (real API responses):** dashboard summary, the entire CLM-1006 workspace, demo scenario, CORS.
-- **Seeded fallback (mock):** the **claims queue list** and **customers directory**. Their API endpoints (`/api/claims`, `/api/customers`) currently return **500** because **Azure SQL is intentionally deferred** (cost). The SPA **degrades gracefully** to bundled seeded rows, so those pages still render — say: *"the full list view falls back to seeded data until the SQL gate; the live API path is the claim workspace."*
-- This is a deliberate cost trade-off, not a bug to hide.
+- **Live from Azure SQL (since 2026-05-30):** the **claims queue list** (`/api/claims`) and **customers directory** (`/api/customers`) load from Azure SQL, and **creating a synthetic customer persists to SQL** (`POST /api/customers`). The earlier `500` / "Failed to fetch" is resolved.
+- **Live (real API responses; in-memory golden fixtures by design):** dashboard summary, the entire CLM-1006 workspace + sub-resources, demo scenario, CORS. These curated golden-claim views are served in-memory on purpose (deterministic demo); DB-created claims (CLM-1011+) read from SQL.
+- **Still mock (by design):** AI outputs (Mock provider; numbers seeded), demo auth (client-side). Synthetic data only — no real PII.
+
+## Live SQL write demo (persistence proof)
+1. Open **Customer directory** (`/customers`) — the list loads from **Azure SQL** (200 synthetic customers).
+2. Click **Create customer**, enter a name, submit → success, **no "Failed to fetch"**; a new `CUST-T0xxx` row is written to SQL.
+3. **Refresh** the page (or search the name) → the customer is still there → proves **durable SQL persistence** (not localStorage).
 
 ## Verify API health / CORS (read-only)
 ```bash
@@ -40,12 +45,12 @@ curl -s -i -H "Origin: https://kind-meadow-03cf73103.7.azurestaticapps.net" "$AP
 
 ## Avoid causing cost
 - Read-only `curl` / browsing costs ~nothing (scale-to-zero + Free SWA).
-- Don't load-test. Don't enable SQL/AI/AKS. Don't raise `minReplicas`.
+- Don't load-test. Don't enable real AI/AKS/ACR. Don't raise `minReplicas`. (Azure SQL is serverless auto-pause — leave it.)
 - Budget alerts at $5/$10/$20/$30/$50 will fire long before anything material.
 
 ## Stop / delete (one command)
 ```bash
-az group delete -n rg-iap-demo --yes --no-wait     # removes all 8 resources
+az group delete -n rg-iap-demo --yes --no-wait     # removes all resources (Container App, Azure SQL, SWA, Key Vault, Storage, observability)
 ```
 GHCR image + the subscription budget live outside the RG (unaffected). To redeploy later: `az deployment sub create … infra/main.bicep` then `swa deploy ./dist`.
 
@@ -53,7 +58,7 @@ GHCR image + the subscription budget live outside the RG (unaffected). To redepl
 | Symptom | Cause | Fix |
 |---|---|---|
 | First load slow / 503 then OK | ACA cold start from scale-to-zero | warm with `curl …/health`, retry |
-| Claims **list** empty / seeded-looking | `/api/claims` 500 (SQL deferred) → mock fallback | expected; run the SQL gate to make it live |
+| First data request slow after long idle | Azure SQL serverless auto-paused (60 min) → resume ~30–60s | warm `/api/customers` before presenting; later requests are fast |
 | Browser console CORS error | SWA origin not allowed | already fixed (config-driven CORS); if a new SWA hostname appears, add it to `Cors:AllowedOrigins` + redeploy API image |
 | Image pull fails on deploy | GHCR package private | ensure `ghcr.io/slavkan777/insuranceai-api` package is **public** |
 | SPA deep link 404 | missing SPA fallback | `staticwebapp.config.json` must be in the deployed `dist/` (we copy it in before `swa deploy`) |

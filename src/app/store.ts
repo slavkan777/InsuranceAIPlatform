@@ -10,6 +10,7 @@ import demoReducer from '@/features/demo/demoSlice';
 import authReducer from '@/features/auth/authSlice';
 import uiFeedbackReducer from '@/features/ui/uiFeedbackSlice';
 import i18nReducer from '@/features/i18n/i18nSlice';
+import ragReducer from '@/features/rag/ragSlice';
 
 const sagaMiddleware = createSagaMiddleware();
 
@@ -24,6 +25,7 @@ export const store = configureStore({
     approval: approvalReducer,
     demo: demoReducer,
     uiFeedback: uiFeedbackReducer,
+    rag: ragReducer,
   },
   middleware: (getDefault) =>
     getDefault({

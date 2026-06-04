@@ -41,6 +41,13 @@ import type {
   MockAiRunResult,
   PayoutSimulationResultDto,
   PayoutSimulationSummaryDto,
+  RagAnswerDto,
+  RagAskBody,
+  RagAuditEntryDto,
+  RagEvaluationQuestionDto,
+  RagEvidenceSearchResultDto,
+  RagInfrastructureStatus,
+  RagSimilarClaimsResultDto,
   RecordAiDecisionBody,
   RequestMissingDocumentBody,
   SaveApprovalDraftBody,
@@ -432,6 +439,222 @@ export const mockInsuranceApi = {
       customerSince: row.customerSince,
       isSynthetic: true,
       message: `Mock-mode: створено клієнта ${row.id} (без БД).`,
+    };
+  },
+
+  // ---- RAG — Claim Evidence Intelligence (advisory only) ----
+
+  async ragAsk(claimId: string, body: RagAskBody): Promise<RagAnswerDto> {
+    await delay(350);
+    const citations = [
+      {
+        chunkId: `chunk-mock-001`,
+        documentId: `doc-${claimId}-police-report`,
+        kind: 'police_report',
+        snippet: 'Vehicle collision occurred at intersection; driver at fault confirmed.',
+        score: 0.92,
+      },
+      {
+        chunkId: `chunk-mock-002`,
+        documentId: `doc-${claimId}-damage-assessment`,
+        kind: 'damage_assessment',
+        snippet: 'Rear bumper damage estimate $2,400; front hood $800.',
+        score: 0.87,
+      },
+    ];
+    return {
+      traceId: `rag-trace-mock-${Math.random().toString(36).slice(2, 10)}`,
+      claimId,
+      useCase: body.useCase,
+      question: body.question,
+      answer: `[Mock RAG advisory] Based on the claim documents for ${claimId}, the AI analysis for "${body.question}" indicates: coverage is confirmed under the comprehensive auto policy, deductible $500 applies, and all submitted evidence supports the claim. This is advisory only — human adjuster makes the final decision.`,
+      confidence: 0.82,
+      citations,
+      retrievedChunkIds: citations.map((c) => c.chunkId),
+      providerMode: 'Mock',
+      promptTokens: 312,
+      completionTokens: 148,
+      costMicros: 94,
+      retrievalMs: 42,
+      advisoryOnly: true,
+      correlationId: `corr-rag-mock-${Math.random().toString(36).slice(2, 8)}`,
+      createdAtUtc: new Date().toISOString(),
+    };
+  },
+
+  async ragEvidenceSearch(
+    claimId: string,
+    query: string,
+    _topK = 5,
+  ): Promise<RagEvidenceSearchResultDto> {
+    await delay(150);
+    return {
+      claimId,
+      query,
+      hits: [
+        {
+          chunkId: 'chunk-mock-001',
+          documentId: `doc-${claimId}-police-report`,
+          kind: 'police_report',
+          snippet: 'Police report excerpt matching search query.',
+          score: 0.88,
+        },
+      ],
+      correlationId: `corr-search-mock-${Math.random().toString(36).slice(2, 8)}`,
+    };
+  },
+
+  async ragEvaluationQuestions(claimId: string): Promise<RagEvaluationQuestionDto[]> {
+    return [
+      { questionId: 'eq-1', claimId, useCase: 'coverage', text: 'Is the damage covered under the policy?', language: 'en' },
+      { questionId: 'eq-2', claimId, useCase: 'missing_docs', text: 'What documents are missing?', language: 'en' },
+      { questionId: 'eq-3', claimId, useCase: 'risk', text: 'What are the main risk factors?', language: 'en' },
+    ];
+  },
+
+  async ragAudit(claimId: string, _limit = 10): Promise<RagAuditEntryDto[]> {
+    // DETERMINISTIC synthetic rows — fixed createdAtUtc strings so the
+    // persistence test sees the same rows on initial load and after page.reload().
+    // Advisory tone only; no fraud-accusation words.
+    return [
+      {
+        traceId: `rag-trace-mock-audit-001-${claimId}`,
+        claimId,
+        useCase: 'coverage',
+        query: 'Is the damage covered under the policy?',
+        answer: '[Mock advisory] Policy coverage confirmed for the submitted claim. Deductible of $500 applies. Human adjuster makes the final decision.',
+        confidence: 0.85,
+        retrievedChunkIds: ['chunk-mock-001', 'chunk-mock-002'],
+        costMicros: 72,
+        createdAtUtc: '2026-06-01T10:00:00.000Z',
+      },
+      {
+        traceId: `rag-trace-mock-audit-002-${claimId}`,
+        claimId,
+        useCase: 'missing_docs',
+        query: 'What documents are missing from the claim file?',
+        answer: '[Mock advisory] Rear bumper photo is noted as pending. All other required documents have been received. Advisory only — human review required.',
+        confidence: 0.78,
+        retrievedChunkIds: ['chunk-mock-003'],
+        costMicros: 58,
+        createdAtUtc: '2026-06-01T09:30:00.000Z',
+      },
+    ];
+  },
+
+  /**
+   * GET /api/claims/{claimId}/rag/similar-claims?topK={n}
+   * Returns claim-level similarity cards only — NO evidence text from other claims.
+   * Deterministic synthetic data so Playwright e2e in mock mode works.
+   */
+  async ragSimilarClaims(claimId: string, _topK = 5): Promise<RagSimilarClaimsResultDto> {
+    await delay(280);
+    return {
+      claimId,
+      similarClaims: [
+        {
+          claimId: 'CLM-1008',
+          score: 0.91,
+          reason: 'Rear-end collision at intersection; similar damage pattern and repair estimate range.',
+          matchingCategories: ['collision', 'invoice', 'police'],
+        },
+        {
+          claimId: 'CLM-1010',
+          score: 0.78,
+          reason: 'Single-vehicle accident with comparable vehicle type and policy coverage structure.',
+          matchingCategories: ['invoice', 'vehicle_report'],
+        },
+        {
+          claimId: 'CLM-1015',
+          score: 0.64,
+          reason: 'Similar event location and deductible tier; moderate risk profile overlap.',
+          matchingCategories: ['police', 'photos'],
+        },
+      ],
+      correlationId: `corr-similar-mock-${Math.random().toString(36).slice(2, 8)}`,
+    };
+  },
+
+  /**
+   * GET /api/claims/{claimId}/rag/infrastructure
+   * Returns deterministic healthy infrastructure status for the mock pipeline.
+   * localReasoningRuntime is explicitly disabled — no live paid model is running.
+   */
+  async ragInfrastructure(claimId: string): Promise<RagInfrastructureStatus> {
+    return {
+      claimId,
+      sqlSourceOfTruth: {
+        status: 'healthy',
+        policyClauses: 8,
+        evidenceChunks: 50,
+        evaluationQuestions: 21,
+        auditTraces: 2,
+      },
+      evidenceMemoryIndex: {
+        status: 'healthy',
+        embeddedChunks: 50,
+        totalChunks: 50,
+        embeddingModel: 'deterministic-fnv1a-256',
+        dimensions: 256,
+      },
+      vectorRuntime: {
+        status: 'disabled',
+        enabled: false,
+        backend: 'in-memory-hash',
+        endpointConfigured: false,
+        reachable: false,
+      },
+      localReasoningRuntime: {
+        status: 'disabled',
+        enabled: false,
+        model: 'local-llama (disabled)',
+        endpointConfigured: false,
+        reachable: false,
+      },
+      generatedAtUtc: '2026-06-01T10:00:00.000Z',
+      correlationId: 'mock-infra',
+    };
+  },
+
+  /**
+   * POST /api/claims/{claimId}/rag/infrastructure/reindex
+   * Triggers a re-index of the evidence memory index. Returns the same
+   * deterministic healthy status (mock; no real embedding model is invoked).
+   */
+  async ragReindex(claimId: string): Promise<RagInfrastructureStatus> {
+    await delay(280);
+    return {
+      claimId,
+      sqlSourceOfTruth: {
+        status: 'healthy',
+        policyClauses: 8,
+        evidenceChunks: 50,
+        evaluationQuestions: 21,
+        auditTraces: 2,
+      },
+      evidenceMemoryIndex: {
+        status: 'healthy',
+        embeddedChunks: 50,
+        totalChunks: 50,
+        embeddingModel: 'deterministic-fnv1a-256',
+        dimensions: 256,
+      },
+      vectorRuntime: {
+        status: 'disabled',
+        enabled: false,
+        backend: 'in-memory-hash',
+        endpointConfigured: false,
+        reachable: false,
+      },
+      localReasoningRuntime: {
+        status: 'disabled',
+        enabled: false,
+        model: 'local-llama (disabled)',
+        endpointConfigured: false,
+        reachable: false,
+      },
+      generatedAtUtc: '2026-06-01T10:00:00.000Z',
+      correlationId: 'mock-infra',
     };
   },
 

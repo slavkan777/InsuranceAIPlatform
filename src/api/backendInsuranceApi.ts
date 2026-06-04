@@ -800,6 +800,87 @@ export const backendInsuranceApi = {
   ): Promise<import('./insuranceApi.types').CreateCustomerResult> {
     return apiPost(`/api/customers`, body, idempotencyKey);
   },
+
+  // ---- RAG — Claim Evidence Intelligence (advisory only) ----
+
+  /**
+   * POST /api/claims/{claimId}/rag/ask
+   * Ask the RAG pipeline a question about the claim. Advisory only.
+   */
+  async ragAsk(
+    claimId: string,
+    body: import('./insuranceApi.types').RagAskBody,
+  ): Promise<import('./insuranceApi.types').RagAnswerDto> {
+    return apiPost(`/api/claims/${claimId}/rag/ask`, body);
+  },
+
+  /**
+   * GET /api/claims/{claimId}/rag/evidence-search?q={query}&topK={n}
+   * Retrieve relevant evidence chunks for a free-text query.
+   */
+  async ragEvidenceSearch(
+    claimId: string,
+    query: string,
+    topK = 5,
+  ): Promise<import('./insuranceApi.types').RagEvidenceSearchResultDto> {
+    const params = new URLSearchParams({ q: query, topK: String(topK) });
+    return apiFetch(`/api/claims/${claimId}/rag/evidence-search?${params.toString()}`);
+  },
+
+  /**
+   * GET /api/claims/{claimId}/rag/evaluation-questions
+   * Returns pre-seeded evaluation questions for the claim.
+   */
+  async ragEvaluationQuestions(
+    claimId: string,
+  ): Promise<import('./insuranceApi.types').RagEvaluationQuestionDto[]> {
+    return apiFetch(`/api/claims/${claimId}/rag/evaluation-questions`);
+  },
+
+  /**
+   * GET /api/claims/{claimId}/rag/audit?limit={n}
+   * Returns the audit trail of RAG asks for a claim.
+   */
+  async ragAudit(
+    claimId: string,
+    limit = 10,
+  ): Promise<import('./insuranceApi.types').RagAuditEntryDto[]> {
+    return apiFetch(`/api/claims/${claimId}/rag/audit?limit=${limit}`);
+  },
+
+  /**
+   * GET /api/claims/{claimId}/rag/similar-claims?topK={n}
+   * Returns claim-level similarity cards only — NO evidence text from other claims.
+   * 400 → invalid claimId; 404 → unknown claim.
+   */
+  async ragSimilarClaims(
+    claimId: string,
+    topK = 5,
+  ): Promise<import('./insuranceApi.types').RagSimilarClaimsResultDto> {
+    return apiFetch(`/api/claims/${claimId}/rag/similar-claims?topK=${topK}`);
+  },
+
+  /**
+   * GET /api/claims/{claimId}/rag/infrastructure
+   * Returns the current RAG infrastructure stack status for a claim.
+   * Advisory diagnostics only.
+   */
+  async ragInfrastructure(
+    claimId: string,
+  ): Promise<import('./insuranceApi.types').RagInfrastructureStatus> {
+    return apiFetch(`/api/claims/${claimId}/rag/infrastructure`);
+  },
+
+  /**
+   * POST /api/claims/{claimId}/rag/infrastructure/reindex
+   * Triggers re-embedding of evidence chunks. Returns the updated stack status.
+   * Advisory only — no external paid model is invoked from the frontend.
+   */
+  async ragReindex(
+    claimId: string,
+  ): Promise<import('./insuranceApi.types').RagInfrastructureStatus> {
+    return apiPost(`/api/claims/${claimId}/rag/infrastructure/reindex`, {});
+  },
 };
 
 // ---------------------------------------------------------------------------

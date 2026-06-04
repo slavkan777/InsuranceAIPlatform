@@ -4,6 +4,7 @@ import { approvalSaga } from '@/features/approval/approvalSaga';
 import { demoSaga } from '@/features/demo/demoSaga';
 import { documentsSaga } from '@/features/documents/documentsSaga';
 import { claimsSaga } from '@/features/claims/claimsSaga';
+import { ragSaga } from '@/features/rag/ragSaga';
 import { loadClaimsQueue, loadClaimsSummary } from '@/features/claims/claimsSlice';
 import { loadDemoScenario } from '@/features/demo/demoSlice';
 
@@ -14,6 +15,7 @@ export function* rootSaga() {
     fork(demoSaga),
     fork(documentsSaga),
     fork(claimsSaga),
+    fork(ragSaga),
   ]);
   // Kick off initial data loads that don't depend on a route param. Per-claim
   // detail is loaded by ClaimShell's useEffect on route mount — boot-time

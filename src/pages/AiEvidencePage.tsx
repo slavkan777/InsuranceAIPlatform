@@ -2,6 +2,9 @@ import { useEffect, useState } from 'react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Icon } from '@/components/ui/Icon';
+import { ClaimEvidenceIntelligencePanel } from '@/components/claim/ClaimEvidenceIntelligencePanel';
+import { RagAuditHistoryPanel } from '@/components/claim/RagAuditHistoryPanel';
+import { RagInfrastructureStackPanel } from '@/components/claim/RagInfrastructureStackPanel';
 import { goldenClaim } from '@/data/mock/claims';
 import { insuranceApi } from '@/api/insuranceApi';
 import type { AiDecisionRecordedResult } from '@/api/insuranceApi.types';
@@ -446,6 +449,15 @@ export default function AiEvidencePage() {
           </div>
         ) : null}
       </section>
+
+      {/* ---------- Claim Evidence Intelligence (RAG) panel ---------- */}
+      <ClaimEvidenceIntelligencePanel claimId={c.id} />
+
+      {/* ---------- RAG Audit History — re-hydrates from backend on mount ---------- */}
+      <RagAuditHistoryPanel claimId={c.id} />
+
+      {/* ---------- RAG Infrastructure Stack — local pipeline diagnostics ---------- */}
+      <RagInfrastructureStackPanel claimId={c.id} />
 
       {/* ---------- Legacy / mock-evidence sections (carried forward; unchanged) ---------- */}
       <div className="grid xl:grid-cols-[1fr_360px] gap-5">

@@ -280,6 +280,151 @@ export interface RecordAiDecisionBody {
   notes?: string | null;
 }
 
+// ---------------------------------------------------------------------------
+// RAG — Claim Evidence Intelligence
+// POST /api/claims/{claimId}/rag/ask
+// GET  /api/claims/{claimId}/rag/evidence-search
+// GET  /api/claims/{claimId}/rag/evaluation-questions
+// GET  /api/claims/{claimId}/rag/audit
+// AI advisory only — human makes the final decision.
+// ---------------------------------------------------------------------------
+
+/** Body for POST /api/claims/{claimId}/rag/ask */
+export interface RagAskBody {
+  question: string;
+  useCase: string;
+}
+
+/** One citation/chunk returned with a RAG answer. */
+export interface RagCitationDto {
+  chunkId: string;
+  documentId: string;
+  kind: string;
+  snippet: string;
+  score: number;
+}
+
+/** Full response from POST /api/claims/{claimId}/rag/ask */
+export interface RagAnswerDto {
+  traceId: string;
+  claimId: string;
+  useCase: string;
+  question: string;
+  answer: string;
+  confidence: number;
+  citations: RagCitationDto[];
+  retrievedChunkIds: string[];
+  providerMode: string;
+  promptTokens: number;
+  completionTokens: number;
+  costMicros: number;
+  retrievalMs: number;
+  advisoryOnly: boolean;
+  correlationId: string;
+  createdAtUtc: string;
+}
+
+/** One hit returned by GET /api/claims/{claimId}/rag/evidence-search */
+export interface RagEvidenceHitDto {
+  chunkId: string;
+  documentId: string;
+  kind: string;
+  snippet: string;
+  score: number;
+}
+
+/** Response from GET /api/claims/{claimId}/rag/evidence-search */
+export interface RagEvidenceSearchResultDto {
+  claimId: string;
+  query: string;
+  hits: RagEvidenceHitDto[];
+  correlationId: string;
+}
+
+/** One evaluation question returned by GET /api/claims/{claimId}/rag/evaluation-questions */
+export interface RagEvaluationQuestionDto {
+  questionId: string;
+  claimId: string;
+  useCase: string;
+  text: string;
+  language: string;
+}
+
+/** One audit entry returned by GET /api/claims/{claimId}/rag/audit */
+export interface RagAuditEntryDto {
+  traceId: string;
+  claimId: string;
+  useCase: string;
+  query: string;
+  answer: string;
+  confidence: number;
+  retrievedChunkIds: string[];
+  costMicros: number;
+  createdAtUtc: string;
+}
+
+// ---------------------------------------------------------------------------
+// RAG — Similar Claims (cross-claim, claim-level metadata only)
+// GET /api/claims/{claimId}/rag/similar-claims?topK={n}
+// No evidence text from other claims is returned — claim-level cards only.
+// ---------------------------------------------------------------------------
+
+/** One claim-level similarity result from GET /api/claims/{claimId}/rag/similar-claims */
+export interface RagSimilarClaimDto {
+  claimId: string;
+  score: number;
+  reason: string;
+  matchingCategories: string[];
+}
+
+/** Full response from GET /api/claims/{claimId}/rag/similar-claims */
+export interface RagSimilarClaimsResultDto {
+  claimId: string;
+  similarClaims: RagSimilarClaimDto[];
+  correlationId: string;
+}
+
+// ---------------------------------------------------------------------------
+// RAG — Infrastructure Stack Status
+// GET  /api/claims/{claimId}/rag/infrastructure
+// POST /api/claims/{claimId}/rag/infrastructure/reindex
+// Advisory diagnostics only — shows local RAG pipeline health.
+// ---------------------------------------------------------------------------
+
+export interface RagInfrastructureStatus {
+  claimId: string;
+  sqlSourceOfTruth: {
+    status: string;
+    policyClauses: number;
+    evidenceChunks: number;
+    evaluationQuestions: number;
+    auditTraces: number;
+  };
+  evidenceMemoryIndex: {
+    status: string;
+    embeddedChunks: number;
+    totalChunks: number;
+    embeddingModel: string;
+    dimensions: number;
+  };
+  vectorRuntime: {
+    status: string;
+    enabled: boolean;
+    backend: string;
+    endpointConfigured: boolean;
+    reachable: boolean;
+  };
+  localReasoningRuntime: {
+    status: string;
+    enabled: boolean;
+    model: string;
+    endpointConfigured: boolean;
+    reachable: boolean;
+  };
+  generatedAtUtc: string;
+  correlationId: string;
+}
+
 /** Returned by POST /api/claims/{claimId}/ai-decision — extends CommandResult with AI decision fields. */
 export interface AiDecisionRecordedResult extends CommandResult {
   /** The AI run this decision was derived from. */

@@ -19,6 +19,7 @@ import { customers } from './customers';
 import { claimShell } from './claimShell';
 import { demo } from './demo';
 import { ui } from './ui';
+import { rag } from './rag';
 
 export const messages = {
   en: {
@@ -40,6 +41,7 @@ export const messages = {
     claimShell: claimShell.en,
     demo: demo.en,
     ui: ui.en,
+    rag: rag.en,
   },
   uk: {
     common: common.uk,
@@ -60,6 +62,7 @@ export const messages = {
     claimShell: claimShell.uk,
     demo: demo.uk,
     ui: ui.uk,
+    rag: rag.uk,
   },
 };
 

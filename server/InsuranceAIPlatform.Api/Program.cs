@@ -13,6 +13,7 @@ using InsuranceAIPlatform.Services.AiAnalysis.Guardrails;
 using InsuranceAIPlatform.Services.AiAnalysis.Orchestration;
 using InsuranceAIPlatform.Services.AiAnalysis.Persistence;
 using InsuranceAIPlatform.Services.AiAnalysis.Providers;
+using InsuranceAIPlatform.Services.AiAnalysis.Rag;
 using InsuranceAIPlatform.Services.Approval;
 using InsuranceAIPlatform.Services.Approval.Persistence;
 using InsuranceAIPlatform.Services.AuditCost;
@@ -123,6 +124,29 @@ else
 }
 
 builder.Services.AddAiAnalysisPersistence(connectionString);
+
+// -----------------------------------------------------------------------
+// Local RAG foundation (RAG_LOCAL_FOUNDATION_MEGA_V0.1).
+// Deterministic local embeddings + in-SQL cosine retrieval over the ai_analysis schema.
+// LocalLlama/Ollama generation seam is disabled-by-default (Rag:LocalLlamaEnabled=false);
+// the deterministic mock generator is the default. No external/cloud call, no secret.
+// -----------------------------------------------------------------------
+var ragOptions = builder.Configuration.GetSection(RagOptions.SectionName).Get<RagOptions>() ?? new RagOptions();
+builder.Services.AddRagFoundation(ragOptions);
+
+// Honest local-runtime reachability probe (Ollama / Qdrant) for the infrastructure-status endpoint.
+// The seams are disabled-by-default; the probe only reports truthful reachability and never blocks
+// the pipeline (the deterministic local fallback always serves). No secret, local endpoints only.
+builder.Services.AddHttpClient("rag-runtime-probe");
+builder.Services.AddSingleton<InsuranceAIPlatform.Services.AiAnalysis.Rag.Runtime.IRagRuntimeProbe,
+    InsuranceAIPlatform.Api.Rag.HttpRagRuntimeProbe>();
+
+// Local Qdrant vector-store client (raw REST, no SDK). Registering it lets the VectorRetrievalRouter
+// serve retrieval from Qdrant when Rag:QdrantEnabled=true AND the local runtime is reachable; otherwise
+// the router falls back to the in-process index. Local-only endpoint, no secret, no cloud call.
+builder.Services.AddHttpClient("qdrant");
+builder.Services.AddSingleton<InsuranceAIPlatform.Services.AiAnalysis.Rag.Retrieval.IQdrantVectorClient,
+    InsuranceAIPlatform.Api.Rag.HttpQdrantVectorClient>();
 
 // Claim existence delegate — wires IClaimReadService (Api layer) into the orchestrator (Service layer)
 // without creating a circular project reference.

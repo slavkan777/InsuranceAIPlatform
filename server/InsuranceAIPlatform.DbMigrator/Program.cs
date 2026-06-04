@@ -1,5 +1,7 @@
 using InsuranceAIPlatform.BuildingBlocks;
 using InsuranceAIPlatform.Services.AiAnalysis.Persistence;
+using InsuranceAIPlatform.Services.AiAnalysis.Rag.Embedding;
+using InsuranceAIPlatform.Services.AiAnalysis.Rag.Persistence;
 using InsuranceAIPlatform.Services.Approval.Persistence;
 using InsuranceAIPlatform.Services.AuditCost.Persistence;
 using InsuranceAIPlatform.Services.Claims.Persistence;
@@ -95,12 +97,19 @@ await MigrateAndSeedAsync<AiAnalysisDbContext>(
     provider, "ai_analysis", async db =>
     {
         await AiAnalysisSeeder.SeedAsync((AiAnalysisDbContext)db, ct);
+        // Local RAG foundation seed (deterministic embeddings; same ai_analysis schema).
+        var ragEmbed = new DeterministicEmbeddingProvider();
+        await RagSeeder.SeedAsync((AiAnalysisDbContext)db, ragEmbed, ct);
         return new[]
         {
             ($"AiAnalysisRun",      await ((AiAnalysisDbContext)db).AiAnalysisRuns.CountAsync(ct)),
             ($"AiFinding",          await ((AiAnalysisDbContext)db).AiFindings.CountAsync(ct)),
             ($"AiEvidenceReference",await ((AiAnalysisDbContext)db).AiEvidenceReferences.CountAsync(ct)),
             ($"AiRiskSignal",       await ((AiAnalysisDbContext)db).AiRiskSignals.CountAsync(ct)),
+            ($"PolicyClause",       await ((AiAnalysisDbContext)db).PolicyClauses.CountAsync(ct)),
+            ($"EvidenceChunk",      await ((AiAnalysisDbContext)db).EvidenceChunks.CountAsync(ct)),
+            ($"RagEvaluationQuestion", await ((AiAnalysisDbContext)db).RagEvaluationQuestions.CountAsync(ct)),
+            ($"RagAuditTrace",      await ((AiAnalysisDbContext)db).RagAuditTraces.CountAsync(ct)),
         };
     }, ct);
 

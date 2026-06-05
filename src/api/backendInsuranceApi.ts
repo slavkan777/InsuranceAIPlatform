@@ -9,6 +9,7 @@
 
 import type { ClaimDetail, ClaimRow, DocumentChecklistItem, DamagePhoto } from '@/types';
 import type { MockAiRunResult } from './insuranceApi.types';
+import { backendConfidenceToFraction } from '@/utils/ragConfidence';
 
 // ---------------------------------------------------------------------------
 // Configuration
@@ -811,7 +812,13 @@ export const backendInsuranceApi = {
     claimId: string,
     body: import('./insuranceApi.types').RagAskBody,
   ): Promise<import('./insuranceApi.types').RagAnswerDto> {
-    return apiPost(`/api/claims/${claimId}/rag/ask`, body);
+    const dto = await apiPost<
+      import('./insuranceApi.types').RagAskBody,
+      import('./insuranceApi.types').RagAnswerDto
+    >(`/api/claims/${claimId}/rag/ask`, body);
+    // Backend confidence is a 0..100 int; the UI multiplies by 100, so normalize to a 0..1
+    // fraction (matching the mock contract) — otherwise 14 would render as 1400%.
+    return { ...dto, confidence: backendConfidenceToFraction(dto.confidence) };
   },
 
   /**
@@ -845,7 +852,11 @@ export const backendInsuranceApi = {
     claimId: string,
     limit = 10,
   ): Promise<import('./insuranceApi.types').RagAuditEntryDto[]> {
-    return apiFetch(`/api/claims/${claimId}/rag/audit?limit=${limit}`);
+    const dtos = await apiFetch<import('./insuranceApi.types').RagAuditEntryDto[]>(
+      `/api/claims/${claimId}/rag/audit?limit=${limit}`,
+    );
+    // Same 0..100 int -> 0..1 fraction normalization as ragAsk (audit panel also multiplies by 100).
+    return dtos.map((e) => ({ ...e, confidence: backendConfidenceToFraction(e.confidence) }));
   },
 
   /**

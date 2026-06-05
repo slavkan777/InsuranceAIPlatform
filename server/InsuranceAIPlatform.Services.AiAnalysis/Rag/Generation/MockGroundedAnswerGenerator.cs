@@ -22,9 +22,7 @@ public sealed class MockGroundedAnswerGenerator : IGroundedAnswerGenerator
     {
         var retrieved = request.Retrieved ?? Array.Empty<ScoredChunk>();
 
-        var citations = retrieved
-            .Select(s => new RagCitation(s.Chunk.ChunkId, s.Chunk.DocumentId, s.Chunk.Kind, Snippet(s.Chunk.Text), s.Score))
-            .ToList();
+        var citations = BuildCitations(retrieved);
 
         if (retrieved.Count == 0)
         {
@@ -37,12 +35,22 @@ public sealed class MockGroundedAnswerGenerator : IGroundedAnswerGenerator
         string body = string.Join(" ", retrieved.Select((s, i) => $"[{i + 1}] {Snippet(s.Chunk.Text)}"));
         string answer = $"{lead} {body} {AdvisoryFooter}";
 
-        int confidence = Confidence(retrieved[0].Score);
+        int confidence = ConfidenceFromScore(retrieved[0].Score);
         int promptTokens = EstTokens(request.Question) + retrieved.Sum(s => EstTokens(s.Chunk.Text));
         int completionTokens = EstTokens(answer);
 
         return new GroundedDraft(answer, confidence, citations, promptTokens, completionTokens, ProviderMode);
     }
+
+    /// <summary>
+    /// Build citations from the ALREADY-retrieved chunks — the grounding invariant. Shared with the
+    /// LocalLlama generator so a live model NEVER authors citations: the cited evidence is always the
+    /// real retrieved (claim-scoped) chunks, regardless of what the model writes in its prose.
+    /// </summary>
+    internal static IReadOnlyList<RagCitation> BuildCitations(IReadOnlyList<ScoredChunk> retrieved) =>
+        retrieved
+            .Select(s => new RagCitation(s.Chunk.ChunkId, s.Chunk.DocumentId, s.Chunk.Kind, Snippet(s.Chunk.Text), s.Score))
+            .ToList();
 
     private static string Lead(string useCase) => useCase switch
     {
@@ -55,19 +63,22 @@ public sealed class MockGroundedAnswerGenerator : IGroundedAnswerGenerator
         _                       => "На основі знайдених доказів:"
     };
 
-    /// <summary>Maps cosine similarity (~0..1) to a 0..99 confidence band.</summary>
-    private static int Confidence(double topScore)
+    /// <summary>
+    /// Maps cosine similarity (~0..1) to a 0..99 confidence band. Shared with the LocalLlama generator:
+    /// confidence is ALWAYS derived from the top retrieval score, never invented by a live model.
+    /// </summary>
+    internal static int ConfidenceFromScore(double topScore)
     {
         int c = (int)Math.Round(Math.Clamp(topScore, 0, 1) * 100);
         return Math.Clamp(c, 0, 99);
     }
 
-    private static string Snippet(string text)
+    internal static string Snippet(string text)
     {
         text = (text ?? string.Empty).Trim();
         return text.Length <= 200 ? text : text[..200] + "…";
     }
 
     /// <summary>Rough deterministic token estimate (~4 chars/token).</summary>
-    private static int EstTokens(string? s) => string.IsNullOrEmpty(s) ? 0 : Math.Max(1, s.Length / 4);
+    internal static int EstTokens(string? s) => string.IsNullOrEmpty(s) ? 0 : Math.Max(1, s.Length / 4);
 }

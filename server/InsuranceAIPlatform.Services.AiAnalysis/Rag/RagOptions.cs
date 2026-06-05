@@ -32,6 +32,13 @@ public sealed class RagOptions
     /// <summary>Local model id, used ONLY when <see cref="LocalLlamaEnabled"/> is true.</summary>
     public string LocalLlamaModel { get; set; } = "llama3.1:8b";
 
+    /// <summary>
+    /// Timeout (ms) for a local Ollama GENERATION call. Distinct from <see cref="RuntimeProbeTimeoutMs"/>
+    /// (a reachability ping) because generation legitimately takes seconds. On timeout the generator falls
+    /// back to the deterministic mock, so a slow local model never breaks the business flow.
+    /// </summary>
+    public int LocalLlamaTimeoutMs { get; set; } = 30000;
+
     // ---- Vector runtime (Qdrant) seam — disabled-by-default, fallback to the in-process index ----
 
     /// <summary>

@@ -87,7 +87,7 @@ public sealed class RagService : IRagService
             CitationsJson = JsonSerializer.Serialize(draft.Citations),
             AnswerText = draft.AnswerText,
             Confidence = draft.Confidence,
-            ProviderMode = draft.ProviderMode,   // "Mock" — never a real cloud provider
+            ProviderMode = draft.ProviderMode,   // "LocalLlama" (live local model) or "Mock" (fallback) — never a cloud provider
             PromptTokens = draft.PromptTokens,
             CompletionTokens = draft.CompletionTokens,
             CostMicros = 0,                       // local/mock generation is free

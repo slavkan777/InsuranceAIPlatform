@@ -148,6 +148,13 @@ builder.Services.AddHttpClient("qdrant");
 builder.Services.AddSingleton<InsuranceAIPlatform.Services.AiAnalysis.Rag.Retrieval.IQdrantVectorClient,
     InsuranceAIPlatform.Api.Rag.HttpQdrantVectorClient>();
 
+// Local Ollama reasoning client (raw REST, no SDK). Registering it lets LocalLlamaGroundedAnswerGenerator
+// produce a grounded answer from the local model when Rag:LocalLlamaEnabled=true AND Ollama is reachable;
+// on any failure/timeout it falls back to the deterministic mock. Local-only endpoint, no secret, no cloud.
+builder.Services.AddHttpClient("ollama");
+builder.Services.AddSingleton<InsuranceAIPlatform.Services.AiAnalysis.Rag.Generation.ILocalLlamaClient,
+    InsuranceAIPlatform.Api.Rag.HttpOllamaClient>();
+
 // Claim existence delegate — wires IClaimReadService (Api layer) into the orchestrator (Service layer)
 // without creating a circular project reference.
 builder.Services.AddSingleton<Func<string, bool>>(sp =>

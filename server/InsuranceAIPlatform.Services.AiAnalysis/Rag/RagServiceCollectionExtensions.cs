@@ -32,8 +32,14 @@ public static class RagServiceCollectionExtensions
         services.AddSingleton<MockGroundedAnswerGenerator>();
         if (options.LocalLlamaEnabled)
         {
+            // ILocalLlamaClient is resolved with GetService so it stays optional: the Api layer wires the
+            // HTTP client (HttpOllamaClient). Without it — e.g. Services-layer unit tests — the generator
+            // falls back to the deterministic mock instead of attempting a live call.
             services.AddSingleton<IGroundedAnswerGenerator>(sp =>
-                new LocalLlamaGroundedAnswerGenerator(options, sp.GetRequiredService<MockGroundedAnswerGenerator>()));
+                new LocalLlamaGroundedAnswerGenerator(
+                    options,
+                    sp.GetRequiredService<MockGroundedAnswerGenerator>(),
+                    sp.GetService<ILocalLlamaClient>()));
         }
         else
         {

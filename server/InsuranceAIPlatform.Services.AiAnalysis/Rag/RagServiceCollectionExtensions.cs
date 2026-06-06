@@ -1,5 +1,6 @@
 using InsuranceAIPlatform.Services.AiAnalysis.Rag.Embedding;
 using InsuranceAIPlatform.Services.AiAnalysis.Rag.Generation;
+using InsuranceAIPlatform.Services.AiAnalysis.Rag.Ingestion;
 using InsuranceAIPlatform.Services.AiAnalysis.Rag.Retrieval;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -47,6 +48,10 @@ public static class RagServiceCollectionExtensions
         }
 
         services.AddSingleton<IRagService, RagService>();
+
+        // Evidence ingestion: turns an uploaded synthetic claim document's text into claim-scoped
+        // EvidenceChunks so a newly-created claim can receive cited RAG analysis. Additive + idempotent.
+        services.AddSingleton<IEvidenceIngestionService, EvidenceIngestionService>();
         return services;
     }
 }

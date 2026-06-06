@@ -3,6 +3,7 @@ using InsuranceAIPlatform.Api.Contracts.Common;
 using InsuranceAIPlatform.Api.Middleware;
 using InsuranceAIPlatform.Api.Services;
 using InsuranceAIPlatform.BuildingBlocks;
+using InsuranceAIPlatform.Services.AiAnalysis.Rag.Ingestion;
 using InsuranceAIPlatform.Services.Approval;
 using InsuranceAIPlatform.Services.AuditCost;
 using InsuranceAIPlatform.Services.Documents;
@@ -81,17 +82,20 @@ public sealed class ClaimCommandsController : ClaimsControllerBase
     private readonly IDocumentsService _documents;
     private readonly IAuditCostService _audit;
     private readonly IClaimReadService _claimRead;
+    private readonly IEvidenceIngestionService _evidenceIngestion;
 
     public ClaimCommandsController(
         IApprovalService approval,
         IDocumentsService documents,
         IAuditCostService audit,
-        IClaimReadService claimRead)
+        IClaimReadService claimRead,
+        IEvidenceIngestionService evidenceIngestion)
     {
         _approval  = approval;
         _documents = documents;
         _audit     = audit;
         _claimRead = claimRead;
+        _evidenceIngestion = evidenceIngestion;
     }
 
     // -----------------------------------------------------------------------
@@ -425,6 +429,21 @@ public sealed class ClaimCommandsController : ClaimsControllerBase
         var docId = await _documents.UploadDocumentContentAsync(
             claimId, body.Kind, body.Title, body.DocType, body.Content, actor, ct);
 
+        // (a2) RAG ingestion — turn the uploaded synthetic text into claim-scoped EvidenceChunks so
+        // this claim can receive cited RAG analysis. Additive + idempotent + strictly ClaimId-scoped
+        // (never touches another claim's evidence). Best-effort: ingestion failure must not fail the
+        // upload, so it degrades to a warning and the document write still succeeds.
+        var evidenceChunks = 0;
+        try
+        {
+            evidenceChunks = await _evidenceIngestion.IngestDocumentTextAsync(
+                claimId, docId, body.Kind, body.Title, body.Content, ct);
+        }
+        catch (Exception ex)
+        {
+            warnings.Add($"Evidence ingestion skipped (document still saved): {ex.Message}");
+        }
+
         // (b) Audit write — do NOT echo Content into audit metadata (it can be large)
         var meta = JsonSerializer.Serialize(new
         {
@@ -463,7 +482,7 @@ public sealed class ClaimCommandsController : ClaimsControllerBase
             AuditEventId:    auditId < 0 ? null : auditId,
             OutboxMessageId: outboxId < 0 ? null : outboxId,
             CorrelationId:   correlationId,
-            Message:         $"Document '{body.Title}' uploaded ({body.Content.Length} chars). DB-backed synthetic content; no external storage.",
+            Message:         $"Document '{body.Title}' uploaded ({body.Content.Length} chars); {evidenceChunks} RAG evidence chunk(s) ingested for {claimId}. DB-backed synthetic content; no external storage.",
             Warnings:        warnings));
     }
 

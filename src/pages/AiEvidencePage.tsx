@@ -3,6 +3,7 @@ import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Icon } from '@/components/ui/Icon';
 import { ClaimEvidenceIntelligencePanel } from '@/components/claim/ClaimEvidenceIntelligencePanel';
+import { AdvancedAiReviewPanel } from '@/components/claim/AdvancedAiReviewPanel';
 import { RagAuditHistoryPanel } from '@/components/claim/RagAuditHistoryPanel';
 import { RagInfrastructureStackPanel } from '@/components/claim/RagInfrastructureStackPanel';
 import { goldenClaim } from '@/data/mock/claims';
@@ -452,6 +453,9 @@ export default function AiEvidencePage() {
 
       {/* ---------- Claim Evidence Intelligence (RAG) panel ---------- */}
       <ClaimEvidenceIntelligencePanel claimId={c.id} />
+
+      {/* ---------- Optional Advanced AI Review (LangChain sidecar) ---------- */}
+      <AdvancedAiReviewPanel claimId={c.id} />
 
       {/* ---------- RAG Audit History — re-hydrates from backend on mount ---------- */}
       <RagAuditHistoryPanel claimId={c.id} />

@@ -155,6 +155,17 @@ builder.Services.AddHttpClient("ollama");
 builder.Services.AddSingleton<InsuranceAIPlatform.Services.AiAnalysis.Rag.Generation.ILocalLlamaClient,
     InsuranceAIPlatform.Api.Rag.HttpOllamaClient>();
 
+// Optional LangChain "Advanced AI Review" sidecar. DISABLED by default (AdvancedAiReview:Enabled=false):
+// when off OR the sidecar is unreachable the endpoint returns a safe advisory fallback and the core RAG
+// flow is unchanged. No secret/key — the sidecar uses a deterministic local model (Ollama seam optional).
+var advancedAiReviewOptions = builder.Configuration.GetSection(
+    InsuranceAIPlatform.Api.Rag.AdvancedAiReviewOptions.SectionName)
+    .Get<InsuranceAIPlatform.Api.Rag.AdvancedAiReviewOptions>() ?? new InsuranceAIPlatform.Api.Rag.AdvancedAiReviewOptions();
+builder.Services.AddSingleton(advancedAiReviewOptions);
+builder.Services.AddHttpClient(InsuranceAIPlatform.Api.Rag.HttpAdvancedClaimAnalyticsClient.HttpClientName);
+builder.Services.AddSingleton<InsuranceAIPlatform.Api.Rag.IAdvancedClaimAnalyticsClient,
+    InsuranceAIPlatform.Api.Rag.HttpAdvancedClaimAnalyticsClient>();
+
 // Claim existence delegate — wires IClaimReadService (Api layer) into the orchestrator (Service layer)
 // without creating a circular project reference.
 builder.Services.AddSingleton<Func<string, bool>>(sp =>

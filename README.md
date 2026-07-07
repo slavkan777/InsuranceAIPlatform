@@ -12,6 +12,32 @@ The project is intentionally framed as an **AI-assisted decision support system*
 
 ---
 
+## Reviewer quick path
+
+```bash
+npm install
+npm run build
+npm run dev
+```
+
+Open:
+
+```text
+http://127.0.0.1:5173
+```
+
+Recommended review order:
+
+1. Open the dashboard.
+2. Open the claims queue.
+3. Open claim `CLM-1006`.
+4. Review documents, AI evidence, approval and audit/cost pages.
+5. Read `docs/assignment/REVIEWER_GUIDE.md` and `docs/assignment/EVALUATION_MAPPING.md`.
+
+Mock mode is the default. It is deterministic and does not need any LLM key, vector database or backend process.
+
+---
+
 ## Assignment mapping
 
 **Selected assignment option:** Option 1 — Chat With Your Docs.
@@ -250,6 +276,9 @@ These are documented in `docs/assignment/PRODUCTIONIZATION.md`.
 
 ## Documentation for reviewers
 
+- `docs/assignment/REVIEWER_GUIDE.md` — fast review path and key files.
+- `docs/assignment/EVALUATION_MAPPING.md` — assignment requirements mapped to repository evidence.
+- `docs/assignment/DEMO_SCRIPT.md` — concise demo walkthrough script.
 - `docs/assignment/ARCHITECTURE.md` — system shape, mock/backend mode, boundaries.
 - `docs/assignment/RAG_DECISIONS.md` — chunking, embeddings, retrieval, prompt/context, guardrails, quality.
 - `docs/assignment/PRODUCTIONIZATION.md` — what is required to scale/deploy on Azure/AWS/GCP.

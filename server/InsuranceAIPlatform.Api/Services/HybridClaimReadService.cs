@@ -1,6 +1,7 @@
 using InsuranceAIPlatform.Api.Contracts.Claims;
 using InsuranceAIPlatform.BuildingBlocks;
 using InsuranceAIPlatform.Services.Claims;
+using Microsoft.Extensions.Logging;
 
 namespace InsuranceAIPlatform.Api.Services;
 
@@ -18,13 +19,38 @@ public sealed class HybridClaimReadService : IClaimReadService
 {
     private readonly InMemoryClaimReadService _inMemory;
     private readonly IClaimsService _claimsService;
+    private readonly ILogger<HybridClaimReadService> _logger;
 
     public HybridClaimReadService(
         InMemoryClaimReadService inMemory,
-        IClaimsService claimsService)
+        IClaimsService claimsService,
+        ILogger<HybridClaimReadService> logger)
     {
         _inMemory      = inMemory;
         _claimsService = claimsService;
+        _logger        = logger;
+    }
+
+    /// <summary>
+    /// Pulls operator-created claims from the DB. The DB is an ADDITIVE enrichment on top of
+    /// the in-memory seed list, so when it is unreachable this degrades to "seed list only"
+    /// instead of failing the whole read. The deployed demo runs with no SQL server, where an
+    /// unguarded call turns every list request into a 500 and the demo renders nothing.
+    /// The failure is logged at Warning so an outage is observable rather than silent.
+    /// </summary>
+    private IReadOnlyList<SyntheticClaimSummary> TryGetDbClaims()
+    {
+        try
+        {
+            return _claimsService.GetAllClaimsAsync().GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "Claims database unavailable; serving the in-memory seed list only. " +
+                "Operator-created claims will not appear until the database is reachable.");
+            return Array.Empty<SyntheticClaimSummary>();
+        }
     }
 
     public ClaimSummaryDto GetSummary() => _inMemory.GetSummary();
@@ -38,7 +64,8 @@ public sealed class HybridClaimReadService : IClaimReadService
 
         // Pull DB rows synchronously via a blocking call — IClaimReadService is sync by contract.
         // For the local sandbox this is acceptable (single-digit row count expected).
-        var dbRows = _claimsService.GetAllClaimsAsync().GetAwaiter().GetResult();
+        // Best-effort: an unreachable DB yields an empty enrichment, never a failed read.
+        var dbRows = TryGetDbClaims();
         var extras = dbRows
             .Where(r => !seedIds.Contains(r.ClaimId))
             .Select(r => new ClaimListItemDto(
@@ -65,7 +92,21 @@ public sealed class HybridClaimReadService : IClaimReadService
         var seed = _inMemory.GetClaim(claimId);
         if (seed is not null) return seed;
 
-        var row = _claimsService.GetClaimByIdAsync(claimId).GetAwaiter().GetResult();
+        // Same best-effort contract as GetClaims(): a seed claim is served from memory above,
+        // and an unreachable DB means "no such claim here" (→ 404) rather than a 500.
+        SyntheticClaimSummary? row;
+        try
+        {
+            row = _claimsService.GetClaimByIdAsync(claimId).GetAwaiter().GetResult();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex,
+                "Claims database unavailable while resolving {ClaimId}; reporting it as not found.",
+                claimId);
+            return null;
+        }
+
         if (row is null) return null;
 
         // Build a bare details DTO for the newly-created claim. Fields the operator

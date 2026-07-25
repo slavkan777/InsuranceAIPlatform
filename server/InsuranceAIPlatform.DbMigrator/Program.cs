@@ -203,6 +203,20 @@ await using (var scope = provider.CreateAsyncScope())
     Console.WriteLine($"  blocked (unchanged): {aj.Skipped}");
     foreach (var smp in aj.SkippedSamples) Console.WriteLine($"    - {smp}");
     Console.WriteLine($"=== Data backfill complete: {aj.Version} ===");
+
+    // ---- Lease 15: interactively-created demo residue ------------------
+    Console.WriteLine();
+    Console.WriteLine($"=== Data backfill: {EnglishOnlyDemoResidueBackfill.Version} ===");
+    var residueApplied = await EnglishOnlyDemoResidueBackfill.WasAppliedAsync(claimsDb, ct);
+    Console.WriteLine($"  checkpoint: {(residueApplied ? "version already recorded — rerunning is safe (expect 0 updates)" : "not yet applied")}");
+    var residue = await EnglishOnlyDemoResidueBackfill.RunAsync(
+        claimsDb, aiDb, new DeterministicEmbeddingProvider(), claimsDb, ct);
+    Console.WriteLine($"  updated:          {residue.Updated}");
+    Console.WriteLine($"  already English:  {residue.AlreadyEnglish}");
+    Console.WriteLine($"  chunks re-embedded: {residue.ChunksReEmbedded}");
+    Console.WriteLine($"  skipped (left untouched): {residue.Skipped}");
+    foreach (var smp in residue.SkippedSamples) Console.WriteLine($"    - {smp}");
+    Console.WriteLine($"=== Data backfill complete: {residue.Version} ===");
 }
 
 // -----------------------------------------------------------------------

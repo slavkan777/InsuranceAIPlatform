@@ -11,7 +11,7 @@ const toneDot: Record<string, string> = {
 export function Timeline() {
   return (
     <div className="card card-pad">
-      <div className="section-title mb-4">Хронологія випадку</div>
+      <div className="section-title mb-4">Claim timeline</div>
       <ol className="relative space-y-3 ml-1.5">
         <span className="absolute left-1 top-1 bottom-1 w-px bg-ink-100" />
         {claimTimeline.map((row, idx) => (

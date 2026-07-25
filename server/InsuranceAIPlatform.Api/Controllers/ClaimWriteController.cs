@@ -172,7 +172,7 @@ public sealed class ClaimWriteController : ControllerBase
             Success:         true,
             CommandId:       commandId,
             ClaimId:         newClaimId,
-            Status:          "Новий",
+            Status:          ClaimContractCodes.Status.New,
             AuditEventId:    auditId < 0 ? null : auditId,
             OutboxMessageId: outboxId < 0 ? null : outboxId,
             CorrelationId:   correlationId,

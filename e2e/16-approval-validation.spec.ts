@@ -17,12 +17,12 @@ test.describe('Approval + Payout validation', () => {
     await page.evaluate(() => window.localStorage.removeItem('iap.auth.demo.v1'));
     await login(page);
     await page.goto(`/claims/${claimId}/approval`);
-    await expect(page.locator('body')).toContainText(/Людське погодження/i);
+    await expect(page.locator('body')).toContainText(/Human Approval/i);
   });
 
-  test('Save draft surfaces "Чернетку рішення збережено" toast', async ({ page }) => {
+  test('Save draft surfaces "Decision draft saved" toast', async ({ page }) => {
     await page.locator('[data-testid=save-draft]').click();
-    await expect(page.locator('body')).toContainText(/Чернетку рішення збережено/i, {
+    await expect(page.locator('body')).toContainText(/Decision draft saved/i, {
       timeout: 10000,
     });
   });
@@ -31,13 +31,13 @@ test.describe('Approval + Payout validation', () => {
     const approveBtn = page.locator('[data-testid=approve-after-review]');
     await expect(approveBtn).toBeDisabled();
     // The "approve" decision tile carries the AI recommendation pill in mock
-    // mode and the label "Погодити виплату" / "Затвердити виплату" depending on
+    // mode and the label "Approve payout" depending on
     // whether the read model is mock or backend. We accept either wording and
     // also fall through to a positional click on the first decision tile when
     // the wording doesn't match — the data-selected attribute is the real proof.
     const approveTile = page
       .locator('section')
-      .filter({ hasText: /Варіанти рішення/ })
+      .filter({ hasText: /Decision options/ })
       .locator('button[data-selected]')
       .first();
     await approveTile.click();
@@ -46,7 +46,7 @@ test.describe('Approval + Payout validation', () => {
     // (or all tiles tried) — gracefully handles both label variants.
     const tiles = page
       .locator('section')
-      .filter({ hasText: /Варіанти рішення/ })
+      .filter({ hasText: /Decision options/ })
       .locator('button[data-selected]');
     const n = await tiles.count();
     for (let i = 0; i < n; i++) {
@@ -71,7 +71,7 @@ test.describe('Approval + Payout validation', () => {
     // HTML5 `min=0.01` triggers native validation BEFORE the JS handler runs;
     // browser typically refuses to submit and surfaces a tooltip. The
     // observable invariant from the user's perspective is: modal stays open
-    // and no new "Симуляція виплати #X створена" toast appears.
+    // and no new "Payout simulation created" toast appears.
     await page.locator('[data-testid=payout-sim-amount]').fill('0');
     await page.locator('[data-testid=payout-sim-submit]').click();
     // Wait briefly so any would-be toast has time to surface (none should).
@@ -79,7 +79,7 @@ test.describe('Approval + Payout validation', () => {
     await expect(page.locator('[data-testid=payout-sim-amount]')).toBeVisible();
     const body = ((await page.locator('body').textContent()) ?? '');
     expect(
-      /Симуляція виплати #\d+ створена/.test(body),
+      /Payout simulation created/.test(body),
       'amount=0 must NOT create a payout simulation',
     ).toBe(false);
     // amount input should report :invalid via the native HTML5 constraint.
@@ -98,12 +98,12 @@ test.describe('Approval + Payout validation', () => {
   }) => {
     await page.locator('[data-testid=payout-sim-open]').click();
     // Notice text visible up-front (before submit).
-    await expect(page.locator('body')).toContainText(/SimulationOnly=true|Локальна симуляція/i);
+    await expect(page.locator('body')).toContainText(/SimulationOnly=true|Payout simulation/i);
     await page.locator('[data-testid=payout-sim-amount]').fill('2500');
     await page.locator('[data-testid=payout-sim-submit]').click();
     // Success toast.
     await expect(page.locator('body')).toContainText(
-      /Симуляція виплати.*створена|SimulationOnly.*true/i,
+      /Payout simulation created|SimulationOnly.*true/i,
       { timeout: 10000 },
     );
   });

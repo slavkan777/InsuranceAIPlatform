@@ -1,4 +1,5 @@
 using InsuranceAIPlatform.Api.Contracts.Claims;
+using InsuranceAIPlatform.BuildingBlocks;
 using InsuranceAIPlatform.Services.Claims;
 
 namespace InsuranceAIPlatform.Api.Services;
@@ -44,13 +45,16 @@ public sealed class HybridClaimReadService : IClaimReadService
                 Id:             r.ClaimId,
                 Customer:       r.Customer,
                 Vehicle:        r.Vehicle,
-                EventType:      r.EventType,
-                Status:         r.Status,
+                EventType:      NormalizeEventType(r.EventType),
+                // Persisted rows may still hold legacy Ukrainian values — normalize at the
+                // API boundary so the wire contract is always code-shaped. Unknown values
+                // pass through verbatim (never coerced into a real state).
+                Status:         ClaimContractCodes.NormalizeStatus(r.Status),
                 DocumentsCount: $"{r.DocumentsReceived}/{r.DocumentsTotal}",
-                AiStatus:       "Очікує AI",
-                Risk:           r.Risk,
+                AiStatus:       ClaimContractCodes.AiStatus.AwaitingAi,
+                Risk:           ClaimContractCodes.NormalizeRisk(r.Risk),
                 Sla:            FormatSla(r.SlaDeadline),
-                NextAction:     "Зібрати документи",
+                NextAction:     "Collect documents",
                 Updated:        DateTimeOffset.UtcNow));
 
         return seed.Concat(extras).ToList();
@@ -80,12 +84,14 @@ public sealed class HybridClaimReadService : IClaimReadService
             VehicleVin:          row.VehicleVin,
             Policy:              row.Policy,
             PolicyId:            row.PolicyId,
-            EventType:           row.EventType,
+            EventType:           NormalizeEventType(row.EventType),
             EventDate:           row.EventDate,
             Location:            row.Location,
             Description:         row.Description,
-            Status:              row.Status,
-            Risk:                row.Risk,
+            // Same boundary normalization as GetClaims() — legacy persisted values in,
+            // stable codes out.
+            Status:              ClaimContractCodes.NormalizeStatus(row.Status),
+            Risk:                ClaimContractCodes.NormalizeRisk(row.Risk),
             RiskScore:           row.RiskScore,
             Confidence:          0,
             SlaDeadline:         row.SlaDeadline,
@@ -126,11 +132,40 @@ public sealed class HybridClaimReadService : IClaimReadService
 
     public DemoScenarioDto GetDemoScenario() => _inMemory.GetDemoScenario();
 
+    /// <summary>
+    /// Canonical token for a breached SLA. The frontend matches this exact value
+    /// (`SLA_OVERDUE` in `utils/claimContract.ts`) instead of a translated string.
+    /// </summary>
+    private const string SlaOverdue = "Overdue";
+
     private static string FormatSla(DateTimeOffset deadline)
     {
         var remaining = deadline - DateTimeOffset.UtcNow;
-        if (remaining.TotalHours < 0) return "Прострочено";
-        if (remaining.TotalHours < 24) return $"{(int)remaining.TotalHours} год";
-        return $"{(int)remaining.TotalDays} дн";
+        if (remaining.TotalHours < 0) return SlaOverdue;
+        if (remaining.TotalHours < 24) return $"{(int)remaining.TotalHours}h";
+        return $"{(int)remaining.TotalDays}d";
+    }
+
+    // Event-type compatibility map. Rows seeded before the English-only migration still
+    // hold Ukrainian event types (the claims seeder is out of scope for this lease), so
+    // they are normalized to codes HERE, server-side. Keeping the mapping on the server
+    // means no Cyrillic is ever shipped to the browser. Unknown values pass through
+    // verbatim and are never coerced into a real state.
+    private static readonly Dictionary<string, string> EventTypeLegacy = new(StringComparer.OrdinalIgnoreCase)
+    {
+        ["ДТП"] = "RoadAccident",
+        ["Паркування"] = "Parking",
+        ["Зіткнення"] = "Collision",
+        ["Пошкодження"] = "Damage",
+        ["Скло"] = "Glass",
+        ["Угон"] = "Theft",
+        ["Викрадення"] = "Theft",
+    };
+
+    private static string NormalizeEventType(string? raw)
+    {
+        if (string.IsNullOrWhiteSpace(raw)) return raw ?? string.Empty;
+        var trimmed = raw.Trim();
+        return EventTypeLegacy.TryGetValue(trimmed, out var code) ? code : trimmed;
     }
 }

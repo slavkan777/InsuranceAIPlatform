@@ -102,7 +102,7 @@ export const mockInsuranceApi = {
     // keeping the requested claimId AS THE ID. Returning goldenClaim for every
     // id was part of the PostManualV4 bug: the detail page's `id === claimId`
     // guard would treat the data as belonging to a different claim and refuse
-    // to render — or, before the guard existed, render Роберт Джонсон data.
+    // to render — or, before the guard existed, render Robert Johnson data.
     if (claimId === goldenClaim.id) return goldenClaim;
     const row =
       mockExtraClaims.find((r) => r.id === claimId) ??
@@ -129,10 +129,10 @@ export const mockInsuranceApi = {
       customerId: 'CUST-MOCK-0000',
       vehicle: 'Synthetic Vehicle (mock)',
       vehicleVin: 'VIN ****0000',
-      description: 'Локальний sandbox кейс (mock-mode).',
+      description: 'Local sandbox claim (mock mode).',
       location: 'Local sandbox',
-      status: 'Новий' as ClaimDetail['status'],
-      risk: 'Невизначений' as ClaimDetail['risk'],
+      status: 'New',
+      risk: 'Undetermined',
     };
   },
   async getClaimDocuments(_claimId: string): Promise<DocumentChecklistItem[]> {
@@ -201,17 +201,17 @@ export const mockInsuranceApi = {
     return {
       claimId: goldenClaim.id,
       currentDecision: 'request' as string | null,
-      notes: 'Запрошуємо клієнта надати фото пошкодження заднього бампера. AI confidence 78%.' as string | null,
+      notes: 'Requesting the customer to provide a photo of the rear bumper damage. AI confidence 78%.' as string | null,
       savedAt: null as string | null,
       submitted: false,
       submittedAt: null as string | null,
       availableOptions: [
-        { value: 'approve', label: 'Погодити виплату', recommended: false, description: 'Якщо ризики прийнятні' as string | null },
-        { value: 'request', label: 'Запросити дані', recommended: true, description: 'Рекомендовано AI' as string | null },
-        { value: 'reject', label: 'Відхилити', recommended: false, description: 'З обґрунтуванням' as string | null },
-        { value: 'escalate', label: 'Передати старшому', recommended: false, description: 'Ескалація' as string | null },
+        { value: 'approve', label: 'Approve payout', recommended: false, description: 'If the risks are acceptable' as string | null },
+        { value: 'request', label: 'Request information', recommended: true, description: 'AI recommended' as string | null },
+        { value: 'reject', label: 'Reject', recommended: false, description: 'With written justification' as string | null },
+        { value: 'escalate', label: 'Escalate to senior adjuster', recommended: false, description: 'Escalation' as string | null },
       ],
-      aiRecommendation: 'Запросити додаткове фото перед погодженням виплати' as string | null,
+      aiRecommendation: 'Request an additional photo before approving the payout' as string | null,
       recommendedPayout: goldenClaim.recommendedPayout,
     };
   },
@@ -257,7 +257,7 @@ export const mockInsuranceApi = {
     _idempotencyKey?: string,
   ): Promise<CommandResult> {
     await delay(180);
-    return buildSyntheticCommandResult(claimId, 'DraftSaved', 'Чернетку збережено локально (mock).');
+    return buildSyntheticCommandResult(claimId, 'DraftSaved', 'Draft saved locally (mock).');
   },
 
   async submitHumanDecision(
@@ -270,7 +270,7 @@ export const mockInsuranceApi = {
     return buildSyntheticCommandResult(
       claimId,
       requestedStatus,
-      `Рішення «${body.decision}» зафіксовано локально (mock). Виплата не виконувалась.`,
+      `Decision "${body.decision}" recorded locally (mock). No payout was executed.`,
     );
   },
 
@@ -283,7 +283,7 @@ export const mockInsuranceApi = {
     return buildSyntheticCommandResult(
       claimId,
       'MissingDocumentRequested',
-      `Внутрішній запит на документ «${body.documentTitle}» зафіксовано (mock). Лист клієнту не надсилався.`,
+      `Internal request for document "${body.documentTitle}" recorded (mock). No email was sent to the customer.`,
     );
   },
 
@@ -296,7 +296,7 @@ export const mockInsuranceApi = {
     return buildSyntheticCommandResult(
       claimId,
       'MetadataCreated',
-      `Метадані документа «${body.title}» збережено локально (mock). Файл не завантажувався.`,
+      `Metadata for document "${body.title}" saved locally (mock). No file was uploaded.`,
     );
   },
 
@@ -320,19 +320,18 @@ export const mockInsuranceApi = {
       customer,
       vehicle: body.vehicle,
       eventType: body.eventType,
-      // Cast: backend uses 'Новий' / 'Очікує AI' / 'Невизначений' for fresh
-      // synthetic claims (outside the formal union); mock mirrors that.
-      status: 'Новий' as ClaimRow['status'],
+      // Fresh synthetic claims use the same contract codes the backend emits.
+      status: 'New',
       documentsCount: '0/0',
-      aiStatus: 'Очікує AI' as ClaimRow['aiStatus'],
-      risk: 'Невизначений' as ClaimRow['risk'],
-      sla: '7 дн',
-      nextAction: 'Зібрати документи',
-      updated: 'щойно',
+      aiStatus: 'AwaitingAi',
+      risk: 'Undetermined',
+      sla: '7d',
+      nextAction: 'Collect documents',
+      updated: 'just now',
     });
     return {
-      ...buildSyntheticCommandResult(claimId, 'Новий',
-        `Mock-mode: створено локальний кейс ${claimId} (без БД).`),
+      ...buildSyntheticCommandResult(claimId, 'New',
+        `Mock mode: local claim ${claimId} created (no database).`),
       customerId: body.customerId ?? 'CUST-MOCK-0001',
       customer,
       vehicle: body.vehicle,
@@ -348,7 +347,7 @@ export const mockInsuranceApi = {
     return buildSyntheticCommandResult(
       claimId,
       'Uploaded',
-      `Mock-mode: документ «${body.title}» збережено локально (${body.content.length} симв.).`,
+      `Mock mode: document "${body.title}" saved locally (${body.content.length} chars).`,
     );
   },
 
@@ -362,7 +361,7 @@ export const mockInsuranceApi = {
     const base = buildSyntheticCommandResult(
       claimId,
       'DraftSimulated',
-      `Mock-mode: симуляція виплати ${body.amount} ${body.currency ?? 'USD'} створена локально (без БД, без виплати).`,
+      `Mock mode: payout simulation ${body.amount} ${body.currency ?? 'USD'} created locally (no database, no payout).`,
     );
     return {
       ...base,
@@ -438,7 +437,7 @@ export const mockInsuranceApi = {
       addressLine: row.addressLine,
       customerSince: row.customerSince,
       isSynthetic: true,
-      message: `Mock-mode: створено клієнта ${row.id} (без БД).`,
+      message: `Mock mode: customer ${row.id} created (no database).`,
     };
   },
 
@@ -667,14 +666,14 @@ export const mockInsuranceApi = {
     const base = buildSyntheticCommandResult(
       claimId,
       'AiDecisionRecorded',
-      'AI-рішення збережено локально (mock). Без виплати, без повідомлень клієнту.',
+      'AI decision saved locally (mock). No payout, no customer notifications.',
     );
     return {
       ...base,
       aiRunId: 'run_mock_local',
       providerMode: 'Mock',
       modelName: 'local-mock-v0.1',
-      recommendedAction: 'Запросити фото заднього бампера перед остаточним рішенням.',
+      recommendedAction: 'Request a rear bumper photo before the final decision.',
       riskLevel: 'moderate',
       confidenceScore: 78,
       isAdvisoryOnly: true,
@@ -726,15 +725,15 @@ function buildSyntheticAiAnalysisDto(claimId: string, correlationId: string): Ai
     modelName: 'local-mock-v0.1',
     status: 'succeeded',
     summaryText:
-      'Локальний демо-аналіз: розбіжність кошторису з бенчмарком та неповний фотопакет. ' +
-      'Усі прапорці порадницькі; рішення приймає людина.',
+      'Local demo analysis: the repair estimate diverges from the benchmark and the photo set is incomplete. ' +
+      'All flags are advisory; a human makes the decision.',
     recommendedAction: {
-      action: 'Запросити фото заднього бампера перед остаточним рішенням.',
+      action: 'Request a rear bumper photo before the final decision.',
       rationale: 'AI advisory recommendation — human adjuster decides.',
       confidenceScore: 78,
     },
     policyCoverageExplanation:
-      'Поліс POL-2025-AC-4421 покриває ДТП після франшизи $500; виплата у межах ліміту.',
+      'Policy POL-2025-AC-4421 covers road accidents after the $500 deductible; the payout is within the limit.',
     riskLevel: 'moderate',
     confidenceScore: 78,
     findings: keyFindings.map((f, i) => ({

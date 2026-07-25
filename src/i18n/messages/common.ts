@@ -5,11 +5,4 @@ const en = {
   language: 'Language',
   loading: 'Loading…',
 };
-type T = typeof en;
-const uk: T = {
-  appName: 'Insurance AI Platform',
-  appTagline: 'Робоче місце операцій зі страхування',
-  language: 'Мова',
-  loading: 'Завантаження…',
-};
-export const common = { en, uk };
+export const common = { en };

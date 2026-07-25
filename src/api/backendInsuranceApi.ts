@@ -338,15 +338,15 @@ function mapClaimListItem(dto: ClaimListItemDto): ClaimRow {
   };
 }
 
-/** Format ISO DateTimeOffset as "N год" / "N хв" relative time for the UI table. */
+/** Format ISO DateTimeOffset as "Nh" / "Nm" relative time for the UI table. */
 function formatRelativeTime(iso: string): string {
   try {
     const diffMs = Date.now() - new Date(iso).getTime();
     const diffMin = Math.round(diffMs / 60000);
-    if (diffMin < 60) return `${diffMin} хв`;
+    if (diffMin < 60) return `${diffMin}m`;
     const diffH = Math.round(diffMin / 60);
-    if (diffH < 24) return `${diffH} год`;
-    return `${Math.round(diffH / 24)} дн`;
+    if (diffH < 24) return `${diffH}h`;
+    return `${Math.round(diffH / 24)}d`;
   } catch {
     return iso;
   }
@@ -408,7 +408,7 @@ function formatSlaDeadline(iso: string): string {
       dt.getMonth() === now.getMonth() &&
       dt.getDate() === now.getDate()
     ) {
-      return `Сьогодні до ${dt.getHours().toString().padStart(2, '0')}:${dt.getMinutes().toString().padStart(2, '0')}`;
+      return `Today by ${dt.getHours().toString().padStart(2, '0')}:${dt.getMinutes().toString().padStart(2, '0')}`;
     }
     return formatDateOnly(iso.split('T')[0]);
   } catch {
@@ -432,7 +432,7 @@ function mapPhotos(dtos: ClaimDocumentDto[]): DamagePhoto[] {
     .filter((d) => d.type === 'photo' || d.id.startsWith('photo'))
     .map((d) => ({
       id: d.id.replace('photo-', ''),
-      label: d.label.replace('Фото — ', '').replace('Фото — ', ''),
+      label: d.label.replace('Photo — ', ''),
       confidence: d.confidence ?? undefined,
       missing: d.status === 'missing',
     }));

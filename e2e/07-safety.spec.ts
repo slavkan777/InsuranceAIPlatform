@@ -55,7 +55,9 @@ test.describe('Safety invariants', () => {
 
   test('TopBar advertises local sandbox, not "real demo"', async ({ page }) => {
     await page.goto('/');
-    await expect(page.locator('body')).toContainText(/Local Sandbox/i);
+    // The English top bar advertises a demo/sandbox environment, never production.
+    await expect(page.locator('body')).toContainText(/Demo environment/i);
+    await expect(page.locator('body')).not.toContainText(/Production environment/i);
   });
 
   test('No path to /payout or /customer-messages from the UI', async ({ page }) => {

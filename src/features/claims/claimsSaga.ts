@@ -178,17 +178,17 @@ function* loadClaimDetailWorker(action: PayloadAction<string>) {
       ? {
           claimId,
           currentDecision: 'request',
-          notes: 'Запрошуємо клієнта надати фото пошкодження заднього бампера. AI confidence 78%.',
+          notes: 'Requesting the customer to provide a photo of the rear bumper damage. AI confidence 78%.',
           savedAt: null,
           submitted: false,
           submittedAt: null,
           availableOptions: [
-            { value: 'approve', label: 'Погодити виплату', recommended: false, description: 'Якщо ризики прийнятні' },
-            { value: 'request', label: 'Запросити дані', recommended: true, description: 'Рекомендовано AI' },
-            { value: 'reject', label: 'Відхилити', recommended: false, description: 'З обґрунтуванням' },
-            { value: 'escalate', label: 'Передати старшому', recommended: false, description: 'Ескалація' },
+            { value: 'approve', label: 'Approve payout', recommended: false, description: 'If the risks are acceptable' },
+            { value: 'request', label: 'Request information', recommended: true, description: 'AI recommended' },
+            { value: 'reject', label: 'Reject', recommended: false, description: 'With written justification' },
+            { value: 'escalate', label: 'Escalate to senior adjuster', recommended: false, description: 'Escalation' },
           ],
-          aiRecommendation: 'Запросити додаткове фото перед погодженням виплати',
+          aiRecommendation: 'Request an additional photo before approving the payout',
           recommendedPayout: goldenClaim.recommendedPayout,
         }
       : {

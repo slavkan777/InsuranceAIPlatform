@@ -8,7 +8,7 @@ import { selectClaimDetail } from '@/features/claims/claimWorkspaceSelectors';
  *
  * Bug PostManualV4 root cause: previously this component used
  * `claimDetail ?? goldenClaim` — for any non-CLM-1006 route the goldenClaim
- * fallback leaked Роберт Джонсон / Toyota Camry 2021 into the header even
+ * fallback leaked Robert Johnson / Toyota Camry 2021 into the header even
  * though the URL said the new id. The visible symptom Slava reported was
  * exactly this header.
  *
@@ -44,7 +44,7 @@ export function ClaimHeader() {
               {c.location ? <>, {c.location}</> : null}
             </>
           ) : (
-            <>Завантаження даних кейса {claimId}…</>
+            <>Loading claim data for {claimId}…</>
           )}
         </p>
       </div>
@@ -54,7 +54,7 @@ export function ClaimHeader() {
             {c.risk} · <span className="font-mono">{c.riskScore}/100</span>
           </StatusPill>
           <StatusPill tone="info">
-            Впевненість моделі · <span className="font-mono">{c.confidence}%</span>
+            Model confidence · <span className="font-mono">{c.confidence}%</span>
           </StatusPill>
           <StatusPill tone="warn">SLA · {c.slaDeadline}</StatusPill>
         </div>

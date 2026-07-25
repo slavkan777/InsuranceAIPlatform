@@ -1,6 +1,6 @@
-// Aggregated message catalog. Each namespace lives in its own file and exports
-// `{ en, uk }` with identical key sets (the `type T = typeof en; const uk: T`
-// pattern enforces that at compile time). Add new namespaces here.
+// Aggregated message catalog. The product is English-only at runtime: each
+// namespace file exports `{ en }` and this module resolves to English only.
+// Add new namespaces here.
 import { common } from './common';
 import { login } from './login';
 import { sidebar } from './sidebar';
@@ -42,27 +42,6 @@ export const messages = {
     demo: demo.en,
     ui: ui.en,
     rag: rag.en,
-  },
-  uk: {
-    common: common.uk,
-    login: login.uk,
-    sidebar: sidebar.uk,
-    topbar: topbar.uk,
-    dashboard: dashboard.uk,
-    claimsList: claimsList.uk,
-    claimWorkspace: claimWorkspace.uk,
-    aiEvidence: aiEvidence.uk,
-    documents: documents.uk,
-    risks: risks.uk,
-    approval: approval.uk,
-    audit: audit.uk,
-    policy: policy.uk,
-    customerVehicle: customerVehicle.uk,
-    customers: customers.uk,
-    claimShell: claimShell.uk,
-    demo: demo.uk,
-    ui: ui.uk,
-    rag: rag.uk,
   },
 };
 

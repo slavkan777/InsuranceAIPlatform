@@ -30,9 +30,9 @@ test.describe('Claims list deep filtering', () => {
     await expect(page.locator('[data-testid=claim-row-CLM-1006]')).toBeVisible();
   });
 
-  test('status filter set to "Готова" narrows the list', async ({ page }) => {
+  test('status filter set to "Ready" narrows the list', async ({ page }) => {
     const beforeCount = await page.locator('[data-testid^="claim-row-"]').count();
-    await page.locator('select').filter({ hasText: /Усі/ }).first().selectOption('Готова');
+    await page.locator('select').filter({ hasText: /All/ }).first().selectOption('Ready');
     await page.waitForTimeout(300);
     const afterCount = await page.locator('[data-testid^="claim-row-"]').count();
     // Either narrower or shows the empty state; in any case the body must
@@ -40,14 +40,14 @@ test.describe('Claims list deep filtering', () => {
     expect(afterCount).toBeLessThanOrEqual(beforeCount);
   });
 
-  test('event-type filter limits to "Зіткнення" (or shows empty state honestly)', async ({
+  test('event-type filter limits to "Collision" (or shows empty state honestly)', async ({
     page,
   }) => {
     // Pick the third <select> which is event-type (status, risk, eventType, date, aiStatus order).
     const selects = page.locator('section.card.card-pad select');
-    await selects.nth(2).selectOption('Зіткнення');
+    await selects.nth(2).selectOption('Collision');
     await page.waitForTimeout(300);
-    // Every remaining row must be a "Зіткнення" — verify by reading the third <td>
+    // Every remaining row must be a "Collision" — verify by reading the third <td>
     // text on each visible row.
     const rows = page.locator('[data-testid^="claim-row-"]');
     const n = await rows.count();
@@ -56,13 +56,13 @@ test.describe('Claims list deep filtering', () => {
     } else {
       for (let i = 0; i < n; i++) {
         const cellText = (await rows.nth(i).locator('td').nth(2).textContent()) ?? '';
-        expect(cellText.trim()).toBe('Зіткнення');
+        expect(cellText.trim()).toBe('Collision');
       }
     }
   });
 
-  test('segment chip "Високий ризик" filters to high-risk rows only', async ({ page }) => {
-    await page.getByRole('button', { name: /^Високий ризик/ }).click();
+  test('segment chip "High risk" filters to high-risk rows only', async ({ page }) => {
+    await page.getByRole('button', { name: /^High risk/ }).click();
     await page.waitForTimeout(300);
     const rows = page.locator('[data-testid^="claim-row-"]');
     const n = await rows.count();
@@ -70,9 +70,9 @@ test.describe('Claims list deep filtering', () => {
       await expect(page.locator('[data-testid=claims-empty]')).toBeVisible();
     } else {
       for (let i = 0; i < n; i++) {
-        // 7th column is Risk pill — we read the row text and require "Високий".
+        // 7th column is Risk pill — the row renders the English label for code 'High'.
         const rowText = (await rows.nth(i).textContent()) ?? '';
-        expect(rowText.includes('Високий'), `row ${i} should be Високий-risk`).toBe(true);
+        expect(rowText.includes('High'), `row ${i} should be High-risk`).toBe(true);
       }
     }
   });

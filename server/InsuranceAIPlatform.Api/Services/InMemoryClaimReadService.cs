@@ -1,4 +1,5 @@
 using InsuranceAIPlatform.Api.Contracts.Claims;
+using InsuranceAIPlatform.BuildingBlocks;
 
 namespace InsuranceAIPlatform.Api.Services;
 
@@ -16,24 +17,24 @@ public sealed class InMemoryClaimReadService : IClaimReadService
 
     private static readonly ClaimDetailsDto Clm1006Details = new(
         Id: "CLM-1006",
-        Customer: "Роберт Джонсон",
+        Customer: "Robert Johnson",
         CustomerId: "CUST-4421",
         Vehicle: "Toyota Camry 2021",
         VehicleVin: "VIN ****8842",
         Policy: "Auto Comprehensive",
         PolicyId: "POL-2025-AC-4421",
-        EventType: "ДТП",
+        EventType: "RoadAccident",
         EventDate: new DateOnly(2026, 5, 18),
-        Location: "Бориспіль, вул. Київська 24",
-        Description: "Зіткнення на перехресті при здійсненні маневру повороту праворуч.",
-        Status: "В роботі",
-        Risk: "Високий",
+        Location: "Springfield, Main Street 24",
+        Description: "Collision at an intersection while performing a right-turn manoeuvre.",
+        Status: ClaimContractCodes.Status.InProgress,
+        Risk: ClaimContractCodes.Risk.High,
         RiskScore: 82,
         Confidence: 78,
         SlaDeadline: new DateTimeOffset(2026, 5, 27, 18, 0, 0, TimeSpan.Zero),
         DocumentsReceived: 6,
         DocumentsTotal: 7,
-        MissingDocument: "Фото пошкодження заднього бампера",
+        MissingDocument: "Rear bumper damage photo",
         Estimate: 2720.00m,
         ExpectedBenchmark: 1970.00m,
         Deductible: 500.00m,
@@ -50,21 +51,26 @@ public sealed class InMemoryClaimReadService : IClaimReadService
 
     private static readonly IReadOnlyList<ClaimListItemDto> SeedClaimList = new List<ClaimListItemDto>
     {
-        new("CLM-1006", "Роберт Джонсон", "Toyota Camry 2021", "ДТП",
-            "В роботі", "6/7", "AI-перевірено", "Високий", "4 год",
-            "Запросити фото", new DateTimeOffset(2026, 5, 18, 10, 22, 0, TimeSpan.Zero)),
-        new("CLM-1007", "Марія Коваль", "VW Golf 2019", "Паркування",
-            "Збір документів", "3/5", "Потрібна перевірка", "Середній", "6 год",
-            "Запитати рахунок СТО", new DateTimeOffset(2026, 5, 26, 8, 15, 0, TimeSpan.Zero)),
-        new("CLM-1008", "Іван Петренко", "Ford Focus 2020", "Зіткнення",
-            "Готова", "4/4", "AI-перевірено", "Низький", "2 год",
-            "Погодити", new DateTimeOffset(2026, 5, 26, 12, 0, 0, TimeSpan.Zero)),
-        new("CLM-1009", "Олена Шевченко", "Renault Megane 2018", "Пошкодження",
-            "Збір документів", "2/6", "Очікує документи", "Середній", "1 день",
-            "Запросити документи", new DateTimeOffset(2026, 5, 25, 9, 0, 0, TimeSpan.Zero)),
-        new("CLM-1010", "David Wilson", "BMW X3 2022", "ДТП",
-            "AI-обробка", "5/5", "Обробляється", "Низький", "3 год",
-            "Очікувати AI", new DateTimeOffset(2026, 5, 27, 7, 25, 0, TimeSpan.Zero)),
+        new("CLM-1006", "Robert Johnson", "Toyota Camry 2021", "RoadAccident",
+            ClaimContractCodes.Status.InProgress, "6/7", ClaimContractCodes.AiStatus.AiVerified,
+            ClaimContractCodes.Risk.High, "4h",
+            "Request photo", new DateTimeOffset(2026, 5, 18, 10, 22, 0, TimeSpan.Zero)),
+        new("CLM-1007", "Maria Coval", "VW Golf 2019", "Parking",
+            ClaimContractCodes.Status.CollectingDocuments, "3/5", ClaimContractCodes.AiStatus.NeedsReview,
+            ClaimContractCodes.Risk.Medium, "6h",
+            "Request repair invoice", new DateTimeOffset(2026, 5, 26, 8, 15, 0, TimeSpan.Zero)),
+        new("CLM-1008", "Ivan Petrenko", "Ford Focus 2020", "Collision",
+            ClaimContractCodes.Status.Ready, "4/4", ClaimContractCodes.AiStatus.AiVerified,
+            ClaimContractCodes.Risk.Low, "2h",
+            "Approve", new DateTimeOffset(2026, 5, 26, 12, 0, 0, TimeSpan.Zero)),
+        new("CLM-1009", "Elena Shevchenko", "Renault Megane 2018", "Damage",
+            ClaimContractCodes.Status.CollectingDocuments, "2/6", ClaimContractCodes.AiStatus.AwaitingDocuments,
+            ClaimContractCodes.Risk.Medium, "1d",
+            "Request documents", new DateTimeOffset(2026, 5, 25, 9, 0, 0, TimeSpan.Zero)),
+        new("CLM-1010", "David Wilson", "BMW X3 2022", "RoadAccident",
+            ClaimContractCodes.Status.AiProcessing, "5/5", ClaimContractCodes.AiStatus.Processing,
+            ClaimContractCodes.Risk.Low, "3h",
+            "Await AI", new DateTimeOffset(2026, 5, 27, 7, 25, 0, TimeSpan.Zero)),
     };
 
     // -----------------------------------------------------------------------
@@ -73,13 +79,13 @@ public sealed class InMemoryClaimReadService : IClaimReadService
 
     private static readonly IReadOnlyList<ClaimDocumentDto> Clm1006Documents = new List<ClaimDocumentDto>
     {
-        new("application",   "Заява клієнта",           "19.05.2026",        "ok",      "document", null),
-        new("police",        "Поліцейський звіт",       "NoБРС-2026/05/441", "ok",      "document", null),
-        new("photo-front",   "Фото — переднє",          "AI conf 92%",       "ok",      "photo",    92),
-        new("photo-side",    "Фото — бокове",           "AI conf 87%",       "ok",      "photo",    87),
-        new("invoice",       "Рахунок СТО",             "Сума +38%",         "warn",    "document", null),
-        new("policy-terms",  "Умови полісу",            "Auto Comprehensive","ok",      "document", null),
-        new("photo-rear",    "Фото — задній бампер",    "ВІДСУТНЄ",          "missing", "photo",    null),
+        new("application",   "Customer statement",      "19.05.2026",        "ok",      "document", null),
+        new("police",        "Police report",           "No. PR-2026/05/441","ok",      "document", null),
+        new("photo-front",   "Photo — front",           "AI conf 92%",       "ok",      "photo",    92),
+        new("photo-side",    "Photo — side",            "AI conf 87%",       "ok",      "photo",    87),
+        new("invoice",       "Repair invoice",          "Amount +38%",       "warn",    "document", null),
+        new("policy-terms",  "Policy terms",            "Auto Comprehensive","ok",      "document", null),
+        new("photo-rear",    "Photo — rear bumper",     "MISSING",           "missing", "photo",    null),
     };
 
     // -----------------------------------------------------------------------
@@ -91,30 +97,30 @@ public sealed class InMemoryClaimReadService : IClaimReadService
         ModelConfidence: 78,
         Findings: new AiFindingDto[]
         {
-            new("f1", "Документи",     "Відсутнє фото заднього бампера. 6 з 7 документів надано.", "warn"),
-            new("f2", "Оцінка збитку", "Оцінка $2720 перевищує бенчмарк $1970 на 38%.",            "warn"),
-            new("f3", "Покриття",      "Подія ДТП підпадає під Auto Comprehensive. Франшиза $500 застосовна.", "ok"),
+            new("f1", "Documents",      "Rear bumper photo is missing. 6 of 7 documents provided.", "warn"),
+            new("f2", "Damage estimate","Estimate $2,720 exceeds the $1,970 benchmark by 38%.",     "warn"),
+            new("f3", "Coverage",       "The road accident is covered by Auto Comprehensive. The $500 deductible applies.", "ok"),
         },
         Evidence: new EvidenceSourceDto[]
         {
-            new("e1", "Поліцейський звіт", "Підтверджено факт ДТП 18.05.2026, Бориспіль.",                          95),
-            new("e2", "Рахунок СТО",       "Загальна сума $2720. Деталізація: бампер $980, лак $740, кузов $1000.", 87),
+            new("e1", "Police report",     "Road accident on 18.05.2026 in Springfield confirmed.",                 95),
+            new("e2", "Repair invoice",    "Total $2,720. Breakdown: bumper $980, paint $740, bodywork $1,000.",    87),
         },
         ExtractedEntities: new ExtractedEntityDto[]
         {
-            new("Дата ДТП",    "18.05.2026",        "Поліцейський звіт", 99),
-            new("Авто",        "Toyota Camry 2021", "Поліс",             98),
-            new("Сума",        "$2 720",            "Рахунок СТО",       94),
-            new("Поліс",       "POL-2025-AC-4421",  "Поліс",             100),
-            new("Заявник",     "Роберт Джонсон",    "Заява",             100),
-            new("Локація",     "Бориспіль, вул. Київська 24", "Звіт",   95),
+            new("Accident date","18.05.2026",       "Police report",     99),
+            new("Vehicle",     "Toyota Camry 2021", "Policy",            98),
+            new("Amount",      "$2,720",            "Repair invoice",    94),
+            new("Policy",      "POL-2025-AC-4421",  "Policy",            100),
+            new("Claimant",    "Robert Johnson",    "Statement",         100),
+            new("Location",    "Springfield, Main Street 24", "Report", 95),
         },
         ModelConfidenceBreakdown: new ConfidenceBreakdownItemDto[]
         {
-            new("Витягування",   95),
-            new("Покриття",      92),
-            new("Пошкодження",   71),
-            new("Рекомендація",  78),
+            new("Extraction",     95),
+            new("Coverage",       92),
+            new("Damage",         71),
+            new("Recommendation", 78),
         });
 
     // -----------------------------------------------------------------------
@@ -124,22 +130,22 @@ public sealed class InMemoryClaimReadService : IClaimReadService
     private static readonly RiskAssessmentDto Clm1006Risks = new(
         Score: 82,
         Threshold: 60,
-        Level: "Високий",
+        Level: ClaimContractCodes.Risk.High,
         Factors: new RiskFactorDto[]
         {
-            new("amount",        "Сума ремонту вище очікуваного діапазону",    25),
-            new("mismatch",      "Розбіжності у поясненнях водіїв",            18),
-            new("missing-photo", "Відсутнє фото пошкодження",                  22),
-            new("prior",         "Попередні claims клієнта",                    8),
-            new("confidence",    "Confidence нижче порогу 85%",                 9),
+            new("amount",        "Repair amount above the expected range",     25),
+            new("mismatch",      "Discrepancies between driver statements",    18),
+            new("missing-photo", "Damage photo missing",                       22),
+            new("prior",         "Customer prior claims",                       8),
+            new("confidence",    "Confidence below the 85% threshold",          9),
         },
         Pipeline: new PipelineStageDto[]
         {
-            new("Класифікатор документів", "OK"),
-            new("Вилучення полів",         "OK"),
-            new("Рушій ризиків",           "WARN"),
-            new("Рекомендатор",            "OK"),
-            new("Управління",              "BLOCK"),
+            new("Document classifier",  "OK"),
+            new("Field extraction",     "OK"),
+            new("Risk engine",          "WARN"),
+            new("Recommender",          "OK"),
+            new("Governance",           "BLOCK"),
         });
 
     // -----------------------------------------------------------------------
@@ -151,23 +157,23 @@ public sealed class InMemoryClaimReadService : IClaimReadService
         ProductName: "Auto Comprehensive",
         CoverageBlocks: new PolicyCoverageDto[]
         {
-            new("cov-collision",  "Зіткнення",        "$50 000",  "$500",    true,  null),
-            new("cov-liability",  "Відповідальність", "$100 000", "$0",      false, null),
-            new("cov-glass",      "Скло",             "$1 500",   "$100",    false, null),
-            new("cov-theft",      "Викрадення",       "Ринкова",  "$1 000",  false, null),
-            new("cov-roadside",   "Дорожня допомога", "24/7",     "$0",      false, null),
+            new("cov-collision",  "Collision",        "$50,000",  "$500",    true,  null),
+            new("cov-liability",  "Liability",        "$100,000", "$0",      false, null),
+            new("cov-glass",      "Glass",            "$1,500",   "$100",    false, null),
+            new("cov-theft",      "Theft",            "Market",   "$1,000",  false, null),
+            new("cov-roadside",   "Roadside assist",  "24/7",     "$0",      false, null),
         },
         Validation: new PolicyCheckResultDto(
             Covered: true,
             CoverageType: "Collision",
             ValidationNotes: new[]
             {
-                "Покриття підтверджено",
-                "ДТП дата у межах періоду",
-                "Lapse не виявлено",
-                "Зіткнення входить у покриття",
-                "Франшиза $500 застосовується",
-                "Виключень не виявлено",
+                "Coverage confirmed",
+                "Accident date within the policy period",
+                "No lapse detected",
+                "Collision is covered",
+                "$500 deductible applies",
+                "No exclusions found",
             },
             ExclusionTriggered: false));
 
@@ -178,22 +184,22 @@ public sealed class InMemoryClaimReadService : IClaimReadService
     private static readonly CustomerVehicleContextDto Clm1006CustomerVehicle = new(
         Customer: new CustomerDto(
             CustomerId: "CUST-4421",
-            FullName: "Роберт Джонсон",
+            FullName: "Robert Johnson",
             PreviousClaimsCount: 2,
             CustomerSince: new DateOnly(2021, 3, 15),
             CommunicationHistory: new CommunicationEntryDto[]
             {
-                new(new DateOnly(2026, 5, 19), "Email",    "Запит фото заднього бампера"),
-                new(new DateOnly(2026, 5, 19), "Чат",      "Рахунок СТО надано"),
-                new(new DateOnly(2026, 5, 18), "Телефон",  "Перевірка по полісу"),
-                new(new DateOnly(2026, 5, 18), "Web",      "Заявка про ДТП"),
+                new(new DateOnly(2026, 5, 19), "Email",    "Rear bumper photo request"),
+                new(new DateOnly(2026, 5, 19), "Chat",     "Repair invoice provided"),
+                new(new DateOnly(2026, 5, 18), "Phone",    "Policy verification"),
+                new(new DateOnly(2026, 5, 18), "Web",      "Accident notification"),
             }),
         Vehicle: new VehicleDto(
             Make: "Toyota",
             Model: "Camry",
             Year: 2021,
             Vin: "VIN ****8842",
-            Color: "Срібний",
+            Color: "Silver",
             Mileage: 42300));
 
     // -----------------------------------------------------------------------
@@ -209,12 +215,12 @@ public sealed class InMemoryClaimReadService : IClaimReadService
         SubmittedAt: null,
         AvailableOptions: new HumanDecisionOptionDto[]
         {
-            new("request",  "Запросити додаткові документи", true,  "Рекомендовано AI — запросити фото заднього бампера"),
-            new("approve",  "Затвердити виплату",           false, "Якщо ризики прийнятні після перевірки"),
-            new("reject",   "Відхилити заявку",             false, "З обґрунтуванням відмови"),
-            new("escalate", "Передати до відділу розслідування", false, "Ескалація для детального розслідування"),
+            new("request",  "Request additional documents", true,  "AI recommended — request the rear bumper photo"),
+            new("approve",  "Approve payout",               false, "If the risks are acceptable after review"),
+            new("reject",   "Reject the claim",             false, "With a written justification"),
+            new("escalate", "Escalate to the investigation unit", false, "Escalation for a detailed investigation"),
         },
-        AiRecommendation: "Запросити додаткові документи",
+        AiRecommendation: "Request additional documents",
         RecommendedPayout: 1800.00m);
 
     // -----------------------------------------------------------------------
@@ -230,19 +236,19 @@ public sealed class InMemoryClaimReadService : IClaimReadService
         DurationSec: 18.9,
         Events: new AuditEventDto[]
         {
-            new("14:05:12", "AI Pipeline",    "Запуск аналізу CLM-1006",    "OK"),
-            new("14:05:14", "Doc Classifier", "Класифікація 6 документів",  "OK"),
-            new("14:05:19", "Field Extractor","Витягнуто 47 полів",          "OK"),
-            new("14:05:25", "Risk Engine",    "Ризик 82/100 — Високий",     "WARN"),
-            new("14:05:30", "Recommender",    "Рекомендація: запросити фото","OK"),
-            new("14:05:31", "Governance",     "Авто-погодження заблоковано", "BLOCK"),
+            new("14:05:12", "AI Pipeline",    "Analysis started for CLM-1006", "OK"),
+            new("14:05:14", "Doc Classifier", "Classified 6 documents",        "OK"),
+            new("14:05:19", "Field Extractor","Extracted 47 fields",           "OK"),
+            new("14:05:25", "Risk Engine",    "Risk 82/100 — High",            "WARN"),
+            new("14:05:30", "Recommender",    "Recommendation: request photo", "OK"),
+            new("14:05:31", "Governance",     "Auto-approval blocked",         "BLOCK"),
         },
         CostDistribution: new CostDistributionItemDto[]
         {
-            new("Витягування",  0.0072m),
-            new("RAG / докази", 0.0058m),
-            new("Ризик",        0.0029m),
-            new("Рекомендація", 0.0028m),
+            new("Extraction",     0.0072m),
+            new("RAG / evidence", 0.0058m),
+            new("Risk",           0.0029m),
+            new("Recommendation", 0.0028m),
         });
 
     // -----------------------------------------------------------------------
@@ -252,13 +258,13 @@ public sealed class InMemoryClaimReadService : IClaimReadService
     private static readonly DemoScenarioDto SeedDemoScenario = new(
         Steps: new DemoStepDto[]
         {
-            new(1, "Огляд",          "Стан черги ДТП",          "Дошка 01", "/"),
-            new(2, "Обрати CLM-1006","Toyota Camry",            "Дошка 03", "/claims/CLM-1006"),
-            new(3, "Документи та фото","6/7 + відсутнє",        "Дошка 04", "/claims/CLM-1006/documents"),
-            new(4, "AI-докази",      "4 знахідки + RAG",        "Дошка 05", "/claims/CLM-1006/ai-evidence"),
-            new(5, "Оцінка ризиків", "82/100 Високий",          "Дошка 06", "/claims/CLM-1006/risks"),
-            new(6, "Людське рішення","Експерт обирає",          "Дошка 07", "/claims/CLM-1006/approval"),
-            new(7, "Audit & Cost",   "Trace + governance",      "Дошка 08", "/claims/CLM-1006/audit"),
+            new(1, "Overview",       "Claims queue status",     "Board 01", "/"),
+            new(2, "Select CLM-1006","Toyota Camry",            "Board 03", "/claims/CLM-1006"),
+            new(3, "Documents and photos","6/7 + one missing",  "Board 04", "/claims/CLM-1006/documents"),
+            new(4, "AI evidence",    "4 findings + RAG",        "Board 05", "/claims/CLM-1006/ai-evidence"),
+            new(5, "Risk assessment","82/100 High",             "Board 06", "/claims/CLM-1006/risks"),
+            new(6, "Human decision", "Expert decides",          "Board 07", "/claims/CLM-1006/approval"),
+            new(7, "Audit & Cost",   "Trace + governance",      "Board 08", "/claims/CLM-1006/audit"),
         },
         GoldenClaimId: "CLM-1006");
 

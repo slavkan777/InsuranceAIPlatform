@@ -78,27 +78,27 @@ public sealed class LocalLlamaGroundedAnswerGenerator : IGroundedAnswerGenerator
     }
 
     private static string BuildSystemPrompt() =>
-        "Ти — досвідчений аналітик відділу врегулювання страхових справ. " +
-        "Твоя задача — стисло відповісти на запитання, спираючись ВИКЛЮЧНО на надані фрагменти доказів. " +
-        "Правила: " +
-        "(1) відповідай 2–4 реченнями, СВОЇМИ СЛОВАМИ — НЕ копіюй і не переписуй фрагменти дослівно; " +
-        "(2) не вигадуй фактів, яких немає у фрагментах; " +
-        "(3) якщо доказів недостатньо — прямо скажи про це і порекомендуй перегляд людиною; " +
-        "(4) не приймай остаточних рішень про виплату чи відмову і не звинувачуй у шахрайстві — " +
-        "лише вказуй ризик-сигнали для людини-ад'юстера; " +
-        "(5) відповідай мовою запитання.";
+        "You are an experienced claims-handling analyst at an auto insurer. " +
+        "Your task is to answer the question concisely, relying EXCLUSIVELY on the supplied evidence fragments. " +
+        "Rules: " +
+        "(1) answer in 2-4 sentences, IN YOUR OWN WORDS — do NOT copy or restate the fragments verbatim; " +
+        "(2) do not invent facts that are not present in the fragments; " +
+        "(3) if the evidence is insufficient, say so plainly and recommend human review; " +
+        "(4) never make a final payout or denial decision and never accuse anyone of fraud — " +
+        "only point out risk signals for the human adjuster; " +
+        "(5) always answer in English.";
 
     private static string BuildUserPrompt(GroundedRequest request, IReadOnlyList<ScoredChunk> retrieved)
     {
         // Context FIRST, question LAST, then an explicit answer cue — this framing stops a small
         // instruct model from continuing/echoing the prompt verbatim.
         var sb = new StringBuilder();
-        sb.Append("Контекст — фрагменти доказів справи ").Append(request.ClaimId)
-          .Append(" (єдине джерело для відповіді):\n");
+        sb.Append("Context — evidence fragments for claim ").Append(request.ClaimId)
+          .Append(" (the only permitted source for the answer):\n");
         for (int i = 0; i < retrieved.Count; i++)
             sb.Append('[').Append(i + 1).Append("] ").Append(retrieved[i].Chunk.Text).Append('\n');
-        sb.Append("\nЗапитання: ").Append(request.Question).Append('\n');
-        sb.Append("\nСтисла відповідь-аналіз (2–4 речення, своїми словами):");
+        sb.Append("\nQuestion: ").Append(request.Question).Append('\n');
+        sb.Append("\nConcise analytical answer (2-4 sentences, in your own words):");
         return sb.ToString();
     }
 }

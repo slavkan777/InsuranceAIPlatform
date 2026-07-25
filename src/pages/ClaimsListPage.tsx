@@ -26,6 +26,26 @@ import { pushToast } from '@/features/ui/uiFeedbackSlice';
 import { buildCsv, downloadBlob, localDateStamp } from '@/utils/csv';
 import clsx from '@/utils/clsx';
 import type { ClaimRow } from '@/types';
+import {
+  AI_STATUS_LABELS,
+  CLAIM_STATUS_LABELS,
+  EVENT_TYPE_LABELS,
+  FILTER_ALL,
+  RISK_LEVEL_LABELS,
+  aiStatusLabel,
+  aiStatusTone,
+  claimStatusLabel,
+  claimStatusTone,
+  eventTypeLabel,
+  isSlaOverdue,
+  riskLevelLabel,
+  riskLevelTone,
+  toAiStatusCode,
+  toClaimStatusCode,
+  toEventTypeCode,
+  toRiskLevelCode,
+  type ClaimSegmentCode,
+} from '@/utils/claimContract';
 import { useI18n } from '@/i18n/useI18n';
 
 export default function ClaimsListPage() {
@@ -67,11 +87,11 @@ export default function ClaimsListPage() {
       { header: 'ClaimId', accessor: (r) => r.id },
       { header: 'Customer', accessor: (r) => r.customer },
       { header: 'Vehicle', accessor: (r) => r.vehicle },
-      { header: 'EventType', accessor: (r) => r.eventType },
-      { header: 'Status', accessor: (r) => r.status },
+      { header: 'EventType', accessor: (r) => eventTypeLabel(r.eventType) },
+      { header: 'Status', accessor: (r) => claimStatusLabel(r.status) },
       { header: 'Documents', accessor: (r) => r.documentsCount },
-      { header: 'AiStatus', accessor: (r) => r.aiStatus },
-      { header: 'Risk', accessor: (r) => r.risk },
+      { header: 'AiStatus', accessor: (r) => aiStatusLabel(r.aiStatus) },
+      { header: 'Risk', accessor: (r) => riskLevelLabel(r.risk) },
       { header: 'Sla', accessor: (r) => r.sla },
       { header: 'NextAction', accessor: (r) => r.nextAction },
       { header: 'Updated', accessor: (r) => r.updated },
@@ -156,12 +176,38 @@ export default function ClaimsListPage() {
         </label>
         {(
           [
-            ['status', t.claimsList.filterStatusLabel, ['Усі', 'В роботі', 'Збір документів', 'Готова', 'Завершено']],
-            ['risk', t.claimsList.filterRiskLabel, ['Усі', 'Низький', 'Середній', 'Високий']],
-            ['eventType', t.claimsList.filterEventTypeLabel, ['Усі', 'ДТП', 'Паркування', 'Зіткнення', 'Пошкодження']],
-            ['date', t.claimsList.filterDateLabel, ['Сьогодні', '7 днів', '30 днів']],
-            ['aiStatus', t.claimsList.filterAiStatusLabel, ['Усі', 'AI-перевірено', 'Обробляється']],
-          ] as [keyof typeof filters, string, readonly string[]][]
+            ['status', t.claimsList.filterStatusLabel, [
+              { value: FILTER_ALL, label: 'All' },
+              { value: 'InProgress', label: CLAIM_STATUS_LABELS.InProgress },
+              { value: 'CollectingDocuments', label: CLAIM_STATUS_LABELS.CollectingDocuments },
+              { value: 'Ready', label: CLAIM_STATUS_LABELS.Ready },
+              { value: 'Completed', label: CLAIM_STATUS_LABELS.Completed },
+            ]],
+            ['risk', t.claimsList.filterRiskLabel, [
+              { value: FILTER_ALL, label: 'All' },
+              { value: 'Low', label: RISK_LEVEL_LABELS.Low },
+              { value: 'Medium', label: RISK_LEVEL_LABELS.Medium },
+              { value: 'High', label: RISK_LEVEL_LABELS.High },
+            ]],
+            ['eventType', t.claimsList.filterEventTypeLabel, [
+              { value: FILTER_ALL, label: 'All' },
+              { value: 'RoadAccident', label: EVENT_TYPE_LABELS.RoadAccident },
+              { value: 'Parking', label: EVENT_TYPE_LABELS.Parking },
+              { value: 'Collision', label: EVENT_TYPE_LABELS.Collision },
+              { value: 'Damage', label: EVENT_TYPE_LABELS.Damage },
+            ]],
+            // Date filter is a documented no-op (see filterClaimRows).
+            ['date', t.claimsList.filterDateLabel, [
+              { value: 'Today', label: 'Today' },
+              { value: '7 days', label: '7 days' },
+              { value: '30 days', label: '30 days' },
+            ]],
+            ['aiStatus', t.claimsList.filterAiStatusLabel, [
+              { value: FILTER_ALL, label: 'All' },
+              { value: 'AiVerified', label: AI_STATUS_LABELS.AiVerified },
+              { value: 'Processing', label: AI_STATUS_LABELS.Processing },
+            ]],
+          ] as [keyof typeof filters, string, readonly { value: string; label: string }[]][]
         ).map(([key, label, options]) => (
           <label key={key} className="flex flex-col gap-1">
             <span className="metric-label">{label}</span>
@@ -171,8 +217,8 @@ export default function ClaimsListPage() {
               className="rounded-lg border border-ink-200 bg-white px-3 py-2 text-sm focus-ring"
             >
               {options.map((o) => (
-                <option key={o} value={o}>
-                  {o}
+                <option key={o.value} value={o.value}>
+                  {o.label}
                 </option>
               ))}
             </select>
@@ -197,12 +243,12 @@ export default function ClaimsListPage() {
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {([
-                  ['Усі', t.claimsList.segAll, '53'],
-                  ['ДТП', t.claimsList.segAccident, '32'],
-                  ['Високий ризик', t.claimsList.segHighRisk, '7'],
-                  ['Чекає AI', t.claimsList.segAwaitingAi, '4'],
-                  ['Чекає рішення', t.claimsList.segAwaitingDecision, '5'],
-                ] as [typeof segment, string, string][]).map(([segKey, label, count]) => (
+                  ['All', t.claimsList.segAll, '53'],
+                  ['Accident', t.claimsList.segAccident, '32'],
+                  ['HighRisk', t.claimsList.segHighRisk, '7'],
+                  ['AwaitingAi', t.claimsList.segAwaitingAi, '4'],
+                  ['AwaitingDecision', t.claimsList.segAwaitingDecision, '5'],
+                ] as [ClaimSegmentCode, string, string][]).map(([segKey, label, count]) => (
                   <button
                     key={segKey}
                     onClick={() => dispatch(setSegment(segKey))}
@@ -253,60 +299,30 @@ export default function ClaimsListPage() {
                         <div className="font-medium text-ink-900">{row.customer}</div>
                         <div className="text-xs text-ink-500">{row.vehicle}</div>
                       </td>
-                      <td className="table-td text-ink-600">{row.eventType}</td>
+                      <td className="table-td text-ink-600">{eventTypeLabel(row.eventType)}</td>
                       <td className="table-td">
-                        <StatusPill
-                          tone={
-                            row.status === 'Високий ризик'
-                              ? 'danger'
-                              : row.status === 'Готова'
-                                ? 'good'
-                                : row.status === 'AI-обробка'
-                                  ? 'info'
-                                  : row.status === 'Збір документів'
-                                    ? 'warn'
-                                    : 'muted'
-                          }
-                        >
-                          {row.status}
+                        <StatusPill tone={claimStatusTone(row.status)}>
+                          {claimStatusLabel(row.status)}
                         </StatusPill>
                       </td>
                       <td className="table-td">
                         <span className="chip">{row.documentsCount}</span>
                       </td>
                       <td className="table-td">
-                        <StatusPill
-                          tone={
-                            row.aiStatus === 'AI-перевірено'
-                              ? 'good'
-                              : row.aiStatus === 'Потрібна перевірка'
-                                ? 'warn'
-                                : row.aiStatus === 'Обробляється'
-                                  ? 'info'
-                                  : 'muted'
-                          }
-                        >
-                          {row.aiStatus}
+                        <StatusPill tone={aiStatusTone(row.aiStatus)}>
+                          {aiStatusLabel(row.aiStatus)}
                         </StatusPill>
                       </td>
                       <td className="table-td">
-                        <StatusPill
-                          tone={
-                            row.risk === 'Високий'
-                              ? 'danger'
-                              : row.risk === 'Середній'
-                                ? 'warn'
-                                : 'good'
-                          }
-                        >
-                          {row.risk}
+                        <StatusPill tone={riskLevelTone(row.risk)}>
+                          {riskLevelLabel(row.risk)}
                         </StatusPill>
                       </td>
                       <td className="table-td">
                         <span
                           className={clsx(
                             'text-sm font-medium',
-                            row.sla === 'Прострочено' ? 'text-danger-600' : 'text-ink-700',
+                            isSlaOverdue(row.sla) ? 'text-danger-600' : 'text-ink-700',
                           )}
                         >
                           {row.sla}
@@ -336,26 +352,31 @@ export default function ClaimsListPage() {
  * chips) to the source row set. Previously the table rendered `sourceRows`
  * directly — the search box and dropdowns had no effect on what was shown.
  *
+ * Status / risk / AI-status are compared as CONTRACT CODES: each row value is
+ * normalized first (`toClaimStatusCode` etc.), so rows carrying legacy Ukrainian
+ * values from persisted data or the mock layer filter identically to code-shaped
+ * rows from the backend. Display labels are never used in this logic.
+ *
  * Filter semantics:
  *   - search: case-insensitive substring over id / customer / vehicle
- *   - status: exact match unless 'Усі'
- *   - risk:   exact match unless 'Усі'
- *   - eventType: exact match unless 'Усі'
- *   - aiStatus:  exact match unless 'Усі'
+ *   - status: status code match unless FILTER_ALL
+ *   - risk:   risk code match unless FILTER_ALL
+ *   - eventType: event type code match unless FILTER_ALL
+ *   - aiStatus:  AI status code match unless FILTER_ALL
  *   - date:   no-op for now (string-formatted relative time is not filterable
  *             without the original ISO timestamp; tracked as Phase-2 polish)
  *
  * Segment semantics:
- *   - 'Усі'           : no extra filter
- *   - 'ДТП'           : eventType === 'ДТП'
- *   - 'Високий ризик'  : risk === 'Високий'
- *   - 'Чекає AI'       : aiStatus === 'Обробляється'
- *   - 'Чекає рішення'  : status === 'В роботі'
+ *   - 'All'              : no extra filter
+ *   - 'Accident'         : event type code === 'RoadAccident'
+ *   - 'HighRisk'         : risk code === 'High'
+ *   - 'AwaitingAi'       : AI status code === 'Processing'
+ *   - 'AwaitingDecision' : status code === 'InProgress'
  */
 export function filterClaimRows(
   sourceRows: ClaimRow[],
   search: string,
-  segment: 'Усі' | 'ДТП' | 'Високий ризик' | 'Чекає AI' | 'Чекає рішення',
+  segment: ClaimSegmentCode,
   filters: { status: string; risk: string; eventType: string; aiStatus: string; date: string },
 ): ClaimRow[] {
   const q = (search ?? '').trim().toLowerCase();
@@ -364,14 +385,19 @@ export function filterClaimRows(
       const hay = `${r.id} ${r.customer} ${r.vehicle}`.toLowerCase();
       if (!hay.includes(q)) return false;
     }
-    if (filters.status && filters.status !== 'Усі' && r.status !== filters.status) return false;
-    if (filters.risk && filters.risk !== 'Усі' && r.risk !== filters.risk) return false;
-    if (filters.eventType && filters.eventType !== 'Усі' && r.eventType !== filters.eventType) return false;
-    if (filters.aiStatus && filters.aiStatus !== 'Усі' && r.aiStatus !== filters.aiStatus) return false;
-    if (segment === 'ДТП' && r.eventType !== 'ДТП') return false;
-    if (segment === 'Високий ризик' && r.risk !== 'Високий') return false;
-    if (segment === 'Чекає AI' && r.aiStatus !== 'Обробляється') return false;
-    if (segment === 'Чекає рішення' && r.status !== 'В роботі') return false;
+    const statusCode = toClaimStatusCode(r.status);
+    const riskCode = toRiskLevelCode(r.risk);
+    const aiCode = toAiStatusCode(r.aiStatus);
+    const eventCode = toEventTypeCode(r.eventType);
+
+    if (filters.status && filters.status !== FILTER_ALL && statusCode !== filters.status) return false;
+    if (filters.risk && filters.risk !== FILTER_ALL && riskCode !== filters.risk) return false;
+    if (filters.eventType && filters.eventType !== FILTER_ALL && eventCode !== filters.eventType) return false;
+    if (filters.aiStatus && filters.aiStatus !== FILTER_ALL && aiCode !== filters.aiStatus) return false;
+    if (segment === 'Accident' && eventCode !== 'RoadAccident') return false;
+    if (segment === 'HighRisk' && riskCode !== 'High') return false;
+    if (segment === 'AwaitingAi' && aiCode !== 'Processing') return false;
+    if (segment === 'AwaitingDecision' && statusCode !== 'InProgress') return false;
     return true;
   });
 }

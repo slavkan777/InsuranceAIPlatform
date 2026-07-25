@@ -7,6 +7,8 @@ import { pushToast } from '@/features/ui/uiFeedbackSlice';
 import { insuranceApi } from '@/api/insuranceApi';
 import type { CreateClaimBody } from '@/api/insuranceApi.types';
 import { useI18n } from '@/i18n/useI18n';
+import { EVENT_TYPE_LABELS } from '@/utils/claimContract';
+import type { EventTypeCode } from '@/types';
 
 interface NewClaimModalProps {
   open: boolean;
@@ -24,13 +26,14 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
   const dispatch = useAppDispatch();
   const today = new Date().toISOString().slice(0, 10);
 
-  const EVENT_TYPE_OPTIONS = [
-    'ДТП',
-    'Паркування',
-    'Зіткнення',
-    'Пошкодження',
-    'Скло',
-    'Угон',
+  // Values are contract codes; the visible text comes from EVENT_TYPE_LABELS.
+  const EVENT_TYPE_OPTIONS: EventTypeCode[] = [
+    'RoadAccident',
+    'Parking',
+    'Collision',
+    'Damage',
+    'Glass',
+    'Theft',
   ];
 
   const [customerName, setCustomerName] = useState('');
@@ -95,7 +98,7 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
       onClose();
       navigate(`/claims/${result.claimId}`);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Невідома помилка.';
+      const msg = err instanceof Error ? err.message : 'Unknown error.';
       setError(msg);
       setSubmitting(false);
     }
@@ -201,12 +204,12 @@ export function NewClaimModal({ open, onClose }: NewClaimModalProps) {
             </label>
             <select
               value={eventType}
-              onChange={(e) => setEventType(e.target.value)}
+              onChange={(e) => setEventType(e.target.value as EventTypeCode)}
               disabled={submitting}
               className="w-full px-3 py-2 rounded-lg border border-ink-200 bg-white text-sm focus-ring"
             >
               {EVENT_TYPE_OPTIONS.map((o) => (
-                <option key={o} value={o}>{o}</option>
+                <option key={o} value={o}>{EVENT_TYPE_LABELS[o]}</option>
               ))}
             </select>
           </div>

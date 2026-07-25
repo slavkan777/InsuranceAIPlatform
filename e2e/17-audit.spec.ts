@@ -19,18 +19,18 @@ test.describe('Audit & Cost', () => {
   });
 
   test('header + trace identifiers visible', async ({ page }) => {
-    await expect(page.locator('body')).toContainText(/Аудит і витрати/);
+    await expect(page.locator('body')).toContainText(/Audit & Cost/);
     await expect(page.locator('body')).toContainText(/Run ID|Trace ID/);
   });
 
   test('audit trail table renders + cost distribution renders', async ({ page }) => {
     await expect(page.locator('table')).toHaveCount(1);
-    await expect(page.locator('body')).toContainText(/Розподіл витрат/);
+    await expect(page.locator('body')).toContainText(/Cost breakdown/);
   });
 
   test('governance panel: auto-approval forbidden, human review mandatory', async ({ page }) => {
-    await expect(page.locator('body')).toContainText(/НЕ ДОЗВОЛЕНО/);
-    await expect(page.locator('body')).toContainText(/ОБОВ'ЯЗКОВА/);
+    await expect(page.locator('body')).toContainText(/NOT ALLOWED/);
+    await expect(page.locator('body')).toContainText(/REQUIRED/);
   });
 
   test('no forbidden action category names on the audit page', async ({ page }) => {

@@ -53,7 +53,7 @@ test.describe('Zero-to-end browser walk', () => {
     await page.locator('[data-testid=new-claim-customerName]').fill(customerName);
     const vehicleLabel = `Toyota Z2E ${stamp}`;
     await page.locator('[data-testid=new-claim-vehicle]').fill(vehicleLabel);
-    await page.locator('[data-testid=new-claim-location]').fill('Local sandbox, Київ');
+    await page.locator('[data-testid=new-claim-location]').fill('Local sandbox, Springfield');
     await page.locator('[data-testid=new-claim-submit]').click();
 
     // Submission navigates to /claims/{newClaimId}. We need a real

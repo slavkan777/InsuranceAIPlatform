@@ -72,7 +72,7 @@ public sealed class EvidenceIngestionService : IEvidenceIngestionService
                 Text = pieceText,
                 TokenCount = Math.Max(1, pieceText.Length / 4),
                 ChunkHash = Hash(pieceText),
-                Language = "uk",
+                Language = "en",
                 SourceVersion = "v0.1",
                 EmbeddingModel = _embed.ModelName,
                 EmbeddingDim = _embed.Dimensions,

@@ -64,8 +64,8 @@ public sealed class PersistenceClaimsService : IClaimsService
             EventDate         = seed.EventDate,
             Location          = seed.Location,
             Description       = string.IsNullOrWhiteSpace(seed.Description) ? string.Empty : seed.Description!,
-            Status            = "Новий",
-            Risk              = "Невизначений",
+            Status            = ClaimContractCodes.Status.New,
+            Risk              = ClaimContractCodes.Risk.Undetermined,
             RiskScore         = 0,
             Confidence        = 0,
             SlaDeadline       = now.AddDays(7),
@@ -86,9 +86,9 @@ public sealed class PersistenceClaimsService : IClaimsService
         claim.StatusHistory.Add(new ClaimStatusHistory
         {
             ClaimId   = claimId,
-            Status    = "Новий",
+            Status    = ClaimContractCodes.Status.New,
             ChangedAt = now,
-            Note      = $"Створено: {actor.ActorName} ({actor.ActorType}). Локальний sandbox.",
+            Note      = $"Created by: {actor.ActorName} ({actor.ActorType}). Local sandbox.",
         });
 
         db.Claims.Add(claim);

@@ -23,6 +23,7 @@
   <ItemGroup>
     <ProjectReference Include="..\InsuranceAIPlatform.Api\InsuranceAIPlatform.Api.csproj" />
     <ProjectReference Include="..\InsuranceAIPlatform.BuildingBlocks\InsuranceAIPlatform.BuildingBlocks.csproj" />
+    <ProjectReference Include="..\InsuranceAIPlatform.DbMigrator\InsuranceAIPlatform.DbMigrator.csproj" />
     <ProjectReference Include="..\InsuranceAIPlatform.Services.Claims\InsuranceAIPlatform.Services.Claims.csproj" />
     <ProjectReference Include="..\InsuranceAIPlatform.Services.CustomersPolicies\InsuranceAIPlatform.Services.CustomersPolicies.csproj" />
     <ProjectReference Include="..\InsuranceAIPlatform.Services.Documents\InsuranceAIPlatform.Services.Documents.csproj" />

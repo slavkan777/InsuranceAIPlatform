@@ -4,7 +4,7 @@ import { login } from './helpers/auth';
 /**
  * AI Evidence deep coverage (scenario G).
  *
- * - Loading state on Run AI (button text flips to "Запускаємо N%")
+ * - Loading state on Run AI (button text flips to "Running N%")
  * - Provider chip visible after a run (Mock|DeepSeek|Disabled)
  * - Confidence + risk chips visible
  * - Repeat run idempotency (clicking twice produces a 2nd run row)
@@ -23,15 +23,15 @@ test.describe('AI Evidence deep', () => {
   test('Run AI shows loading state, then settles', async ({ page }) => {
     const runBtn = page.locator('[data-testid=run-ai-analysis]');
     await runBtn.click();
-    // The text either flips to "Запускаємо N%" or completes immediately on
+    // The text either flips to "Running N%" or completes immediately on
     // a fast machine — we tolerate both as long as it ends in the idle state.
-    await expect(runBtn).toHaveText(/Запустити AI-аналіз/, { timeout: 30000 });
+    await expect(runBtn).toHaveText(/Run AI analysis/, { timeout: 30000 });
   });
 
   test('After AI run, provider + confidence + risk chips appear', async ({ page }) => {
     await page.locator('[data-testid=run-ai-analysis]').click();
     await expect(page.locator('[data-testid=run-ai-analysis]')).toHaveText(
-      /Запустити AI-аналіз/,
+      /Run AI analysis/,
       { timeout: 30000 },
     );
     // The advisory-only card surfaces chips. We don't pin the exact provider
@@ -43,7 +43,7 @@ test.describe('AI Evidence deep', () => {
   test('Guardrails visible: every "can*" flag = false', async ({ page }) => {
     await page.locator('[data-testid=run-ai-analysis]').click();
     await expect(page.locator('[data-testid=run-ai-analysis]')).toHaveText(
-      /Запустити AI-аналіз/,
+      /Run AI analysis/,
       { timeout: 30000 },
     );
     // Each guardrail pill carries `label=value` text. The advisory-only flag is
@@ -59,7 +59,7 @@ test.describe('AI Evidence deep', () => {
     // First need a run.
     await page.locator('[data-testid=run-ai-analysis]').click();
     await expect(page.locator('[data-testid=run-ai-analysis]')).toHaveText(
-      /Запустити AI-аналіз/,
+      /Run AI analysis/,
       { timeout: 30000 },
     );
     // Record once.

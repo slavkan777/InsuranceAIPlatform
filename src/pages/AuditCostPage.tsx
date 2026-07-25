@@ -47,9 +47,9 @@ export default function AuditCostPage() {
     { label: t.audit.metricRunId, value: runId, mono: true },
     { label: t.audit.metricTraceId, value: traceId, mono: true },
     { label: t.audit.metricModel, value: model },
-    { label: t.audit.metricTokens, value: tokens.toLocaleString('uk-UA'), mono: true },
+    { label: t.audit.metricTokens, value: tokens.toLocaleString('en-US'), mono: true },
     { label: t.audit.metricCost, value: `$${cost.toFixed(4)}`, mono: true },
-    { label: t.audit.metricDuration, value: `${durationSec} с`, mono: true },
+    { label: t.audit.metricDuration, value: `${durationSec}s`, mono: true },
   ];
 
   return (

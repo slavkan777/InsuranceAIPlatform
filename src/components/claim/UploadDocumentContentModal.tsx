@@ -17,20 +17,20 @@ interface UploadDocumentContentModalProps {
 
 const SAMPLE_TEMPLATES: Record<string, string> = {
   'police-report':
-    'ДТП на перехресті Київська 24, 18.05.2026 14:32.\n' +
-    'Учасники: 2. Постраждалі: 0. Винуватець: Сторона Б (Toyota Camry 2021).\n' +
-    'Видимі пошкодження: задній бампер, задні двері.\n' +
-    'Поліцейський: Іваненко О.М.',
+    'Road accident at the Main Street 24 intersection, 18.05.2026 14:32.\n' +
+    'Parties involved: 2. Injuries: 0. At fault: Party B (Toyota Camry 2021).\n' +
+    'Visible damage: rear bumper, rear doors.\n' +
+    'Reporting officer: J. Doe.',
   'customer-statement':
-    'Я, [синтетичне імʼя], підтверджую факт ДТП 18.05.2026 о 14:32.\n' +
-    'Автомобіль: Toyota Camry 2021. Пошкодження: задній бампер.\n' +
-    'Свідомі помилки протоколу відсутні.',
+    'I, [synthetic name], confirm the road accident on 18.05.2026 at 14:32.\n' +
+    'Vehicle: Toyota Camry 2021. Damage: rear bumper.\n' +
+    'No known errors in this statement.',
   estimate:
-    'Кошторис на ремонт Toyota Camry 2021:\n' +
-    '— заміна заднього бампера: 1 200 USD\n' +
-    '— ремонт задніх дверей: 800 USD\n' +
-    '— покраска: 720 USD\n' +
-    'Сума: 2 720 USD',
+    'Repair estimate for Toyota Camry 2021:\n' +
+    '— rear bumper replacement: 1,200 USD\n' +
+    '— rear door repair: 800 USD\n' +
+    '— repainting: 720 USD\n' +
+    'Total: 2,720 USD',
 };
 
 /**
@@ -74,7 +74,7 @@ export function UploadDocumentContentModal({
   useEffect(() => {
     if (open) {
       setKind('police-report');
-      setTitle('Поліцейський звіт NoБРС-2026/' + Math.floor(Math.random() * 9000 + 1000));
+      setTitle('Police report No. PR-2026/' + Math.floor(Math.random() * 9000 + 1000));
       setDocType('PoliceReport');
       setContent(SAMPLE_TEMPLATES['police-report']);
       setSubmitting(false);
@@ -118,7 +118,7 @@ export function UploadDocumentContentModal({
       onUploaded?.(result.commandId);
       onClose();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Невідома помилка.';
+      const msg = err instanceof Error ? err.message : 'Unknown error.';
       setError(msg);
       setSubmitting(false);
     }

@@ -10,6 +10,13 @@ import { DeferredActionButton } from '@/components/ui/DeferredActionButton';
 import { NewClaimModal } from '@/components/claim/NewClaimModal';
 import { pushToast } from '@/features/ui/uiFeedbackSlice';
 import { buildCsv, downloadBlob, localDateStamp } from '@/utils/csv';
+import {
+  aiStatusLabel,
+  aiStatusTone,
+  eventTypeLabel,
+  riskLevelLabel,
+  riskLevelTone,
+} from '@/utils/claimContract';
 import { useI18n } from '@/i18n/useI18n';
 import { DonutChart } from '@/components/charts/DonutChart';
 import { BarList } from '@/components/charts/BarList';
@@ -73,10 +80,10 @@ export default function DashboardPage() {
       { header: 'ClaimId', accessor: (r) => r.id },
       { header: 'Customer', accessor: (r) => r.customer },
       { header: 'Vehicle', accessor: (r) => r.vehicle },
-      { header: 'EventType', accessor: (r) => r.eventType },
+      { header: 'EventType', accessor: (r) => eventTypeLabel(r.eventType) },
       { header: 'Documents', accessor: (r) => r.documentsCount },
-      { header: 'AiStatus', accessor: (r) => r.aiStatus },
-      { header: 'Risk', accessor: (r) => r.risk },
+      { header: 'AiStatus', accessor: (r) => aiStatusLabel(r.aiStatus) },
+      { header: 'Risk', accessor: (r) => riskLevelLabel(r.risk) },
       { header: 'NextAction', accessor: (r) => r.nextAction },
       { header: 'Updated', accessor: (r) => r.updated },
     ]);
@@ -244,32 +251,18 @@ export default function DashboardPage() {
                       <div className="font-medium text-ink-900">{row.customer}</div>
                       <div className="text-xs text-ink-500">{row.vehicle}</div>
                     </td>
-                    <td className="table-td text-ink-600">{row.eventType}</td>
+                    <td className="table-td text-ink-600">{eventTypeLabel(row.eventType)}</td>
                     <td className="table-td">
                       <span className="chip">{row.documentsCount}</span>
                     </td>
                     <td className="table-td">
-                      <StatusPill
-                        tone={
-                          row.aiStatus === 'AI-перевірено'
-                            ? 'good'
-                            : row.aiStatus === 'Потрібна перевірка'
-                              ? 'warn'
-                              : row.aiStatus === 'Обробляється'
-                                ? 'info'
-                                : 'muted'
-                        }
-                      >
-                        {row.aiStatus}
+                      <StatusPill tone={aiStatusTone(row.aiStatus)}>
+                        {aiStatusLabel(row.aiStatus)}
                       </StatusPill>
                     </td>
                     <td className="table-td">
-                      <StatusPill
-                        tone={
-                          row.risk === 'Високий' ? 'danger' : row.risk === 'Середній' ? 'warn' : 'good'
-                        }
-                      >
-                        {row.risk}
+                      <StatusPill tone={riskLevelTone(row.risk)}>
+                        {riskLevelLabel(row.risk)}
                       </StatusPill>
                     </td>
                     <td className="table-td text-ink-600">{row.nextAction}</td>
@@ -303,7 +296,7 @@ export default function DashboardPage() {
               <div>
                 <div className="metric-label">{t.dashboard.aiRecPayoutLabel}</div>
                 <div className="text-2xl font-bold text-ink-900 font-mono mt-0.5">
-                  ${c.recommendedPayout.toLocaleString('uk-UA')}
+                  ${c.recommendedPayout.toLocaleString('en-US')}
                 </div>
               </div>
               <div className="text-right">

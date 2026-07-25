@@ -38,45 +38,4 @@ const en = {
   vehicleInsuredLabel: 'insured',
 };
 
-type T = typeof en;
-
-const uk: T = {
-  pageTitle: 'Поліс і покриття',
-  statusActive: 'Активний · до закінчення 220 днів',
-
-  // Policy detail card
-  sectionPolicyLabel: 'Поліс',
-  sectionPolicyValidity: 'дійсний 01.01.2026 — 31.12.2026',
-  sectionExpiryLabel: 'До закінчення',
-  sectionExpiryValue: '220 днів',
-
-  // Coverage cards
-  coverageLimitLabel: 'Ліміт',
-  coverageDeductibleLabel: 'Франшиза',
-
-  // Limits & deductible section
-  limitsTitle: 'Ліміти та франшиза',
-  limitTotal: 'Загальний ліміт',
-  limitPerIncident: 'Ліміт на ДТП',
-  limitBaseDeductible: 'Базова франшиза',
-  limitBonusMalus: 'Бонус-малус',
-
-  // Exclusions section
-  exclusionsTitle: 'Виключення',
-  exclusion1: 'Стан сп\'яніння',
-  exclusion2: 'Гонки',
-  exclusion3: 'Військові дії',
-
-  // Policy validation section
-  validationTitle: 'Валідація полісу',
-
-  // Owner card
-  ownerLabel: 'Власник',
-  ownerSince: 'Клієнт з 2021',
-
-  // Vehicle card
-  vehicleLabel: 'Транспорт',
-  vehicleInsuredLabel: 'застрах.',
-};
-
-export const policy = { en, uk };
+export const policy = { en };

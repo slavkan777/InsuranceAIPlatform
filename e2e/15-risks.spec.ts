@@ -17,23 +17,23 @@ test.describe('Risks & Checks', () => {
   });
 
   test('renders risk score, factors, and governance panels', async ({ page }) => {
-    await expect(page.locator('body')).toContainText(/Ризик(овий бал|и та перевірки)/i);
-    await expect(page.locator('body')).toContainText(/Фактори ризику/i);
-    await expect(page.locator('body')).toContainText(/Автоматичне погодження ЗАБЛОКОВАНО/);
+    await expect(page.locator('body')).toContainText(/Risks & checks|Risk score/i);
+    await expect(page.locator('body')).toContainText(/Risk factors/i);
+    await expect(page.locator('body')).toContainText(/Auto-approval BLOCKED/);
   });
 
-  test('"Відкрити докази" → ai-evidence', async ({ page }) => {
-    await page.getByRole('button', { name: /Відкрити докази/ }).click();
+  test('"Open evidence" → ai-evidence', async ({ page }) => {
+    await page.getByRole('button', { name: /Open evidence/ }).click();
     await page.waitForURL(/\/claims\/CLM-1006\/ai-evidence$/);
   });
 
-  test('"Запросити дані" → documents', async ({ page }) => {
-    await page.getByRole('button', { name: /Запросити дані/ }).click();
+  test('"Request data" → documents', async ({ page }) => {
+    await page.getByRole('button', { name: /Request data/ }).click();
     await page.waitForURL(/\/claims\/CLM-1006\/documents$/);
   });
 
-  test('"Передати на погодження" → approval', async ({ page }) => {
-    await page.getByRole('button', { name: /Передати на погодження/ }).click();
+  test('"Send for approval" → approval', async ({ page }) => {
+    await page.getByRole('button', { name: /Send for approval/ }).click();
     await page.waitForURL(/\/claims\/CLM-1006\/approval$/);
   });
 

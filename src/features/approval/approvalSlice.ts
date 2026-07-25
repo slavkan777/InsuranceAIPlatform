@@ -13,7 +13,7 @@ interface ApprovalState {
 const initialState: ApprovalState = {
   selectedDecision: 'request',
   reviewerNotes:
-    'Запрошуємо клієнта надати фото пошкодження заднього бампера. AI confidence 78%.',
+    'Requesting the customer to provide a photo of the rear bumper damage. AI confidence 78%.',
   checklist: {
     coverage: true,
     'docs-reviewed': true,
@@ -44,7 +44,7 @@ const slice = createSlice({
     },
     draftSaved(state) {
       state.draftStatus = 'saved';
-      state.draftMessage = 'Чернетку збережено. Доступна в audit trail.';
+      state.draftMessage = 'Draft saved. Available in the audit trail.';
     },
     sendRequestToCustomer(state) {
       state.draftStatus = 'sending';
@@ -52,7 +52,7 @@ const slice = createSlice({
     },
     requestSent(state) {
       state.draftStatus = 'sent';
-      state.draftMessage = 'Запит надіслано клієнту через SMS + email.';
+      state.draftMessage = 'Request sent to the customer via SMS + email.';
     },
     draftFailed(state, action: PayloadAction<string>) {
       state.draftStatus = 'failed';

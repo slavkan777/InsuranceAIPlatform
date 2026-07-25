@@ -1,6 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import { claimRows } from '@/data/mock/claims';
 import type { ClaimRow } from '@/types';
+import { FILTER_ALL, type ClaimSegmentCode } from '@/utils/claimContract';
 
 /** 'mock-fallback' = backend unreachable; fell back to mock data with degraded indicator */
 export type ClaimsApiMode = 'mock' | 'backend' | 'mock-fallback';
@@ -25,7 +26,7 @@ interface ClaimsState {
     aiStatus: string;
     date: string;
   };
-  segment: 'Усі' | 'ДТП' | 'Високий ризик' | 'Чекає AI' | 'Чекає рішення';
+  segment: ClaimSegmentCode;
   // --- async load state (queue) ---
   loading: boolean;
   error: string | null;
@@ -41,17 +42,17 @@ const initialState: ClaimsState = {
   list: claimRows,
   selectedId: 'CLM-1006',
   search: '',
-  // All filters default to 'Усі' (any) so the list shows everything on first
-  // paint. Slava bug 4: a default eventType of 'ДТП' silently hid every claim
-  // whose event_type wasn't exactly 'ДТП' — including freshly created ones.
+  // All filters default to the FILTER_ALL sentinel (any) so the list shows everything
+  // on first paint. Slava bug 4: a non-neutral default event-type filter silently hid
+  // every claim of a different event type — including freshly created ones.
   filters: {
-    status: 'Усі',
-    risk: 'Усі',
-    eventType: 'Усі',
-    aiStatus: 'Усі',
-    date: 'Усі',
+    status: FILTER_ALL,
+    risk: FILTER_ALL,
+    eventType: FILTER_ALL,
+    aiStatus: FILTER_ALL,
+    date: FILTER_ALL,
   },
-  segment: 'Усі',
+  segment: 'All',
   loading: false,
   error: null,
   apiMode: 'mock',

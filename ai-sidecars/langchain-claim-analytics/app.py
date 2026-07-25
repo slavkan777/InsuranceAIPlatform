@@ -29,7 +29,7 @@ from langchain_core.runnables import Runnable, RunnableLambda
 
 SERVICE = "langchain-claim-analytics"
 VERSION = "0.1.0"
-ADVISORY = ("AI-аналіз має лише рекомендаційний характер — фінальне рішення приймає людина-адʼюстер.")
+ADVISORY = ("AI analysis is advisory only — the final decision is made by a human adjuster.")
 
 
 # ----------------------------- I/O contracts -----------------------------
@@ -75,7 +75,7 @@ prompt = ChatPromptTemplate.from_messages([
     ("system",
      "You are an insurance claim review assistant. Produce an ADVISORY-ONLY structured manager "
      "review strictly from the provided claim-scoped evidence. Never make a final payout, fraud, or "
-     "legal decision. Use only the given evidence; do not invent facts. Respond in Ukrainian.\n"
+     "legal decision. Use only the given evidence; do not invent facts. Respond in English.\n"
      "{format_instructions}"),
     ("human",
      "Claim {claimId} ({eventType}). Vehicle: {vehicle}. Description: {description}.\n"
@@ -84,9 +84,9 @@ prompt = ChatPromptTemplate.from_messages([
 
 
 # ----------------------------- deterministic analyzer -----------------------------
-_COVERAGE_HINTS = ("покрива", "поліс", "comprehensive", "оцспв", "відшкод")
-_EXCLUSION_HINTS = ("виключенн", "спʼянін", "сп'янін", "перегон", "не покрива")
-_ANOMALY_HINTS = ("перевищ", "38", "норм", "години", "год", "бенчмарк", "ставка", "невідповід")
+_COVERAGE_HINTS = ("cover", "policy", "comprehensive", "third-party", "indemnit", "deductible")
+_EXCLUSION_HINTS = ("exclusion", "excluded", "intoxicat", "alcohol", "racing", "not covered")
+_ANOMALY_HINTS = ("exceed", "excess", "benchmark", "mismatch", "discrepan", "rate", "hours", "percent")
 
 
 def _deterministic_review(req: AdvancedReviewRequest) -> AdvancedReview:
@@ -100,12 +100,12 @@ def _deterministic_review(req: AdvancedReviewRequest) -> AdvancedReview:
     if n == 0:
         return AdvancedReview(
             claimId=req.claimId,
-            summary="Недостатньо доказів у матеріалах справи для розширеного аналізу.",
-            coverageAssessment="Неможливо оцінити покриття — немає доказів.",
+            summary="There is not enough evidence in this claim for an advanced analysis.",
+            coverageAssessment="Coverage cannot be assessed — no evidence available.",
             evidenceStrength="none",
             anomalies=[],
-            missingItems=["Завантажте документи/докази для цієї справи (заява, поліс, рахунок СТО)."],
-            recommendedNextAction="Зібрати докази та передати на перевірку людині-адʼюстеру.",
+            missingItems=["Upload documents/evidence for this claim (statement, policy, repair invoice)."],
+            recommendedNextAction="Collect the evidence and hand the claim to a human adjuster for review.",
             citations=[],
             confidence=0,
             advisoryOnly=True,
@@ -115,31 +115,31 @@ def _deterministic_review(req: AdvancedReviewRequest) -> AdvancedReview:
     coverage_pos = any(h in joined for h in _COVERAGE_HINTS)
     exclusion = any(h in joined for h in _EXCLUSION_HINTS)
     coverage = (
-        "Докази вказують на ймовірне покриття за умовами полісу; виключень у наданих доказах не виявлено."
+        "The evidence indicates likely coverage under the policy terms; no exclusion was found in the supplied evidence."
         if coverage_pos and not exclusion else
-        "Докази згадують можливі виключення — потрібна перевірка людиною."
+        "The evidence mentions possible exclusions — human review is required."
         if exclusion else
-        "Прямих згадок про покриття у наданих доказах недостатньо — потрібна перевірка полісу людиною."
+        "There are not enough direct references to coverage in the supplied evidence — a human must review the policy."
     )
 
     anomalies: List[str] = []
     if any(h in joined for h in _ANOMALY_HINTS):
-        anomalies.append("Можлива невідповідність вартості/годин ремонту — потребує перевірки людиною (не вирок про шахрайство).")
+        anomalies.append("Possible mismatch in repair cost/hours — requires human review (not a fraud determination).")
 
     kinds = {c.kind for c in ev if c.kind}
     missing: List[str] = []
-    for need, label in (("invoice", "рахунок СТО"), ("police", "довідка/протокол"), ("policy", "умови полісу")):
+    for need, label in (("invoice", "repair invoice"), ("police", "police report/certificate"), ("policy", "policy terms")):
         if not any(need in (c.kind or "").lower() for c in ev):
-            missing.append(f"Відсутній документ: {label}.")
+            missing.append(f"Missing document: {label}.")
 
     return AdvancedReview(
         claimId=req.claimId,
-        summary=f"Розширений аналіз за {n} фрагментами доказів справи {req.claimId}. {ADVISORY}",
+        summary=f"Advanced analysis over {n} evidence fragments for claim {req.claimId}. {ADVISORY}",
         coverageAssessment=coverage,
         evidenceStrength=strength,
         anomalies=anomalies,
         missingItems=missing[:3],
-        recommendedNextAction="Передати на перевірку людині-адʼюстеру з урахуванням наведених доказів і відкритих питань.",
+        recommendedNextAction="Hand the claim to a human adjuster for review, taking the cited evidence and open questions into account.",
         citations=[Citation(chunkId=c.chunkId, kind=c.kind) for c in ev[:6]],
         confidence=confidence,
         advisoryOnly=True,
@@ -183,10 +183,10 @@ def advanced_claim_analytics(req: AdvancedReviewRequest):
     base = os.environ.get("OLLAMA_BASE_URL", "").strip()
     if base:
         try:
-            evidence_block = "\n".join(f"- [{c.kind}] {c.chunkId}: {c.text}" for c in req.evidence) or "(немає)"
+            evidence_block = "\n".join(f"- [{c.kind}] {c.chunkId}: {c.text}" for c in req.evidence) or "(none)"
             review: AdvancedReview = chain.invoke({
                 "claimId": req.claimId, "eventType": req.eventType or "", "vehicle": req.vehicle or "",
-                "description": req.description or "", "question": req.question or "Загальний огляд справи",
+                "description": req.description or "", "question": req.question or "General claim review",
                 "evidence_block": evidence_block,
             })
             # Never trust the model for claim scoping: re-scope citations to the input evidence ids only.

@@ -99,9 +99,9 @@ public sealed class SandboxSurfaceTests : IClassFixture<SandboxTestWebApplicatio
             customerName = "Synthetic Customer 001",
             vehicle = "Honda Civic 2022",
             vehicleVin = "VIN ****1234",
-            eventType = "ДТП",
+            eventType = "RoadAccident",
             eventDate = "2026-05-25",
-            location = "Київ, проспект Перемоги 50",
+            location = "Springfield, Lake Drive 50",
             description = "Test claim",
         };
         var response = await _client.PostAsJsonAsync("/api/claims", body);
@@ -111,7 +111,7 @@ public sealed class SandboxSurfaceTests : IClassFixture<SandboxTestWebApplicatio
         Assert.NotNull(result);
         Assert.True(result!.Success);
         Assert.StartsWith("CLM-", result.ClaimId);
-        Assert.Equal("Новий", result.Status);
+        Assert.Equal(ClaimContractCodes.Status.New, result.Status);
         Assert.NotNull(result.AuditEventId);
         Assert.True(result.AuditEventId > 0);
         Assert.NotNull(result.OutboxMessageId);
@@ -127,7 +127,7 @@ public sealed class SandboxSurfaceTests : IClassFixture<SandboxTestWebApplicatio
         {
             customerId = "CUST-DOES-NOT-EXIST",
             vehicle = "X",
-            eventType = "ДТП",
+            eventType = "RoadAccident",
             eventDate = "2026-05-25",
             location = "X",
         };
@@ -147,7 +147,7 @@ public sealed class SandboxSurfaceTests : IClassFixture<SandboxTestWebApplicatio
             kind = "police-report",
             title = "Test Police Report",
             docType = "PoliceReport",
-            content = "ДТП на перехресті — синтетичний тестовий вміст.",
+            content = "Road accident at an intersection — synthetic test content.",
         };
         var response = await _client.PostAsJsonAsync("/api/claims/CLM-1006/documents/upload", body);
         Assert.True(response.IsSuccessStatusCode);

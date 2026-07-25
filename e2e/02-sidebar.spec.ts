@@ -5,7 +5,7 @@ import { login } from './helpers/auth';
  * TEST 2 — Sidebar active state (per gate spec; Slava bug 1).
  *
  * Pre-fix bug: navigating to `/claims/CLM-1006` highlighted BOTH
- * "Автострахові випадки" (`/claims`) AND "Робоче місце випадку"
+ * "Auto insurance claims" (`/claims`) AND "Claim workspace"
  * (`/claims/CLM-1006`) because the first link lacked `end:true` and
  * therefore prefix-matched any nested route.
  *

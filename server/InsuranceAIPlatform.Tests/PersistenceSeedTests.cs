@@ -130,9 +130,9 @@ public class PersistenceSeedTests
         Assert.NotNull(claim);
         Assert.Equal("CUST-4421", claim!.CustomerId);
         Assert.Equal("POL-2025-AC-4421", claim.PolicyId);
-        Assert.Equal("Роберт Джонсон", claim.Customer);
+        Assert.Equal("Robert Johnson", claim.Customer);
         Assert.Equal("Toyota Camry 2021", claim.Vehicle);
-        Assert.Equal("В роботі", claim.Status);
+        Assert.Equal(ClaimContractCodes.Status.InProgress, claim.Status);
         Assert.Equal(82, claim.RiskScore);
         Assert.Equal(78, claim.Confidence);
         Assert.Equal(4261, claim.Tokens);

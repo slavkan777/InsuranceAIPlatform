@@ -7,7 +7,7 @@ import { login } from './helpers/auth';
  * Opens the golden seeded claim and walks each main tab. Verifies that:
  *   - The detail route renders (HTTP 200 + UI mounts).
  *   - Each sub-route URL is reachable.
- *   - The customer label "Роберт Джонсон" is visible somewhere in the
+ *   - The customer label "Robert Johnson" is visible somewhere in the
  *     workspace shell (proves the seeded data is wired all the way through
  *     the HybridClaimReadService + BFF + UI).
  */
@@ -34,7 +34,7 @@ test.describe('CLM-1006 walkthrough', () => {
     await expect(page).toHaveURL(/\/claims\/CLM-1006$/);
 
     // Customer label appears somewhere (proves HybridClaimReadService served it).
-    await expect(page.locator('body')).toContainText(/Роберт Джонсон/);
+    await expect(page.locator('body')).toContainText(/Robert Johnson/);
 
     for (const r of subRoutes) {
       await page.goto(`/claims/CLM-1006/${r}`);

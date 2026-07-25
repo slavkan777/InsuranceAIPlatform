@@ -34,39 +34,4 @@ const en = {
     'Persistent SQL storage and real AI provider keys are intentionally disabled in this demo.',
   ],
 };
-type T = typeof en;
-const uk: T = {
-  title: 'Огляд можливостей платформи',
-  subtitle: '7 кроків · ~6 хвилин — тур по процесу обробки випадків',
-  playingStep: 'Крок',
-  startWalkthrough: '▶ Запустити огляд',
-  stopWalkthrough: '■ Зупинити',
-  nowPlaying: '⏵ зараз',
-  stepLabel: 'Крок',
-  openStep: 'Перейти →',
-  capabilitiesTitle: 'Можливості платформи',
-  capabilitiesSubtitle: 'Як робоче місце допомагає вашій команді',
-  cap1Title: 'Робоче місце перевірки випадків',
-  cap1Body:
-    'Організуйте вхідні випадки, відстежуйте статуси та фокусуйте ревʼюерів на справах, які потребують уваги першими.',
-  cap2Title: 'AI-допомога з доказами',
-  cap2Body:
-    'Класифікуйте документи, витягуйте ключові поля та підсвічуйте ризикові сигнали до людської перевірки.',
-  cap3Title: 'Аудит і governance',
-  cap3Body:
-    'Зберігайте рішення пояснюваними завдяки evidence-first виходам, контрольним точкам людської перевірки та повному audit trail.',
-  cap4Title: 'Cloud operations',
-  cap4Body:
-    'Працює як живий cloud-додаток — React frontend і .NET API з health-перевірками та економним масштабуванням.',
-  valueTitle: 'Що робить ця платформа',
-  valueBody:
-    'Детермінована система обробки випадків з AI-доказами, людською перевіркою та audit / cost governance.',
-  techNote: '.NET 9 API · React + TypeScript · живий cloud-деплой',
-  environmentTitle: 'Статус демо-середовища',
-  environmentBullets: [
-    'Seeded дані випадків і mock AI-провайдер безпечно демонструють процес.',
-    'Жива інтеграція API увімкнена (health-checked .NET API).',
-    'Persistent SQL storage і реальні AI provider keys навмисно вимкнені в цьому демо.',
-  ],
-};
-export const demo = { en, uk };
+export const demo = { en };

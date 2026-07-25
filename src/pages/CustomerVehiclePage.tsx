@@ -37,7 +37,7 @@ export default function CustomerVehiclePage() {
         <section className="card card-pad">
           <div className="flex items-center gap-4 mb-4">
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-brand-400 to-brand-700 grid place-items-center text-white text-lg font-semibold">
-              РД
+              RJ
             </div>
             <div>
               <h3 className="text-lg font-semibold text-ink-900">{c.customer}</h3>

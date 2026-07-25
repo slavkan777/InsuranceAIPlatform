@@ -39,8 +39,8 @@ public static class SimilarClaimsRanker
                 .OrderBy(k => k, StringComparer.Ordinal).ToList();
 
             string reason = shared.Count > 0
-                ? $"Спільні категорії доказів: {string.Join(", ", shared)}; семантична близькість {score:P0}."
-                : $"Семантична близькість {score:P0} за профілем справи.";
+                ? $"Shared evidence categories: {string.Join(", ", shared)}; semantic similarity {score:P0}."
+                : $"Semantic similarity {score:P0} based on the claim profile.";
 
             results.Add(new SimilarClaim(claimId, score, reason, shared));
         }

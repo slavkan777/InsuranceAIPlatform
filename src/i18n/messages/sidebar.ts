@@ -29,35 +29,4 @@ const en = {
   statusStorageText: 'metadata',
   footerNote: 'Demo environment · synthetic data · AI is advisory, a human decides',
 };
-type T = typeof en;
-const uk: T = {
-  brandName: 'Insurance AI Platform',
-  brandTagline: 'Робоче місце операцій зі страхування',
-  navSection: 'Навігація',
-  navOverview: 'Огляд',
-  navClaims: 'Автострахові випадки',
-  navCustomerDirectory: 'Каталог клієнтів',
-  navWorkspace: 'Робоче місце випадку',
-  navDocuments: 'Документи та фото',
-  navAiChecks: 'AI-перевірки',
-  navRisks: 'Ризики та перевірки',
-  navApproval: 'Людське погодження',
-  navAudit: 'Аудит і витрати',
-  navCustomerVehicle: 'Клієнт і авто',
-  navPolicies: 'Поліси',
-  navVehicles: 'Транспортні засоби (наступний реліз)',
-  navSettings: 'Налаштування (наступний реліз)',
-  statusTitle: 'Стан системи',
-  statusUiLabel: 'Інтерфейс',
-  statusUiText: 'працює',
-  statusApiLabel: 'BFF / API',
-  statusApiText: 'онлайн',
-  statusDataLabel: 'Сховище даних',
-  statusDataText: 'демо (seeded)',
-  statusAiLabel: 'AI (порадницький)',
-  statusAiText: 'mock · DeepSeek opt-in',
-  statusStorageLabel: 'Сховище файлів',
-  statusStorageText: 'метадані',
-  footerNote: 'Демо-середовище · синтетичні дані · AI порадницький, рішення приймає людина',
-};
-export const sidebar = { en, uk };
+export const sidebar = { en };

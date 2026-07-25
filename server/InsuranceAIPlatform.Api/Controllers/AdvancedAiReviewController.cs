@@ -52,7 +52,7 @@ public sealed class AdvancedAiReviewController : ClaimsControllerBase
         // Feature off → safe fallback, no sidecar call.
         if (!_options.Enabled)
             return Ok(Fallback(claimId, "Disabled",
-                "Розширений AI-огляд вимкнено. Доступний базовий RAG-аналіз з цитатами."));
+                "Advanced AI review is disabled. The core RAG analysis with citations is available."));
 
         var claim = _claimRead.GetClaim(claimId);
         var chunks = await _chunks.GetClaimChunksAsync(claimId, ct);
@@ -76,7 +76,7 @@ public sealed class AdvancedAiReviewController : ClaimsControllerBase
         // Sidecar unreachable/error → safe fallback (no fabricated content).
         if (result is null)
             return Ok(Fallback(claimId, "Unavailable",
-                "Сервіс розширеного аналізу недоступний. Скористайтеся базовим RAG-аналізом з цитатами."));
+                "The advanced analysis service is unavailable. Please use the core RAG analysis with citations."));
 
         // Defense-in-depth: re-scope citations to THIS claim's own evidence ids only (no cross-claim leakage).
         var allowed = evidence.Select(e => e.ChunkId).ToHashSet();
@@ -89,7 +89,7 @@ public sealed class AdvancedAiReviewController : ClaimsControllerBase
         new(ClaimId: claimId, Summary: summary,
             CoverageAssessment: "—", EvidenceStrength: "none",
             Anomalies: Array.Empty<string>(), MissingItems: Array.Empty<string>(),
-            RecommendedNextAction: "Скористайтеся базовим RAG-аналізом; фінальне рішення приймає людина-адʼюстер.",
+            RecommendedNextAction: "Use the core RAG analysis; the final decision is made by a human adjuster.",
             Citations: Array.Empty<AdvancedReviewCitation>(), Confidence: 0, AdvisoryOnly: true,
             ProviderMode: providerMode, Framework: "langchain");
 }

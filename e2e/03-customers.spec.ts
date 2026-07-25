@@ -23,10 +23,10 @@ test.describe('Customers catalog', () => {
     await expect(page.locator('[data-testid=customers-directory-page]')).toBeVisible();
     const meta = page.locator('[data-testid=customers-meta]');
     await expect(meta).toBeVisible();
-    // Meta text reads e.g. "200 знайдено · сторінка 1/8" once the API responds.
-    await expect.poll(async () => (await meta.textContent()) ?? '').toMatch(/\d+ знайдено/);
+    // Meta text reads e.g. "200 found · page 1/8" once the API responds.
+    await expect.poll(async () => (await meta.textContent()) ?? '').toMatch(/\d+ found/);
     const metaText = (await meta.textContent()) ?? '';
-    const match = metaText.match(/^(\d+)\s+знайдено/);
+    const match = metaText.match(/^(\d+)\s+found/);
     expect(match, `expected meta to start with a number; got: ${metaText}`).not.toBeNull();
     const total = Number(match![1]);
     // Backend seed is 200; any number > 5 means we're not on the mock fallback.
@@ -34,7 +34,7 @@ test.describe('Customers catalog', () => {
 
     // Pagination control visible when total > pageSize (25).
     if (total > 25) {
-      await expect(page.getByRole('button', { name: /Далі/ })).toBeVisible();
+      await expect(page.getByRole('button', { name: /Next/ })).toBeVisible();
     }
   });
 
@@ -45,7 +45,7 @@ test.describe('Customers catalog', () => {
     await expect(page.locator('[data-testid="customer-row-CUST-T0042"]')).toBeVisible({
       timeout: 5000,
     });
-    await expect(page.locator('[data-testid=customers-meta]')).toContainText(/\d+ знайдено/);
+    await expect(page.locator('[data-testid=customers-meta]')).toContainText(/\d+ found/);
   });
 
   test('create new synthetic customer, then see it in the catalog', async ({ page }) => {

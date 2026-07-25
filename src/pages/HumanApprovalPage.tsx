@@ -96,9 +96,9 @@ export default function HumanApprovalPage() {
 
   // Payout draft rows — defined inside component so they can reference t
   const payoutRows = [
-    { label: t.approval.payoutRowInvoice, value: `$${c.estimate.toLocaleString('uk-UA')}`, tone: 'ink-900' },
-    { label: t.approval.payoutRowExpected, value: `$${c.expectedBenchmark.toLocaleString('uk-UA')}`, tone: 'ink-700' },
-    { label: t.approval.payoutRowDeviation, value: `+$${(c.estimate - c.expectedBenchmark).toLocaleString('uk-UA')}`, tone: 'danger' },
+    { label: t.approval.payoutRowInvoice, value: `$${c.estimate.toLocaleString('en-US')}`, tone: 'ink-900' },
+    { label: t.approval.payoutRowExpected, value: `$${c.expectedBenchmark.toLocaleString('en-US')}`, tone: 'ink-700' },
+    { label: t.approval.payoutRowDeviation, value: `+$${(c.estimate - c.expectedBenchmark).toLocaleString('en-US')}`, tone: 'danger' },
     { label: t.approval.payoutRowDeductible, value: `–$${c.deductible}`, tone: 'ink-700' },
     { label: t.approval.payoutRowReduction, value: `–$${reductionAmount}`, tone: 'ink-700' },
   ];
@@ -256,7 +256,7 @@ export default function HumanApprovalPage() {
               <div className="flex items-center justify-between py-3 text-sm bg-brand-50 -mx-5 px-5">
                 <span className="font-semibold text-ink-900">{t.approval.payoutRowRecommended}</span>
                 <span className="font-mono text-lg font-bold text-brand-700">
-                  ${draftPayout.toLocaleString('uk-UA')}
+                  ${draftPayout.toLocaleString('en-US')}
                 </span>
               </div>
             </dl>

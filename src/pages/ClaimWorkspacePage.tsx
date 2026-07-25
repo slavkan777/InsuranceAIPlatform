@@ -12,6 +12,7 @@ import {
 } from '@/data/mock/claim-1006';
 import { selectClaimDetail } from '@/features/claims/claimWorkspaceSelectors';
 import { useI18n } from '@/i18n/useI18n';
+import { eventTypeLabel } from '@/utils/claimContract';
 import clsx from '@/utils/clsx';
 
 const GOLDEN_CLAIM_ID = 'CLM-1006';
@@ -32,7 +33,7 @@ const GOLDEN_CLAIM_ID = 'CLM-1006';
  *   - Combined with rootSaga.ts boot-time `loadClaimDetail('CLM-1006')` and
  *     no per-route re-dispatch, the Redux state stayed locked on CLM-1006
  *     forever, and the page rendered it on every route.
- *   - Bottom-rail "Передати на перевірку" / "Підготувати рішення" buttons
+ *   - Bottom-rail "Send for review" / "Prepare decision" buttons
  *     navigated to `/claims/CLM-1006/...` (hardcoded), so even if the user
  *     was looking at CLM-1032, those buttons jumped them to CLM-1006.
  *
@@ -85,7 +86,7 @@ export default function ClaimWorkspacePage() {
               {t.claimWorkspace.labelEventDate}:{' '}
               <span data-testid="claim-detail-event-date">{c.eventDate}</span> ·{' '}
               {t.claimWorkspace.labelEventType}:{' '}
-              <span data-testid="claim-detail-event-type">{c.eventType}</span>
+              <span data-testid="claim-detail-event-type">{eventTypeLabel(c.eventType)}</span>
             </div>
             <div className="text-sm text-ink-500 mt-1">
               {t.claimWorkspace.labelCustomer}:{' '}
@@ -224,7 +225,7 @@ export default function ClaimWorkspacePage() {
                       <tr key={line.id}>
                         <td className="py-2 text-ink-700">{line.label}</td>
                         <td className="py-2 text-right font-mono font-semibold text-ink-900">
-                          ${line.value.toLocaleString('uk-UA')}
+                          ${line.value.toLocaleString('en-US')}
                         </td>
                       </tr>
                     ))}
@@ -233,7 +234,7 @@ export default function ClaimWorkspacePage() {
                         {t.claimWorkspace.invoiceTotalLabel}
                       </td>
                       <td className="py-2.5 px-2 text-right font-mono font-bold text-ink-900">
-                        ${c.estimate.toLocaleString('uk-UA')}
+                        ${c.estimate.toLocaleString('en-US')}
                       </td>
                     </tr>
                   </tbody>

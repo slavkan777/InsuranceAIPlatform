@@ -92,7 +92,7 @@ export function ImportDocumentMetadataModal({
       reset();
       onClose();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Невідома помилка.';
+      const msg = err instanceof Error ? err.message : 'Unknown error.';
       setError(msg);
       setSubmitting(false);
     }

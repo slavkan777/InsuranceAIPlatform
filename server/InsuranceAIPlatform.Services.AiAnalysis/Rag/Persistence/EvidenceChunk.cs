@@ -23,7 +23,7 @@ public sealed class EvidenceChunk
     public string Text { get; set; } = string.Empty;           // synthetic evidence text — SOURCE OF TRUTH
     public int TokenCount { get; set; }
     public string ChunkHash { get; set; } = string.Empty;      // deterministic hash of Text (re-embed gate)
-    public string Language { get; set; } = "uk";               // "uk" | "en"
+    public string Language { get; set; } = "en";               // "uk" | "en"
     public string SourceVersion { get; set; } = "v0.1";
 
     // ---- embedding cache (merged ChunkEmbedding; rebuildable, never the source of truth) ----

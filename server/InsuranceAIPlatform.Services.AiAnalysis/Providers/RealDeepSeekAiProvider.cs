@@ -60,7 +60,7 @@ public sealed class RealDeepSeekAiProvider : IAiProvider
         "Claim ID: CLM-1006 (synthetic)\n" +
         "Customer: Robert Johnson (synthetic)\n" +
         "Vehicle: Toyota Camry 2021\n" +
-        "Event: Road traffic accident (ДТП), 18.05.2026, Boryspil area\n" +
+        "Event: Road traffic accident, 18.05.2026, Springfield area\n" +
         "Recommended payout: $2720 | Benchmark: $1970 (difference: +38%)\n" +
         "Documents: 6 of 7 submitted — missing: rear bumper photo\n" +
         "Policy: Auto Comprehensive POL-2025-AC-4421 | Deductible: $500\n\n" +

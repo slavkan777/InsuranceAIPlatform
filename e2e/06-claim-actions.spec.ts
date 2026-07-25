@@ -29,8 +29,8 @@ test.describe('Claim workspace actions on CLM-1006', () => {
     await page.locator('[data-testid=upload-doc-submit]').click();
     // Modal closes; success toast appears in viewport.
     await expect(page.locator('[data-testid=upload-doc-title]')).toBeHidden({ timeout: 10000 });
-    // Toast content asserts the success ("збережено в БД").
-    await expect(page.locator('body')).toContainText(/Документ збережено в БД|документ.*збережено/i, {
+    // Toast content asserts the success ("saved to DB").
+    await expect(page.locator('body')).toContainText(/Document saved to DB/i, {
       timeout: 10000,
     });
   });
@@ -39,14 +39,14 @@ test.describe('Claim workspace actions on CLM-1006', () => {
     await page.goto(`/claims/${claimId}/documents`);
     await page.locator('[data-testid=request-missing-doc-open]').click();
     // The shared RequestMissingDocumentModal opens. Its primary CTA is a
-    // "Зафіксувати запит" button (no data-testid yet); we click the
+    // "Record request" button (no data-testid yet); we click the
     // submit button by role to keep the test stable.
-    const submitBtn = page.getByRole('button', { name: /Зафіксувати запит|Зафіксувати/i });
+    const submitBtn = page.getByRole('button', { name: /Record request/i });
     await expect(submitBtn).toBeVisible();
     await submitBtn.click();
     // Success toast or local-sandbox copy.
     await expect(page.locator('body')).toContainText(
-      /Запит.*зафіксовано|зафіксовано.*журналі|документ.*зафіксовано/i,
+      /request recorded|recorded in the audit log/i,
       { timeout: 10000 },
     );
   });
@@ -57,9 +57,9 @@ test.describe('Claim workspace actions on CLM-1006', () => {
     // Run AI analysis.
     await page.locator('[data-testid=run-ai-analysis]').click();
     // Wait for the analysis to complete — button text flips back from
-    // "Запускаємо N%" to "Запустити AI-аналіз".
+    // "Running N%" back to "Run AI analysis".
     await expect(page.locator('[data-testid=run-ai-analysis]')).toHaveText(
-      /Запустити AI-аналіз/,
+      /Run AI analysis/,
       { timeout: 30000 },
     );
 
@@ -84,15 +84,15 @@ test.describe('Claim workspace actions on CLM-1006', () => {
     await page.locator('[data-testid=payout-sim-open]').click();
 
     // The SimulationOnly notice copy is required by spec (Slava rule:
-    // every payout UI says "Локальна симуляція" / "SimulationOnly=true").
-    await expect(page.locator('body')).toContainText(/SimulationOnly=true|Локальна симуляція/i);
+    // every payout UI says "Payout simulation" / "SimulationOnly=true").
+    await expect(page.locator('body')).toContainText(/SimulationOnly=true|Payout simulation/i);
 
     await page.locator('[data-testid=payout-sim-amount]').fill('1234.56');
     await page.locator('[data-testid=payout-sim-submit]').click();
 
     // Toast confirms the sim was created.
     await expect(page.locator('body')).toContainText(
-      /Симуляція виплати.*створена|SimulationOnly.*true/i,
+      /Payout simulation created|SimulationOnly.*true/i,
       { timeout: 10000 },
     );
   });
@@ -106,10 +106,10 @@ test.describe('Claim workspace actions on CLM-1006', () => {
     // visible somewhere.
     const bodyText = (await page.locator('body').textContent()) ?? '';
     const hasAnyCategory =
-      /ClaimCreated|DocumentUploaded|MissingDocumentRequested|AiAnalysisCompleted|AiDecisionRecorded|ApprovalDraftSaved|HumanDecisionSubmitted|PayoutSimulationCreated|Аудит/i.test(
+      /ClaimCreated|DocumentUploaded|MissingDocumentRequested|AiAnalysisCompleted|AiDecisionRecorded|ApprovalDraftSaved|HumanDecisionSubmitted|PayoutSimulationCreated|Audit/i.test(
         bodyText,
       );
-    expect(hasAnyCategory, 'expected at least one audit category label or "Аудит" header').toBe(
+    expect(hasAnyCategory, 'expected at least one audit category label or "Audit" header').toBe(
       true,
     );
   });

@@ -11,7 +11,6 @@ import {
   selectLoginError,
 } from '@/features/auth/authSelectors';
 import { Icon } from '@/components/ui/Icon';
-import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
 import { useI18n } from '@/i18n/useI18n';
 
 export default function LoginPage() {
@@ -56,7 +55,6 @@ export default function LoginPage() {
             {t.common.appName}
           </span>
         </div>
-        <LanguageSwitcher />
       </div>
 
       {/* Main split: product hero (left) + sign-in card (right) */}

@@ -15,27 +15,27 @@ test.describe('Claim workspace deep navigation', () => {
     await login(page);
   });
 
-  test('"Відкрити збір документів" navigates to documents sub-route', async ({ page }) => {
+  test('"Open document collection" navigates to documents sub-route', async ({ page }) => {
     await page.goto('/claims/CLM-1006');
-    await page.getByRole('button', { name: /Відкрити збір документів/ }).click();
+    await page.getByRole('button', { name: /Open document collection/ }).click();
     await page.waitForURL(/\/claims\/CLM-1006\/documents$/);
   });
 
-  test('"Передати на перевірку" navigates to ai-evidence', async ({ page }) => {
+  test('"Send for review" navigates to ai-evidence', async ({ page }) => {
     await page.goto('/claims/CLM-1006');
-    await page.getByRole('button', { name: /Передати на перевірку/ }).click();
+    await page.getByRole('button', { name: /Send for review/ }).click();
     await page.waitForURL(/\/claims\/CLM-1006\/ai-evidence$/);
   });
 
-  test('"Підготувати рішення" navigates to approval', async ({ page }) => {
+  test('"Prepare decision" navigates to approval', async ({ page }) => {
     await page.goto('/claims/CLM-1006');
-    await page.getByRole('button', { name: /Підготувати рішення/ }).click();
+    await page.getByRole('button', { name: /Prepare decision/ }).click();
     await page.waitForURL(/\/claims\/CLM-1006\/approval$/);
   });
 
-  test('"Повернутись до списку" navigates to /claims', async ({ page }) => {
+  test('"Back to list" navigates to /claims', async ({ page }) => {
     await page.goto('/claims/CLM-1006');
-    await page.getByRole('button', { name: /Повернутись до списку/ }).click();
+    await page.getByRole('button', { name: /Back to list/ }).click();
     await page.waitForURL(/\/claims$/);
   });
 });

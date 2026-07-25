@@ -19,7 +19,7 @@ function* saveApprovalDraftWorker() {
     });
     yield put(draftSaved());
   } catch (err) {
-    yield put(draftFailed('Не вдалось зберегти чернетку.'));
+    yield put(draftFailed('Could not save the draft.'));
   }
 }
 
@@ -28,7 +28,7 @@ function* sendCustomerRequestWorker() {
     yield call([insuranceApi, insuranceApi.sendCustomerRequest], CLAIM_ID);
     yield put(requestSent());
   } catch (err) {
-    yield put(draftFailed('Не вдалось надіслати запит клієнту.'));
+    yield put(draftFailed('Could not send the request to the customer.'));
   }
 }
 

@@ -53,7 +53,7 @@ export function AdvancedAiReviewPanel({ claimId }: { claimId: string }) {
       setReview((await res.json()) as AdvancedReviewDto);
       setStatus('done');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Невідома помилка');
+      setError(e instanceof Error ? e.message : 'Unknown error');
       setStatus('error');
     }
   }
@@ -67,9 +67,9 @@ export function AdvancedAiReviewPanel({ claimId }: { claimId: string }) {
     >
       <div className="flex items-center justify-between gap-2 mb-3">
         <div>
-          <h3 className="text-sm font-semibold text-ink-900">Розширений AI-огляд (LangChain)</h3>
+          <h3 className="text-sm font-semibold text-ink-900">Advanced AI review (LangChain)</h3>
           <p className="text-[11px] text-ink-500">
-            Додатковий структурований огляд поверх базового RAG. Рекомендаційно, не фінальне рішення.
+            An additional structured review layered on top of the core RAG pipeline. Advisory only, not a final decision.
           </p>
         </div>
         <button
@@ -80,21 +80,21 @@ export function AdvancedAiReviewPanel({ claimId }: { claimId: string }) {
           className="btn-primary inline-flex items-center gap-1.5 px-3 py-1.5 text-sm disabled:opacity-50 shrink-0"
         >
           <Icon name="cpu" size={14} />
-          {status === 'loading' ? 'Аналізуємо…' : 'Запустити розширений огляд'}
+          {status === 'loading' ? 'Analysing…' : 'Run advanced review'}
         </button>
       </div>
 
       {status === 'loading' && (
         <div className="rounded-lg border border-ai-200 bg-ai-50 px-4 py-3 text-sm text-ai-700 animate-pulse"
              data-testid="advanced-ai-review-loading">
-          Виконується розширений аналіз через LangChain-сайдкар…
+          Running the advanced analysis through the LangChain sidecar…
         </div>
       )}
 
       {status === 'error' && (
         <div className="rounded-lg border border-danger-200 bg-danger-50 px-4 py-3 text-sm text-danger-700"
              data-testid="advanced-ai-review-error">
-          Помилка розширеного огляду: {error}. Базовий RAG-аналіз доступний вище.
+          Advanced review failed: {error}. The core RAG analysis above is still available.
         </div>
       )}
 
@@ -103,7 +103,7 @@ export function AdvancedAiReviewPanel({ claimId }: { claimId: string }) {
           <div className="flex items-center gap-2 rounded-lg border border-warn-200 bg-warn-50 px-4 py-2 text-sm font-semibold text-warn-800"
                data-testid="advanced-ai-review-advisory">
             <span className="text-warn-600 text-base">⚠</span>
-            AI-аналіз має лише рекомендаційний характер — фінальне рішення приймає людина-адʼюстер.
+            AI analysis is advisory only — the final decision is made by a human adjuster.
           </div>
 
           {disabled ? (
@@ -112,11 +112,11 @@ export function AdvancedAiReviewPanel({ claimId }: { claimId: string }) {
             <>
               <div className="flex flex-wrap gap-3 text-xs">
                 <span className="px-2 py-0.5 rounded-full bg-ai-100 text-ai-700 border border-ai-200">
-                  Сила доказів: <b>{review.evidenceStrength}</b>
+                  Evidence strength: <b>{review.evidenceStrength}</b>
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-ink-100 text-ink-700 border border-ink-200"
                       data-testid="advanced-ai-review-confidence">
-                  Впевненість: <b>{review.confidence}%</b>
+                  Confidence: <b>{review.confidence}%</b>
                 </span>
                 <span className="px-2 py-0.5 rounded-full bg-ink-50 text-ink-500 border border-ink-200">
                   {review.providerMode} · {review.framework}
@@ -124,17 +124,17 @@ export function AdvancedAiReviewPanel({ claimId }: { claimId: string }) {
               </div>
 
               <div>
-                <div className="text-[10px] font-semibold text-ink-400 uppercase tracking-wide">Підсумок</div>
+                <div className="text-[10px] font-semibold text-ink-400 uppercase tracking-wide">Summary</div>
                 <p className="text-sm text-ink-800">{review.summary}</p>
               </div>
               <div>
-                <div className="text-[10px] font-semibold text-ink-400 uppercase tracking-wide">Оцінка покриття</div>
+                <div className="text-[10px] font-semibold text-ink-400 uppercase tracking-wide">Coverage assessment</div>
                 <p className="text-sm text-ink-800">{review.coverageAssessment}</p>
               </div>
 
               {review.anomalies.length > 0 && (
                 <div data-testid="advanced-ai-review-anomalies">
-                  <div className="text-[10px] font-semibold text-ink-400 uppercase tracking-wide">Аномалії</div>
+                  <div className="text-[10px] font-semibold text-ink-400 uppercase tracking-wide">Anomalies</div>
                   <ul className="list-disc pl-5 text-sm text-ink-800">
                     {review.anomalies.map((a, i) => <li key={i}>{a}</li>)}
                   </ul>
@@ -143,7 +143,7 @@ export function AdvancedAiReviewPanel({ claimId }: { claimId: string }) {
 
               {review.missingItems.length > 0 && (
                 <div>
-                  <div className="text-[10px] font-semibold text-ink-400 uppercase tracking-wide">Відсутні матеріали</div>
+                  <div className="text-[10px] font-semibold text-ink-400 uppercase tracking-wide">Missing items</div>
                   <ul className="list-disc pl-5 text-sm text-ink-800">
                     {review.missingItems.map((m, i) => <li key={i}>{m}</li>)}
                   </ul>
@@ -151,14 +151,14 @@ export function AdvancedAiReviewPanel({ claimId }: { claimId: string }) {
               )}
 
               <div>
-                <div className="text-[10px] font-semibold text-ink-400 uppercase tracking-wide">Рекомендована дія</div>
+                <div className="text-[10px] font-semibold text-ink-400 uppercase tracking-wide">Recommended action</div>
                 <p className="text-sm text-ink-800">{review.recommendedNextAction}</p>
               </div>
 
               {review.citations.length > 0 && (
                 <div data-testid="advanced-ai-review-citations">
                   <div className="text-[10px] font-semibold text-ink-400 uppercase tracking-wide">
-                    Цитати ({review.citations.length}) — лише ця справа
+                    Citations ({review.citations.length}) — this claim only
                   </div>
                   <ul className="text-xs font-mono text-ink-600 space-y-0.5">
                     {review.citations.map((c) => (

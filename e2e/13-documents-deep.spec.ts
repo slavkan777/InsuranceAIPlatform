@@ -34,9 +34,9 @@ test.describe('Documents page deep', () => {
   test('Upload modal: sample template auto-fills content', async ({ page }) => {
     await page.locator('[data-testid=upload-doc-open]').click();
     await expect(page.locator('[data-testid=upload-doc-content]')).toBeVisible();
-    // Clear current content then click "Підставити шаблон"
+    // Clear current content then click the use-template button
     await page.locator('[data-testid=upload-doc-content]').fill('');
-    await page.getByRole('button', { name: /Підставити шаблон/ }).click();
+    await page.getByRole('button', { name: /Use template/ }).click();
     const filled = (await page.locator('[data-testid=upload-doc-content]').inputValue()) ?? '';
     expect(filled.length, 'expected sample template to fill content').toBeGreaterThan(20);
     await page.locator('[data-testid=upload-doc-cancel]').click();
@@ -55,32 +55,32 @@ test.describe('Documents page deep', () => {
     await page.locator('[data-testid=upload-doc-submit]').click();
     await expect(page.locator('[data-testid=upload-doc-title]')).toBeHidden({ timeout: 10000 });
     // Both uploads succeeded — at least one success toast visible (toast collapses).
-    await expect(page.locator('body')).toContainText(/Документ збережено в БД/i, { timeout: 5000 });
+    await expect(page.locator('body')).toContainText(/Document saved to DB/i, { timeout: 5000 });
   });
 
   test('Document preview modal opens with honest "originals not stored" copy', async ({
     page,
   }) => {
-    // Open the preview modal via the right-rail "Переглянути деталі" button.
+    // Open the preview modal via the right-rail "View details" button.
     // The button is disabled until a checklist item is selected; click an item
     // first.
     const item = page
       .locator('li')
-      .filter({ has: page.locator('text=/AI conf|Поліц|Заяв|Кошт/') })
+      .filter({ has: page.locator('text=/AI conf|Police|statement|invoice/i') })
       .first();
     if (await item.count() > 0) {
       await item.click();
     }
-    const previewBtn = page.getByRole('button', { name: /Переглянути деталі/ });
+    const previewBtn = page.getByRole('button', { name: /View details/ });
     if (await previewBtn.isEnabled()) {
       await previewBtn.click();
       // The modal renders honest copy.
       await expect(page.locator('body')).toContainText(
-        /У цьому демо ми не зберігаємо файли|Оригінал не доступний у демо-режимі/i,
+        /documents are not stored|not available in demo/i,
         { timeout: 3000 },
       );
       // Close
-      await page.getByRole('button', { name: /Зрозуміло/ }).click();
+      await page.getByRole('button', { name: /Understood/ }).click();
     } else {
       test.info().annotations.push({
         type: 'skipped',

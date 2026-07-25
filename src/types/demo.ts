@@ -1,4 +1,4 @@
-// Guided demo ("Приклад використання") contracts.
+// Guided demo ("Usage example") contracts.
 export type { DemoStep } from './index';
 
 export interface DemoScenarioState {

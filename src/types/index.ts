@@ -1,19 +1,49 @@
-export type ClaimStatus =
-  | 'В роботі'
-  | 'Збір документів'
-  | 'AI-обробка'
-  | 'Високий ризик'
-  | 'Готова'
-  | 'Завершено';
+// ---------------------------------------------------------------------------
+// Claim contract: stable English codes
+// ---------------------------------------------------------------------------
+// These are the canonical API/domain values. The product is English-only and the
+// backend normalizes any legacy Ukrainian values still present in the database to
+// codes at the API boundary, so the browser only ever sees codes.
+//
+// All *logic* normalizes to a code first via `@/utils/claimContract`; display labels
+// live there too and must never be compared against.
+// ---------------------------------------------------------------------------
 
-export type RiskLevel = 'Низький' | 'Середній' | 'Високий';
+export type ClaimStatusCode =
+  | 'New'
+  | 'InProgress'
+  | 'CollectingDocuments'
+  | 'AiProcessing'
+  | 'HighRisk'
+  | 'Ready'
+  | 'Completed';
 
-export type AiStatus =
-  | 'AI-перевірено'
-  | 'Потрібна перевірка'
-  | 'Очікує документи'
-  | 'Обробляється'
-  | 'Готова';
+/** Claim status as carried on the wire. */
+export type ClaimStatus = ClaimStatusCode;
+
+export type RiskLevelCode = 'Undetermined' | 'Low' | 'Medium' | 'High';
+
+/** Risk level as carried on the wire. */
+export type RiskLevel = RiskLevelCode;
+
+export type EventTypeCode =
+  | 'RoadAccident'
+  | 'Parking'
+  | 'Collision'
+  | 'Damage'
+  | 'Glass'
+  | 'Theft';
+
+export type AiStatusCode =
+  | 'AwaitingAi'
+  | 'AiVerified'
+  | 'NeedsReview'
+  | 'AwaitingDocuments'
+  | 'Processing'
+  | 'Ready';
+
+/** AI status as carried on the wire. */
+export type AiStatus = AiStatusCode;
 
 export interface ClaimRow {
   id: string;

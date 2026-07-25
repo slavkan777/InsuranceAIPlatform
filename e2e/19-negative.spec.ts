@@ -27,7 +27,7 @@ test.describe('Negative / adversarial', () => {
     await page.locator('[data-testid=new-claim-open]').click();
     // Fill location only; leave vehicle empty.
     await page.locator('[data-testid=new-claim-vehicle]').fill('');
-    await page.locator('[data-testid=new-claim-location]').fill('Київ');
+    await page.locator('[data-testid=new-claim-location]').fill('Springfield');
     await page.locator('[data-testid=new-claim-submit]').click();
     // Modal stays open (HTML5 required on vehicle).
     await expect(page.locator('[data-testid=new-claim-vehicle]')).toBeVisible();

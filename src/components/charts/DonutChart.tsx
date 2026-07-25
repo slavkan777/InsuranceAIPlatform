@@ -58,7 +58,7 @@ export function DonutChart({
         className="fill-ink-400"
         style={{ fontSize: 9, letterSpacing: 0.6 }}
       >
-        ВИПАДКІВ
+        CLAIMS
       </text>
     </svg>
   );

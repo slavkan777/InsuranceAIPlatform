@@ -24,11 +24,11 @@ Full docs: [`docs/architecture/`](docs/architecture/) — architecture overview,
 | Field | Value |
 |---|---|
 | Claim ID | `CLM-1006` |
-| Customer | Роберт Джонсон (synthetic) |
+| Customer | Robert Johnson (synthetic) |
 | Vehicle | Toyota Camry 2021 · VIN `****8842` |
 | Policy | Auto Comprehensive · `POL-2025-AC-4421` |
-| Event | ДТП 18.05.2026, Бориспіль |
-| Risk | Високий · 82 / 100 |
+| Event | Road accident 18.05.2026, Springfield |
+| Risk | High · 82 / 100 |
 | Model confidence | 78 % |
 | Documents received | 6 / 7 (missing: rear bumper photo) |
 | Repair invoice vs benchmark | $2 720 vs $1 970 (+38 %) |
@@ -73,16 +73,16 @@ Simple UI toggles (tabs, filters, opening a modal) live **inside slice reducers*
 
 | Route | Page | PDF reference |
 |---|---|---|
-| `/` | DashboardPage | Огляд автострахових випадків |
-| `/claims` | ClaimsListPage | Автострахові випадки |
-| `/claims/CLM-1006` | ClaimWorkspacePage | Робоче місце випадку |
-| `/claims/CLM-1006/documents` | DocumentsPhotosPage | Документи та фото |
-| `/claims/CLM-1006/ai-evidence` | AiEvidencePage | AI-аналіз та докази |
-| `/claims/CLM-1006/risks` | RisksChecksPage | Ризики та перевірки |
-| `/claims/CLM-1006/approval` | HumanApprovalPage | Людське погодження |
-| `/claims/CLM-1006/audit` | AuditCostPage | Аудит і витрати |
-| `/claims/CLM-1006/policy` | PolicyCoveragePage | Поліс і покриття |
-| `/claims/CLM-1006/customer-vehicle` | CustomerVehiclePage | Клієнт і транспортний засіб |
+| `/` | DashboardPage | Auto insurance claims overview |
+| `/claims` | ClaimsListPage | Auto insurance claims |
+| `/claims/CLM-1006` | ClaimWorkspacePage | Claim workspace |
+| `/claims/CLM-1006/documents` | DocumentsPhotosPage | Documents & photos |
+| `/claims/CLM-1006/ai-evidence` | AiEvidencePage | AI analysis & evidence |
+| `/claims/CLM-1006/risks` | RisksChecksPage | Risks & checks |
+| `/claims/CLM-1006/approval` | HumanApprovalPage | Human approval |
+| `/claims/CLM-1006/audit` | AuditCostPage | Audit & cost |
+| `/claims/CLM-1006/policy` | PolicyCoveragePage | Policy & coverage |
+| `/claims/CLM-1006/customer-vehicle` | CustomerVehiclePage | Customer & vehicle |
 | `/demo` | DemoScenarioPage | Demo Flow |
 
 The sidebar and top bar are visible on every route. Claim-scoped routes share a `ClaimShell` outlet with sub-tabs.

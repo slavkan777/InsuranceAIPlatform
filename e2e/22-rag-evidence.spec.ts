@@ -148,7 +148,7 @@ test.describe('22 RAG panel — NEGATIVE_PASS', () => {
 
     const answerText = await page.locator('[data-testid=rag-answer-text]').textContent() ?? '';
     // Prohibited fraud-accusation vocabulary (case-insensitive)
-    const fraudWords = ['шахрай', 'шахрайств', 'fraud', 'fraudulent'];
+    const fraudWords = ['fraud', 'fraudulent'];
     for (const word of fraudWords) {
       expect(answerText.toLowerCase()).not.toContain(word.toLowerCase());
     }

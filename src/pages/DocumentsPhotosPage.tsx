@@ -287,7 +287,7 @@ export default function DocumentsPhotosPage() {
           <section className="card card-pad">
             <div className="metric-label mb-2">{t.documents.policeReportLabel}</div>
             <div className="rounded-xl bg-ink-950 text-ink-200 p-4 text-xs font-mono leading-relaxed">
-              <div className="text-brand-300">NoБРС-2026/05/441</div>
+              <div className="text-brand-300">No. PR-2026/05/441</div>
               <div>{t.documents.policeReportDate}</div>
               <div>{t.documents.policeReportLocation}</div>
               <div>{t.documents.policeReportInspector}</div>

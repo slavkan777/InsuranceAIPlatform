@@ -122,7 +122,7 @@ public class RagFoundationTests
         var draft = gen.Generate(new GroundedRequest("CLM-1006", RagUseCases.Custom, "Питання?", new List<ScoredChunk>()));
 
         Assert.Equal(0, draft.Confidence);
-        Assert.Contains("Недостатньо", draft.AnswerText);
+        Assert.Contains("not enough relevant evidence", draft.AnswerText);
         Assert.Empty(draft.Citations);
     }
 

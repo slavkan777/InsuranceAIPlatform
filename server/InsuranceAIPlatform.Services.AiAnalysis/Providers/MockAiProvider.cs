@@ -30,29 +30,29 @@ public sealed class MockAiProvider : IAiProvider
     private static AiProviderRawOutput BuildGoldenOutput() => new(
         ModelName: "local-mock-v0.1",
         SummaryText:
-            "AI аналіз виявив 2 попереджувальні та 1 нейтральну знахідку. " +
-            "Оцінка збитку перевищує бенчмарк, відсутні деякі фото. " +
-            "Покриття підтверджено. Рекомендується перевірка людиною.",
+            "AI analysis produced 2 warning findings and 1 neutral finding. " +
+            "The damage estimate exceeds the benchmark and some photos are missing. " +
+            "Coverage is confirmed. Human review is recommended.",
         Findings:
         [
-            new AiFindingDraft("f1", "Документи",     "Відсутнє фото заднього бампера. 6 з 7 документів надано.",                        "warn"),
-            new AiFindingDraft("f2", "Оцінка збитку", "Оцінка $2720 перевищує бенчмарк $1970 на 38%.",                                    "warn"),
-            new AiFindingDraft("f3", "Покриття",      "Подія ДТП підпадає під Auto Comprehensive. Франшиза $500 застосовна.", "ok"),
+            new AiFindingDraft("f1", "Documents",       "Rear bumper photo is missing. 6 of 7 documents provided.",                       "warn"),
+            new AiFindingDraft("f2", "Damage estimate", "Estimate $2,720 exceeds the $1,970 benchmark by 38%.",                           "warn"),
+            new AiFindingDraft("f3", "Coverage",        "The road accident is covered by Auto Comprehensive. The $500 deductible applies.", "ok"),
         ],
         Evidence:
         [
-            new AiEvidenceDraft("e1", "Поліцейський звіт", "Підтверджено факт ДТП 18.05.2026, Бориспіль.",                                        95),
-            new AiEvidenceDraft("e2", "Рахунок СТО",       "Загальна сума $2720. Деталізація: бампер $980, лак $740, кузов $1000.",                87),
+            new AiEvidenceDraft("e1", "Police report",  "Road accident on 18.05.2026 in Springfield confirmed.",                          95),
+            new AiEvidenceDraft("e2", "Repair invoice", "Total $2,720. Breakdown: bumper $980, paint $740, bodywork $1,000.",             87),
         ],
         Risks:
         [
-            new AiRiskDraft("rs1", "Сума ремонту вище очікуваного діапазону",   25),
-            new AiRiskDraft("rs2", "Відсутнє фото пошкодження",                 22),
-            new AiRiskDraft("rs3", "Розбіжності у поясненнях водіїв",           18),
-            new AiRiskDraft("rs4", "Confidence нижче порогу 85%",                9),
+            new AiRiskDraft("rs1", "Repair amount above the expected range",     25),
+            new AiRiskDraft("rs2", "Damage photo missing",                       22),
+            new AiRiskDraft("rs3", "Discrepancies between driver statements",    18),
+            new AiRiskDraft("rs4", "Confidence below the 85% threshold",          9),
         ],
-        RecommendedActionText: "Запросіть відсутнє фото бампера. Перевірте рахунок СТО. Рішення лише за людиною-ад'ютантом.",
-        PolicyExplanationText: "Поліс Auto Comprehensive POL-2025-AC-4421 покриває збитки від ДТП після застосування франшизи $500.",
+        RecommendedActionText: "Request the missing bumper photo. Review the repair invoice. The decision rests solely with the human adjuster.",
+        PolicyExplanationText: "Policy Auto Comprehensive POL-2025-AC-4421 covers road-accident damage after the $500 deductible is applied.",
         ConfidenceScore: 78,
         Tokens: 4261,
         Cost: 0.0187m);
@@ -63,10 +63,10 @@ public sealed class MockAiProvider : IAiProvider
 
     private static AiProviderRawOutput BuildGenericStub(string claimId) => new(
         ModelName: "local-mock-v0.1",
-        SummaryText: $"AI аналіз для {claimId} — в очікуванні даних.",
+        SummaryText: $"AI analysis for {claimId} — awaiting data.",
         Findings:
         [
-            new AiFindingDraft("f1", "Загальне", "AI analysis pending — insufficient claim data for detailed analysis.", "ok"),
+            new AiFindingDraft("f1", "General", "AI analysis pending — insufficient claim data for detailed analysis.", "ok"),
         ],
         Evidence: Array.Empty<AiEvidenceDraft>(),
         Risks:

@@ -128,7 +128,7 @@ public class LocalLlamaGeneratorTests
         Assert.Equal("Mock", draft.ProviderMode);
         Assert.Empty(draft.Citations);
         Assert.Equal(0, draft.Confidence);
-        Assert.Contains("Недостатньо", draft.AnswerText); // honest insufficient-evidence answer
+        Assert.Contains("not enough relevant evidence", draft.AnswerText); // honest insufficient-evidence answer
     }
 
     // ── RagService integration: a serving local model is persisted as "LocalLlama" ──

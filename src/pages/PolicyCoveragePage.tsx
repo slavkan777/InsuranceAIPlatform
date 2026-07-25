@@ -118,7 +118,7 @@ export default function PolicyCoveragePage() {
       <div className="grid md:grid-cols-2 gap-5">
         <section className="card card-pad flex items-center gap-4">
           <div className="w-14 h-14 rounded-full bg-gradient-to-br from-brand-400 to-brand-700 grid place-items-center text-white text-base font-semibold">
-            РД
+            RJ
           </div>
           <div>
             <div className="metric-label">{t.policy.ownerLabel}</div>

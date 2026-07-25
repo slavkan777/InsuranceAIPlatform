@@ -14,7 +14,7 @@ namespace InsuranceAIPlatform.Services.AiAnalysis.Rag.Generation;
 public sealed class MockGroundedAnswerGenerator : IGroundedAnswerGenerator
 {
     public const string AdvisoryFooter =
-        "AI-аналіз має лише рекомендаційний характер — фінальне рішення приймає людина-ад'юстер.";
+        "AI analysis is advisory only — the final decision is made by a human adjuster.";
 
     public string ProviderMode => "Mock";
 
@@ -26,8 +26,8 @@ public sealed class MockGroundedAnswerGenerator : IGroundedAnswerGenerator
 
         if (retrieved.Count == 0)
         {
-            const string none = "Недостатньо релевантних доказів у матеріалах справи для відповіді. " +
-                                 "Рекомендується перегляд людиною.";
+            const string none = "There is not enough relevant evidence in this claim to answer. " +
+                                 "Human review is recommended.";
             return new GroundedDraft($"{none} {AdvisoryFooter}", 0, citations, EstTokens(request.Question), 24, ProviderMode);
         }
 
@@ -54,13 +54,13 @@ public sealed class MockGroundedAnswerGenerator : IGroundedAnswerGenerator
 
     private static string Lead(string useCase) => useCase switch
     {
-        RagUseCases.Coverage    => "За умовами полісу та матеріалами справи:",
-        RagUseCases.MissingDocs => "Перевірка повноти документів у справі:",
+        RagUseCases.Coverage    => "Based on the policy terms and the claim evidence:",
+        RagUseCases.MissingDocs => "Document completeness check for this claim:",
         // Explicitly advisory; never accuses fraud.
-        RagUseCases.Risk        => "Пояснення ризик-сигналів (рекомендаційно, без звинувачень):",
-        RagUseCases.Similar     => "Справи зі схожими ознаками за наявними доказами:",
-        RagUseCases.Summary     => "Зведення доказів для рішення людини:",
-        _                       => "На основі знайдених доказів:"
+        RagUseCases.Risk        => "Explanation of the risk signals (advisory, no accusations):",
+        RagUseCases.Similar     => "Claims with similar characteristics based on the available evidence:",
+        RagUseCases.Summary     => "Evidence summary for the human decision:",
+        _                       => "Based on the retrieved evidence:"
     };
 
     /// <summary>

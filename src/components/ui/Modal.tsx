@@ -53,7 +53,7 @@ export function Modal({
       <button
         type="button"
         onClick={onClose}
-        aria-label="Закрити вікно"
+        aria-label="Close dialog"
         className="absolute inset-0 bg-ink-900/50 backdrop-blur-sm"
       />
       <div
@@ -74,7 +74,7 @@ export function Modal({
           <button
             type="button"
             onClick={onClose}
-            aria-label="Закрити"
+            aria-label="Close"
             className="shrink-0 w-8 h-8 rounded-lg grid place-items-center text-ink-500 hover:bg-ink-100"
           >
             <Icon name="x" size={16} />

@@ -15,7 +15,7 @@ public sealed class RagEvaluationQuestion
     public string ClaimId { get; set; } = string.Empty;
     public string UseCase { get; set; } = string.Empty;              // coverage | missing_docs | risk | similar | summary | custom
     public string Text { get; set; } = string.Empty;
-    public string Language { get; set; } = "uk";
+    public string Language { get; set; } = "en";
     public string ExpectedSourceChunkIdsCsv { get; set; } = string.Empty;
     public string MustNotCiteChunkIdsCsv { get; set; } = string.Empty;   // negative guard (cross-claim leak)
     public string ExpectedAnswerKeywordsCsv { get; set; } = string.Empty; // grader keywords (merged ExpectedAnswer)

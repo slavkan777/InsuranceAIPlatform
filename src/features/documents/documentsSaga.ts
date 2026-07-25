@@ -10,12 +10,12 @@ function* requestMissingPhotoWorker() {
     yield delay(900);
     yield put(
       requestMissingPhotoSucceeded(
-        'SMS+email-запит надіслано клієнту. Очікуємо завантаження.',
+        'SMS + email request sent to the customer. Awaiting upload.',
       ),
     );
   } catch (error) {
     yield call(() => undefined);
-    yield put(requestMissingPhotoFailed('Не вдалось надіслати запит. Спробуйте ще раз.'));
+    yield put(requestMissingPhotoFailed('Could not send the request. Please try again.'));
   }
 }
 

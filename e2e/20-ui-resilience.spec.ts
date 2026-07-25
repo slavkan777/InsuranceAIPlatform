@@ -68,17 +68,17 @@ test.describe('UI resilience', () => {
     await expect(page.locator('main')).toBeVisible();
   });
 
-  test('sidebar disabled-future entries are not clickable (Транспортні засоби, Налаштування)', async ({
+  test('sidebar disabled-future entries are not clickable (Vehicles, Settings)', async ({
     page,
   }) => {
     await page.goto('/');
     // The disabled items render as <span>, not <a>; clicking them must not
     // change the URL.
     const startUrl = page.url();
-    const vehiclesItem = page.locator('aside').locator('span:has-text("Транспортні засоби")').first();
+    const vehiclesItem = page.locator('aside').locator('span:has-text("Vehicles")').first();
     await vehiclesItem.click();
     expect(page.url(), 'URL must not change when clicking disabled sidebar item').toBe(startUrl);
-    const settingsItem = page.locator('aside').locator('span:has-text("Налаштування")').first();
+    const settingsItem = page.locator('aside').locator('span:has-text("Settings")').first();
     await settingsItem.click();
     expect(page.url(), 'URL must not change when clicking disabled sidebar item').toBe(startUrl);
   });
@@ -87,8 +87,8 @@ test.describe('UI resilience', () => {
     page,
   }) => {
     await page.goto('/');
-    const help = page.locator('button[aria-label*="Довідка"]');
-    const bell = page.locator('button[aria-label*="Сповіщення"]');
+    const help = page.locator('button[aria-label*="Help"]');
+    const bell = page.locator('button[aria-label*="Notifications"]');
     // The framework refuses to dispatch click() to a disabled element; just
     // assert disabled is true.
     await expect(help).toBeDisabled();

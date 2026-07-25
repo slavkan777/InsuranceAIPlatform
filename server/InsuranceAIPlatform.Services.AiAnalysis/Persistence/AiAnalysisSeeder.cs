@@ -25,21 +25,21 @@ public static class AiAnalysisSeeder
             Cost = 0.0187m,
             Findings = new List<AiFinding>
             {
-                new() { Id = "f1", RunId = "run_8f3d2a7e", Category = "Документи",     Text = "Відсутнє фото заднього бампера. 6 з 7 документів надано.", Severity = "warn" },
-                new() { Id = "f2", RunId = "run_8f3d2a7e", Category = "Оцінка збитку", Text = "Оцінка $2720 перевищує бенчмарк $1970 на 38%.",            Severity = "warn" },
-                new() { Id = "f3", RunId = "run_8f3d2a7e", Category = "Покриття",      Text = "Подія ДТП підпадає під Auto Comprehensive. Франшиза $500 застосовна.", Severity = "ok" },
+                new() { Id = "f1", RunId = "run_8f3d2a7e", Category = "Documents",       Text = "Rear bumper photo is missing. 6 of 7 documents provided.", Severity = "warn" },
+                new() { Id = "f2", RunId = "run_8f3d2a7e", Category = "Damage estimate", Text = "Estimate $2,720 exceeds the $1,970 benchmark by 38%.",            Severity = "warn" },
+                new() { Id = "f3", RunId = "run_8f3d2a7e", Category = "Coverage",        Text = "The road accident is covered by Auto Comprehensive. The $500 deductible applies.", Severity = "ok" },
             },
             EvidenceReferences = new List<AiEvidenceReference>
             {
-                new() { Id = "e1", RunId = "run_8f3d2a7e", Source = "Поліцейський звіт", Note = "Підтверджено факт ДТП 18.05.2026, Бориспіль.", Confidence = 95 },
-                new() { Id = "e2", RunId = "run_8f3d2a7e", Source = "Рахунок СТО",       Note = "Загальна сума $2720. Деталізація: бампер $980, лак $740, кузов $1000.", Confidence = 87 },
+                new() { Id = "e1", RunId = "run_8f3d2a7e", Source = "Police report",     Note = "Road accident on 18.05.2026 in Springfield confirmed.", Confidence = 95 },
+                new() { Id = "e2", RunId = "run_8f3d2a7e", Source = "Repair invoice",    Note = "Total $2,720. Breakdown: bumper $980, paint $740, bodywork $1,000.", Confidence = 87 },
             },
             RiskSignals = new List<AiRiskSignal>
             {
-                new() { Id = "rs1", RunId = "run_8f3d2a7e", Label = "Сума ремонту вище очікуваного діапазону",   Weight = 25 },
-                new() { Id = "rs2", RunId = "run_8f3d2a7e", Label = "Відсутнє фото пошкодження",                 Weight = 22 },
-                new() { Id = "rs3", RunId = "run_8f3d2a7e", Label = "Розбіжності у поясненнях водіїв",           Weight = 18 },
-                new() { Id = "rs4", RunId = "run_8f3d2a7e", Label = "Confidence нижче порогу 85%",               Weight = 9  },
+                new() { Id = "rs1", RunId = "run_8f3d2a7e", Label = "Repair amount above the expected range",     Weight = 25 },
+                new() { Id = "rs2", RunId = "run_8f3d2a7e", Label = "Damage photo missing",                       Weight = 22 },
+                new() { Id = "rs3", RunId = "run_8f3d2a7e", Label = "Discrepancies between driver statements",    Weight = 18 },
+                new() { Id = "rs4", RunId = "run_8f3d2a7e", Label = "Confidence below the 85% threshold",         Weight = 9  },
             }
         };
 

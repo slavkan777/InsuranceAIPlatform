@@ -1,4 +1,5 @@
 using InsuranceAIPlatform.BuildingBlocks;
+using InsuranceAIPlatform.DbMigrator;
 using InsuranceAIPlatform.Services.AiAnalysis.Persistence;
 using InsuranceAIPlatform.Services.AiAnalysis.Rag.Embedding;
 using InsuranceAIPlatform.Services.AiAnalysis.Rag.Persistence;
@@ -115,6 +116,94 @@ await MigrateAndSeedAsync<AiAnalysisDbContext>(
 
 Console.WriteLine();
 Console.WriteLine("=== Migration + Seed complete ===");
+
+// -----------------------------------------------------------------------
+// Explicit English-only data backfill step.
+//
+// This runs ONLY here, in the migrator — never implicitly at API startup.
+// It is versioned, idempotent and non-destructive: UPDATEs only, no deletes,
+// and rerunning it is a no-op once the data is already English.
+// -----------------------------------------------------------------------
+Console.WriteLine();
+Console.WriteLine($"=== Data backfill: {EnglishOnlyBackfill.Version} ===");
+
+await using (var scope = provider.CreateAsyncScope())
+{
+    var claimsDb    = scope.ServiceProvider.GetRequiredService<ClaimsDbContext>();
+    var documentsDb = scope.ServiceProvider.GetRequiredService<DocumentsDbContext>();
+    var customersDb = scope.ServiceProvider.GetRequiredService<CustomersPoliciesDbContext>();
+    var aiDb        = scope.ServiceProvider.GetRequiredService<AiAnalysisDbContext>();
+    var auditDb     = scope.ServiceProvider.GetRequiredService<AuditCostDbContext>();
+    var approvalDb  = scope.ServiceProvider.GetRequiredService<ApprovalDbContext>();
+
+    var alreadyApplied = await EnglishOnlyBackfill.WasAppliedAsync(claimsDb, ct);
+    Console.WriteLine($"  checkpoint: {(alreadyApplied ? "version already recorded — rerunning is safe (expect 0 updates)" : "not yet applied")}");
+
+    var report = await EnglishOnlyBackfill.RunAsync(
+        claimsDb, documentsDb, customersDb, aiDb, auditDb, approvalDb,
+        new DeterministicEmbeddingProvider(), ct);
+
+    Console.WriteLine($"  updated:          {report.Updated}");
+    Console.WriteLine($"  already English:  {report.AlreadyEnglish}");
+    Console.WriteLine($"  chunks re-embedded: {report.ChunksReEmbedded}");
+    Console.WriteLine($"  skipped (left untouched): {report.Skipped}");
+    foreach (var sample in report.SkippedSamples)
+        Console.WriteLine($"    - {sample}");
+    Console.WriteLine($"=== Data backfill complete: {report.Version} ===");
+
+    // ---- Lease 6 closure pass: runtime/E2E-created rows -----------------
+    Console.WriteLine();
+    Console.WriteLine($"=== Data backfill: {EnglishOnlyClosureBackfill.Version} ===");
+    var closureApplied = await EnglishOnlyClosureBackfill.WasAppliedAsync(claimsDb, ct);
+    Console.WriteLine($"  checkpoint: {(closureApplied ? "version already recorded — rerunning is safe (expect 0 updates)" : "not yet applied")}");
+
+    var closure = await EnglishOnlyClosureBackfill.RunAsync(
+        claimsDb, documentsDb, customersDb, aiDb, auditDb,
+        new DeterministicEmbeddingProvider(), ct);
+
+    Console.WriteLine($"  updated:          {closure.Updated}");
+    Console.WriteLine($"  already English:  {closure.AlreadyEnglish}");
+    Console.WriteLine($"  chunks re-embedded: {closure.ChunksReEmbedded}");
+    Console.WriteLine($"  skipped (left untouched): {closure.Skipped}");
+    foreach (var sample in closure.SkippedSamples)
+        Console.WriteLine($"    - {sample}");
+    Console.WriteLine($"=== Data backfill complete: {closure.Version} ===");
+
+    // ---- Lease 8: historical synthetic/demo columns --------------------
+    Console.WriteLine();
+    Console.WriteLine($"=== Data backfill: {EnglishOnlyHistoricalBackfill.Version} ===");
+    var histApplied = await EnglishOnlyHistoricalBackfill.WasAppliedAsync(claimsDb, ct);
+    Console.WriteLine($"  checkpoint: {(histApplied ? "version already recorded — rerunning is safe (expect 0 updates)" : "not yet applied")}");
+
+    var hist = await EnglishOnlyHistoricalBackfill.RunAsync(aiDb, documentsDb, approvalDb, claimsDb, ct);
+    Console.WriteLine($"  updated:          {hist.Updated}");
+    Console.WriteLine($"  already English:  {hist.AlreadyEnglish}");
+    Console.WriteLine($"=== Data backfill complete: {hist.Version} ===");
+
+    // ---- Lease 10: JSON-escaped content + stale language tags ----------
+    Console.WriteLine();
+    Console.WriteLine($"=== Data backfill: {EnglishOnlyJsonBackfill.Version} ===");
+    var jsonApplied = await EnglishOnlyJsonBackfill.WasAppliedAsync(claimsDb, ct);
+    Console.WriteLine($"  checkpoint: {(jsonApplied ? "version already recorded — rerunning is safe (expect 0 updates)" : "not yet applied")}");
+    var js = await EnglishOnlyJsonBackfill.RunAsync(aiDb, claimsDb, ct);
+    Console.WriteLine($"  updated:          {js.Updated}");
+    Console.WriteLine($"  already English:  {js.AlreadyEnglish}");
+    Console.WriteLine($"  skipped:          {js.Skipped}");
+    foreach (var smp in js.SkippedSamples) Console.WriteLine($"    - {smp}");
+    Console.WriteLine($"=== Data backfill complete: {js.Version} ===");
+
+    // ---- Lease 11: audit/outbox history JSON ---------------------------
+    Console.WriteLine();
+    Console.WriteLine($"=== Data backfill: {EnglishOnlyAuditJsonBackfill.Version} ===");
+    var auditApplied = await EnglishOnlyAuditJsonBackfill.WasAppliedAsync(claimsDb, ct);
+    Console.WriteLine($"  checkpoint: {(auditApplied ? "version already recorded — rerunning is safe (expect 0 updates)" : "not yet applied")}");
+    var aj = await EnglishOnlyAuditJsonBackfill.RunAsync(auditDb, claimsDb, ct);
+    Console.WriteLine($"  updated:          {aj.Updated}");
+    Console.WriteLine($"  already English:  {aj.AlreadyEnglish}");
+    Console.WriteLine($"  blocked (unchanged): {aj.Skipped}");
+    foreach (var smp in aj.SkippedSamples) Console.WriteLine($"    - {smp}");
+    Console.WriteLine($"=== Data backfill complete: {aj.Version} ===");
+}
 
 // -----------------------------------------------------------------------
 static async Task MigrateAndSeedAsync<TContext>(

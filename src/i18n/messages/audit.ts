@@ -33,40 +33,4 @@ const en = {
   govReplayValue: 'YES',
 };
 
-type T = typeof en;
-
-const uk: T = {
-  pageHeading: 'Аудит і витрати AI-запуску',
-  pageSubheadingTrail: 'повний слід виконання · governance evidence',
-  runSuccess: 'Запуск успішний',
-
-  metricRunId: 'Run ID',
-  metricTraceId: 'Trace ID',
-  metricModel: 'Модель',
-  metricTokens: 'Токени',
-  metricCost: 'Вартість',
-  metricDuration: 'Час',
-
-  sectionPipeline: 'Хід AI-запуску',
-  sectionAuditTrail: 'Audit trail',
-  auditTrailSubtitle: 'Усі дії з повним слідом',
-  thTime: 'Час',
-  thActor: 'Актор',
-  thAction: 'Дія',
-  thResult: 'Рез.',
-
-  sectionCostBreakdown: 'Розподіл витрат',
-
-  governanceLabel: 'Governance',
-  governanceHeading: 'AI підпорядковується процедурі',
-  govAutoApproveLabel: 'Авто-погодження:',
-  govAutoApproveValue: 'НЕ ДОЗВОЛЕНО',
-  govHumanReviewLabel: 'Людська перевірка:',
-  govHumanReviewValue: "ОБОВ'ЯЗКОВА",
-  govDecisionLogsLabel: 'Логи рішень:',
-  govDecisionLogsValue: 'ТАК',
-  govReplayLabel: 'Replay:',
-  govReplayValue: 'ТАК',
-};
-
-export const audit = { en, uk };
+export const audit = { en };

@@ -99,13 +99,13 @@ export function PayoutSimulationModal({
           title: `${t.ui.payoutSimToastTitle} #${result.simulationId}`,
           detail:
             `${result.amount} ${result.currency} (net ${result.netPayoutAmount}). ` +
-            'SimulationOnly=true; реальної виплати не виконано.',
+            'SimulationOnly=true; no real payout was executed.',
         }),
       );
       onCreated?.(result);
       onClose();
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Невідома помилка.';
+      const msg = err instanceof Error ? err.message : 'Unknown error.';
       setError(msg);
       setSubmitting(false);
     }
@@ -193,7 +193,7 @@ export function PayoutSimulationModal({
         <div className="rounded-lg border border-brand-200 bg-brand-50 px-3 py-2 flex items-center justify-between text-sm">
           <span className="text-brand-800 font-semibold">{t.ui.payoutSimNetLabel}</span>
           <span className="font-mono text-lg font-bold text-brand-700">
-            {net.toLocaleString('uk-UA', { maximumFractionDigits: 2 })} {currency}
+            {net.toLocaleString('en-US', { maximumFractionDigits: 2 })} {currency}
           </span>
         </div>
         <div>

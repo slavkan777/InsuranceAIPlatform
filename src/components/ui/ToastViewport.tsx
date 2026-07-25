@@ -55,7 +55,7 @@ export function ToastViewport() {
               type="button"
               onClick={() => dispatch(dismissToast(t.id))}
               className="shrink-0 -mr-1 -mt-1 w-6 h-6 rounded-md grid place-items-center text-current opacity-70 hover:opacity-100"
-              aria-label="Закрити повідомлення"
+              aria-label="Close notification"
             >
               <Icon name="x" size={14} />
             </button>

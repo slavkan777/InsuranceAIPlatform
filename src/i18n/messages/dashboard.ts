@@ -1,5 +1,5 @@
 // Auto-insurance claims overview dashboard namespace.
-// EN = default product language; UK = Ukrainian locale.
+// EN = the product language. The product is English-only.
 // `const uk: T` enforces compile-time key parity with `en`.
 const en = {
   // Page header
@@ -94,99 +94,4 @@ const en = {
   toastExportDetailSuffix: ' saved to browser downloads.',
 };
 
-type T = typeof en;
-
-const uk: T = {
-  // Page header
-  overviewTitle: 'Огляд автострахових випадків',
-  overviewSubtitle: 'Операційна панель · Станом на 24 травня 2026, 22:48',
-
-  // Period / export toolbar
-  periodToday: 'Сьогодні',
-  periodTodayHint: 'Перемикач періоду з\'явиться у наступному релізі',
-  period7Days: '7 днів',
-  period7DaysHint: 'Перемикач періоду з\'явиться у наступному релізі',
-  exportCsvLabel: 'Експорт CSV',
-  exportCsvTitle: 'Експортувати огляд черги у CSV (локально)',
-
-  // Metric cards — store-derived labels
-  metricNewClaims: 'НОВІ ДТП',
-  metricNewClaimsDelta: 'AI runs',
-  metricAwaitingDecision: 'ОЧІКУЮТЬ РІШЕННЯ',
-  metricAwaitingDecisionDelta: 'на розгляді',
-  metricAiProcessedToday: 'AI-ОБРОБЛЕНО СЬОГОДНІ',
-  metricAiProcessedTodayDelta: 'зараз',
-  metricHighRisk: 'ВИСОКИЙ РИЗИК',
-  metricHighRiskDelta: 'поточні',
-  metricAvgSla: 'СЕРЕДНІЙ ЧАС SLA',
-  metricAvgSlaDeltaSuffix: ' год',
-  metricAvgSlaDelta: 'залишилось',
-
-  // Lifecycle chart section
-  lifecycleTitle: 'Життєвий цикл автострахового випадку',
-  lifecycleSubtitle: 'Розподіл активних випадків за фазами',
-  lifecycleActiveChip: 'активних',
-
-  // Claims queue section
-  claimsQueueTitle: 'Черга автострахових випадків',
-  claimsQueueSubtitleActive: 'активних',
-  claimsQueueSubtitleSuffix: ' · оновлено щохвилини',
-  claimsQueueActiveDefault: '53 активних',
-  newClaimButton: 'Створити випадок',
-  newClaimButtonTitle: 'Створення нового синтетичного кейсу (локальний sandbox)',
-
-  // Queue filter tabs
-  filterAll: 'Усі',
-  filterRta: 'ДТП',
-  filterHighRisk: 'Високий ризик',
-  filterAwaitAi: 'Чекає AI',
-  filterAwaitDecision: 'Чекає рішення',
-  filterTabsTitle: 'Фільтри активні у розділі «Автострахові випадки»',
-
-  // Table headers
-  thClaimNo: 'Номер',
-  thCustomerVehicle: 'Клієнт · Авто',
-  thEventType: 'Тип події',
-  thDocuments: 'Документи',
-  thAiStatus: 'AI-статус',
-  thRisk: 'Ризик',
-  thNextAction: 'Наступна дія',
-  thUpdated: 'Оновлено',
-
-  // View-all link
-  viewAllClaims: 'Переглянути всі випадки',
-
-  // AI recommendation card
-  aiRecTitle: 'AI-рекомендація для',
-  aiRecPayoutLabel: 'Ймовірна виплата',
-  aiRecConfidenceLabel: 'Впевненість',
-  aiRecPill: 'Рекомендація',
-  aiRecAdvisory: 'людська перевірка обов\'язкова',
-  aiRecBody: 'Запросити додаткове фото пошкодження заднього бампера перед погодженням виплати.',
-  aiRecKeyFactors: 'Ключові фактори',
-  aiRecViewButton: 'Переглянути AI-аналіз',
-
-  // Audit & cost card
-  auditTitle: 'Аудит і витрати (сьогодні)',
-  auditViewDetails: 'Переглянути деталі',
-
-  // Recent events card
-  recentEventsTitle: 'Останні події',
-  recentEventsViewAudit: 'Переглянути журнал аудиту',
-
-  // Chart sections
-  chartCaseTypeTitle: 'Випадки за типом події',
-  chartCaseTypeSubtitle: 'за 7 днів',
-  chartConfidenceTitle: 'AI-впевненість (розподіл)',
-  chartConfidenceSubtitle: 'сьогодні',
-  chartConfidenceSubtitleSuffix: '= 78%',
-  chartTrendTitle: 'Тренд обробки',
-  chartTrendSubtitle: 'за 7 днів',
-
-  // Toast (export)
-  toastExportTitle: 'Експортовано 5 рядків.',
-  toastExportDetailPrefix: 'Файл ',
-  toastExportDetailSuffix: ' збережено у завантаженнях браузера.',
-};
-
-export const dashboard = { en, uk };
+export const dashboard = { en };

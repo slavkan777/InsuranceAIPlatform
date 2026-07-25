@@ -32,38 +32,4 @@ const en = {
   btnSendForApproval: 'Send for approval',
 };
 
-type T = typeof en;
-
-const uk: T = {
-  pageHeading: 'Ризики та перевірки',
-  pageSubheadingMiddle: '· автоматичне погодження заблоковано · потрібна людська перевірка',
-  statusHighRisk: 'Високий ризик',
-  riskScoreLabel: 'Ризиковий бал',
-  riskScoreSuffix: '/ 100',
-  riskScoreThreshold: 'Поріг автопогодження:',
-  riskScoreThresholdExceededBy: 'Перевищено на',
-  riskFactorsTitle: 'Фактори ризику',
-  policyCheckTitle: 'Перевірка полісу',
-  policyCoverageActive: 'Покриття активне',
-  policyCheckIncidentDate: '· ДТП дата у періоді',
-  policyCheckDeductible: '· Франшиза $500',
-  policyCheckLimit: '· Ліміт $50 000',
-  policyCheckNoExclusions: '· Виключень немає',
-  costBenchmarkTitle: 'Бенчмарк вартості',
-  costBenchmarkExpected: 'Очікувано',
-  costBenchmarkSubmitted: 'Подано',
-  costBenchmarkDeviation: 'Відхилення:',
-  automationLimitsLabel: 'Обмеження автоматизації',
-  automationBlockedHeading: 'Автоматичне погодження ЗАБЛОКОВАНО',
-  automationAutoLabel: 'Авто',
-  automationAutoValue: 'НІ',
-  automationHumanLabel: 'Людина',
-  automationHumanValue: "ОБОВ'ЯЗК.",
-  automationEscalationLabel: 'Ескалація',
-  automationEscalationValue: 'РЕКОМ.',
-  btnOpenEvidence: 'Відкрити докази',
-  btnRequestData: 'Запросити дані',
-  btnSendForApproval: 'Передати на погодження',
-};
-
-export const risks = { en, uk };
+export const risks = { en };

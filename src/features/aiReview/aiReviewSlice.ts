@@ -25,7 +25,7 @@ const initialState: AiReviewState = {
   progressPct: 0,
   lastRun: null,
   lastRunStatus: 'idle',
-  selectedEvidence: 'Поліцейський звіт',
+  selectedEvidence: 'Police report',
   confidenceFilter: 70,
 };
 

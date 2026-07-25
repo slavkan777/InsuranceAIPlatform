@@ -12,9 +12,9 @@ public static class CustomersPoliciesSeeder
 {
     private static readonly string[] Makes = ["Toyota", "Honda", "Ford", "Chevrolet", "BMW", "VW", "Renault", "Hyundai", "Kia", "Nissan"];
     private static readonly string[] Models = ["Camry", "Civic", "Focus", "Malibu", "X3", "Golf", "Megane", "Elantra", "Sportage", "Sentra"];
-    private static readonly string[] Colors = ["Білий", "Чорний", "Срібний", "Синій", "Червоний", "Сірий", "Зелений", "Бежевий"];
-    private static readonly string[] Cities = ["Київ", "Харків", "Одеса", "Дніпро", "Запоріжжя", "Львів", "Кривий Ріг", "Миколаїв"];
-    private static readonly string[] Streets = ["вул. Шевченка", "вул. Лесі Українки", "вул. Хрещатик", "вул. Грушевського", "вул. Франка", "пр. Перемоги"];
+    private static readonly string[] Colors = ["White", "Black", "Silver", "Blue", "Red", "Grey", "Green", "Beige"];
+    private static readonly string[] Cities = ["Springfield", "Riverside", "Fairview", "Madison", "Greenville", "Salem", "Georgetown", "Clinton"];
+    private static readonly string[] Streets = ["Main Street", "Oak Avenue", "Maple Street", "Cedar Road", "Park Avenue", "Lake Drive"];
     private static readonly string[] Products = ["Auto Comprehensive", "Auto Third Party", "Auto Basic", "Auto Premium"];
 
     public static async Task SeedAsync(CustomersPoliciesDbContext db, CancellationToken ct = default)
@@ -101,10 +101,10 @@ public static class CustomersPoliciesSeeder
         var customer = new SyntheticCustomer
         {
             Id = goldenCustomerId,
-            FullName = "Роберт Джонсон",
+            FullName = "Robert Johnson",
             Email = $"robert.johnson@{SeedConstants.SyntheticEmailDomain}",
             Phone = "+380501234421",
-            AddressLine = "Бориспіль, вул. Київська 24",
+            AddressLine = "Springfield, Main Street 24",
             CustomerSince = new DateOnly(2021, 3, 15),
             PreviousClaimsCount = 2,
             IsSynthetic = false
@@ -129,7 +129,7 @@ public static class CustomersPoliciesSeeder
             Model = "Camry",
             Year = 2021,
             Vin = "VIN****8842",
-            Color = "Срібний",
+            Color = "Silver",
             Mileage = 42300
         };
 

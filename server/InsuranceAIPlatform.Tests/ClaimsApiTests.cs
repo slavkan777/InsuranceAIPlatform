@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using InsuranceAIPlatform.Api.Contracts.Claims;
 using InsuranceAIPlatform.Api.Contracts.Common;
+using InsuranceAIPlatform.BuildingBlocks;
 using Microsoft.AspNetCore.Mvc.Testing;
 
 namespace InsuranceAIPlatform.Tests;
@@ -70,7 +71,7 @@ public class ClaimsApiTests(WebApplicationFactory<Program> factory)
         Assert.Equal("trc_8f3d2a7e", body.TraceId);
         Assert.Equal("run_8f3d2a7e", body.RunId);
         Assert.Equal("POL-2025-AC-4421", body.PolicyId);
-        Assert.Contains("Джонсон", body.Customer);
+        Assert.Contains("Johnson", body.Customer);
     }
 
     // -----------------------------------------------------------------------
@@ -105,7 +106,7 @@ public class ClaimsApiTests(WebApplicationFactory<Program> factory)
         Assert.NotNull(body);
         Assert.Equal(82, body!.Score);
         Assert.Equal(60, body.Threshold);
-        Assert.Equal("Високий", body.Level);
+        Assert.Equal(ClaimContractCodes.Risk.High, body.Level);
         Assert.NotEmpty(body.Factors);
     }
 

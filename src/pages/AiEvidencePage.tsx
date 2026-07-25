@@ -137,7 +137,7 @@ export default function AiEvidencePage() {
               {providerMode}
             </span>{' '}
             · <span className="font-mono text-ink-600">{modelName}</span> ·{' '}
-            {displayTokens.toLocaleString('uk-UA')} {t.aiEvidence.pageSubtitleTokens} · ${displayCost.toFixed(4)} {currencyCode}
+            {displayTokens.toLocaleString('en-US')} {t.aiEvidence.pageSubtitleTokens} · ${displayCost.toFixed(4)} {currencyCode}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
@@ -289,7 +289,7 @@ export default function AiEvidencePage() {
                 <div>
                   <div className="text-ink-500 uppercase tracking-wide">{t.aiEvidence.counterTokens}</div>
                   <div className="text-ink-800 font-semibold mt-0.5 font-mono">
-                    {lastRun.costTrace.tokens.toLocaleString('uk-UA')}
+                    {lastRun.costTrace.tokens.toLocaleString('en-US')}
                   </div>
                 </div>
                 <div>

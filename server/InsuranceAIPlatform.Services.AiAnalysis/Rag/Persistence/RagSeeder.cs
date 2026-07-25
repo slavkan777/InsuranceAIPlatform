@@ -30,15 +30,15 @@ public static class RagSeeder
         // ---- Policy clauses (Auto Comprehensive product) ----
         var allClauses = new List<PolicyClause>
         {
-            new() { ClauseId = "CLA-AC-COVER-001", ProductCode = ProductAutoComprehensive, PolicyId = "POL-2025-AC-4421", ClauseType = "coverage",   Ordinal = 1, Title = "Покриття ДТП", Text = "Поліс Auto Comprehensive покриває збитки внаслідок дорожньо-транспортної пригоди та зіткнення транспортних засобів." },
-            new() { ClauseId = "CLA-AC-COVER-002", ProductCode = ProductAutoComprehensive, PolicyId = "POL-2025-AC-4421", ClauseType = "coverage",   Ordinal = 2, Title = "Стихійні явища і крадіжка", Text = "Покриваються пошкодження від стихійних явищ, пожежі та крадіжки транспортного засобу." },
-            new() { ClauseId = "CLA-AC-EXCL-001",  ProductCode = ProductAutoComprehensive, PolicyId = "POL-2025-AC-4421", ClauseType = "exclusion",  Ordinal = 3, Title = "Виключення: стан спʼяніння", Text = "Не покриваються збитки, завдані під час керування у стані алкогольного або наркотичного спʼяніння." },
-            new() { ClauseId = "CLA-AC-EXCL-002",  ProductCode = ProductAutoComprehensive, PolicyId = "POL-2025-AC-4421", ClauseType = "exclusion",  Ordinal = 4, Title = "Виключення: перегони", Text = "Не покриваються збитки під час участі у перегонах або експлуатації поза дорогами загального користування." },
-            new() { ClauseId = "CLA-AC-DED-001",   ProductCode = ProductAutoComprehensive, PolicyId = "POL-2025-AC-4421", ClauseType = "deductible", Ordinal = 5, Title = "Франшиза", Text = "До кожного страхового випадку застосовується франшиза у розмірі 500 доларів США." },
-            new() { ClauseId = "CLA-AC-LIM-001",   ProductCode = ProductAutoComprehensive, PolicyId = "POL-2025-AC-4421", ClauseType = "limit",      Ordinal = 6, Title = "Ліміт на кузовний ремонт", Text = "Ліміт відшкодування кузовного ремонту визначається ринковою вартістю аналогічних робіт у регіоні." },
+            new() { ClauseId = "CLA-AC-COVER-001", ProductCode = ProductAutoComprehensive, PolicyId = "POL-2025-AC-4421", ClauseType = "coverage",   Ordinal = 1, Title = "Road accident coverage", Text = "The Auto Comprehensive policy covers losses resulting from a road traffic accident and collision of vehicles." },
+            new() { ClauseId = "CLA-AC-COVER-002", ProductCode = ProductAutoComprehensive, PolicyId = "POL-2025-AC-4421", ClauseType = "coverage",   Ordinal = 2, Title = "Natural events and theft", Text = "Damage from natural events, fire and theft of the vehicle is covered." },
+            new() { ClauseId = "CLA-AC-EXCL-001",  ProductCode = ProductAutoComprehensive, PolicyId = "POL-2025-AC-4421", ClauseType = "exclusion",  Ordinal = 3, Title = "Exclusion: intoxication", Text = "Losses caused while driving under the influence of alcohol or drugs are not covered." },
+            new() { ClauseId = "CLA-AC-EXCL-002",  ProductCode = ProductAutoComprehensive, PolicyId = "POL-2025-AC-4421", ClauseType = "exclusion",  Ordinal = 4, Title = "Exclusion: racing", Text = "Losses incurred while taking part in racing or driving off public roads are not covered." },
+            new() { ClauseId = "CLA-AC-DED-001",   ProductCode = ProductAutoComprehensive, PolicyId = "POL-2025-AC-4421", ClauseType = "deductible", Ordinal = 5, Title = "Deductible", Text = "A deductible of 500 US dollars applies to every insured event." },
+            new() { ClauseId = "CLA-AC-LIM-001",   ProductCode = ProductAutoComprehensive, PolicyId = "POL-2025-AC-4421", ClauseType = "limit",      Ordinal = 6, Title = "Bodywork repair limit", Text = "The bodywork repair limit is determined by the market value of comparable work in the region." },
             // Auto Third-Party product (two extra clauses)
-            new() { ClauseId = "CLA-TP-COVER-001", ProductCode = ProductAutoThirdParty,    PolicyId = "POL-2025-TP-0091", ClauseType = "coverage",   Ordinal = 1, Title = "Покриття ОСЦПВ", Text = "Поліс Auto Third-Party покриває збитки, заподіяні третім особам внаслідок дорожньо-транспортної пригоди з вини страхувальника." },
-            new() { ClauseId = "CLA-TP-LIM-001",   ProductCode = ProductAutoThirdParty,    PolicyId = "POL-2025-TP-0091", ClauseType = "limit",      Ordinal = 2, Title = "Ліміт відповідальності ОСЦПВ", Text = "Максимальне відшкодування шкоди майну третіх осіб — 130 000 гривень; шкоди здоров'ю — 260 000 гривень на одну подію." },
+            new() { ClauseId = "CLA-TP-COVER-001", ProductCode = ProductAutoThirdParty,    PolicyId = "POL-2025-TP-0091", ClauseType = "coverage",   Ordinal = 1, Title = "Third-party liability coverage", Text = "The Auto Third-Party policy covers losses caused to third parties in a road traffic accident for which the policyholder is at fault." },
+            new() { ClauseId = "CLA-TP-LIM-001",   ProductCode = ProductAutoThirdParty,    PolicyId = "POL-2025-TP-0091", ClauseType = "limit",      Ordinal = 2, Title = "Third-party liability limit", Text = "The maximum indemnity for third-party property damage is 130,000 US dollars; for bodily injury 260,000 US dollars per event." },
         };
 
         var newClauses = allClauses.Where(c => !existingClauseIds.Contains(c.ClauseId)).ToList();
@@ -55,134 +55,134 @@ public static class RagSeeder
 
         // ════════════════════════════════════════════════════════════════════════════════════
         // CLM-1006 — deep golden corpus (Toyota Camry 2021, POL-2025-AC-4421)
-        //            Scenario: covered ДТП collision; inflated invoice flagged for review
+        //            Scenario: covered road accident collision; inflated invoice flagged for review
         // ════════════════════════════════════════════════════════════════════════════════════
         Add("CLM-1006-application#0", "CLM-1006", "CLM-1006-application", "application", 0,
-            "Заява клієнта: дорожньо-транспортна пригода сталася 18.05.2026 у місті Бориспіль. Автомобіль Toyota Camry 2021 отримав пошкодження переднього бампера та крила.");
+            "Customer statement: a road traffic accident occurred on 18.05.2026 in Springfield. The Toyota Camry 2021 sustained damage to the front bumper and wing.");
         Add("CLM-1006-police#0", "CLM-1006", "CLM-1006-police", "police", 0,
-            "Поліцейський звіт No БРС-2026/05/441: підтверджено факт зіткнення двох транспортних засобів 18.05.2026. Винуватцем визнано іншого водія, складено адміністративний протокол.");
+            "Police report No. PR-2026/05/441: a collision between two vehicles on 18.05.2026 is confirmed. The other driver was found at fault and an administrative report was filed.");
         Add("CLM-1006-police#1", "CLM-1006", "CLM-1006-police", "police", 1,
-            "Погодні умови на момент ДТП: дощ, мокре дорожнє покриття. Постраждалих немає. Обидва транспортні засоби залишалися на місці події до приїзду патруля.");
+            "Weather conditions at the time of the accident: rain, wet road surface. There were no injuries. Both vehicles remained at the scene until the patrol arrived.");
         Add("CLM-1006-invoice#0", "CLM-1006", "CLM-1006-invoice", "invoice", 0,
-            "Рахунок СТО: заміна переднього бампера 980 доларів, лакування 740 доларів, кузовні роботи 1000 доларів. Загальна сума ремонту 2720 доларів США.");
+            "Repair invoice: front bumper replacement 980 dollars, painting 740 dollars, bodywork 1000 dollars. Total repair amount 2720 US dollars.");
         Add("CLM-1006-invoice#1", "CLM-1006", "CLM-1006-invoice", "invoice", 1,
-            "Оцінка ремонту 2720 доларів перевищує середній бенчмарк 1970 доларів на 38 відсотків. Розбіжність потребує перевірки людиною-ад'юстером.");
+            "The repair estimate of 2720 dollars exceeds the average benchmark of 1970 dollars by 38 percent. The discrepancy requires review by a human adjuster.");
         Add("CLM-1006-policy-terms#0", "CLM-1006", "CLM-1006-policy-terms", "policy-clause", 0,
-            "Поліс Auto Comprehensive POL-2025-AC-4421 покриває збитки від дорожньо-транспортної пригоди. До страхового випадку застосовується франшиза 500 доларів.");
+            "Policy Auto Comprehensive POL-2025-AC-4421 covers losses from a road traffic accident. A deductible of 500 dollars applies to the insured event.");
         Add("CLM-1006-statement#0", "CLM-1006", "CLM-1006-application", "statement", 0,
-            "Пояснення водія: автомобіль попереду різко загальмував, через мокре покриття уникнути зіткнення не вдалося. Швидкість була в межах дозволеної.");
+            "Driver statement: the car ahead braked sharply and, because of the wet surface, the collision could not be avoided. Speed was within the limit.");
         Add("CLM-1006-photo-front#0", "CLM-1006", "CLM-1006-photo-front", "photo-caption", 0,
-            "Фото переднього бампера: видимі тріщини та деформація, відповідає опису пригоди. Достовірність розпізнавання 92 відсотки.");
+            "Photo of the front bumper: visible cracks and deformation, consistent with the description of the accident. Recognition confidence 92 percent.");
         Add("CLM-1006-photo-rear#0", "CLM-1006", "CLM-1006-photo-rear", "photo-caption", 0,
-            "Фото заднього бампера відсутнє. Пакет документів неповний: надано 6 із 7 обов'язкових позицій. Потрібно дозапросити фото заднього бампера.");
+            "The rear bumper photo is missing. The document package is incomplete: 6 of 7 required items provided. The rear bumper photo must be requested.");
         // deepening chunks
         Add("CLM-1006-repair-detail#0", "CLM-1006", "CLM-1006-invoice", "invoice-detail", 0,
-            "Деталізація СТО: замінено передній бампер Toyota Camry 2021 (оригінальна запчастина, артикул 521190X910). Норма часу кузовних робіт за каталогом — 8 годин, виставлено 14 годин.");
+            "Repair breakdown: the front bumper of the Toyota Camry 2021 was replaced (original part, article 521190X910). The catalogue labour time for bodywork is 8 hours; 14 hours were billed.");
         Add("CLM-1006-repair-detail#1", "CLM-1006", "CLM-1006-invoice", "invoice-detail", 1,
-            "Порівняльна оцінка: середні ставки СТО у Бориспільському районі складають 85–95 доларів за нормо-годину. Виставлена ставка 120 доларів. Перевищення ставки потребує перевірки людиною.");
+            "Comparative assessment: average workshop rates in the Springfield area are 85-95 dollars per labour hour. The billed rate is 120 dollars. The rate excess requires human review.");
         Add("CLM-1006-coverage-check#0", "CLM-1006", "CLM-1006-policy-terms", "coverage-check", 0,
-            "Перевірка виключень: водій на момент ДТП тверезий, перегони не проводилися, дорога загального користування. Жодного виключення за полісом POL-2025-AC-4421 не виявлено. Страховий випадок покривається.");
+            "Exclusion check: the driver was sober at the time of the accident, no racing took place, and the road was a public road. No exclusion under policy POL-2025-AC-4421 was found. The insured event is covered.");
         Add("CLM-1006-approval-summary#0", "CLM-1006", "CLM-1006-application", "approval-summary", 0,
-            "Попереднє рішення: страховий випадок підпадає під покриття поліса Auto Comprehensive. Сума до відшкодування після франшизи 500 доларів підлягає уточненню після перевірки рахунку ад'юстером. Документи 6/7 — запитати фото заднього бампера.");
+            "Preliminary conclusion: the insured event falls under Auto Comprehensive coverage. The amount payable after the 500 dollar deductible is to be confirmed once the adjuster reviews the invoice. Documents 6/7 — request the rear bumper photo.");
 
         // ════════════════════════════════════════════════════════════════════════════════════
         // CLM-1007 — separate claim (Skoda Octavia) — powers the cross-claim leakage guard
         //            Scenario: missing repair invoice
         // ════════════════════════════════════════════════════════════════════════════════════
         Add("CLM-1007-application#0", "CLM-1007", "CLM-1007-application", "application", 0,
-            "Заява клієнта: бокове зіткнення 26.05.2026 у місті Київ. Автомобіль Skoda Octavia, пошкоджено ліві двері та дзеркало.");
+            "Customer statement: a side collision on 26.05.2026 in Riverside. The Skoda Octavia sustained damage to the left door and mirror.");
         Add("CLM-1007-photo-front#0", "CLM-1007", "CLM-1007-photo-front", "photo-caption", 0,
-            "Фото переднього крила Skoda Octavia: подряпини та незначна вмʼятина. Достовірність розпізнавання 75 відсотків.");
+            "Photo of the Skoda Octavia front wing: scratches and a minor dent. Recognition confidence 75 percent.");
         Add("CLM-1007-invoice#0", "CLM-1007", "CLM-1007-invoice", "invoice", 0,
-            "Рахунок СТО відсутній. Без рахунку неможливо оцінити суму ремонту. Документ потрібно дозапросити у клієнта.");
+            "The repair invoice is missing. Without the invoice the repair amount cannot be assessed. The document must be requested from the customer.");
         Add("CLM-1007-police#0", "CLM-1007", "CLM-1007-police", "police", 0,
-            "Поліцейський звіт КИЇВ-2026/05/887: зіткнення підтверджено, складено схему ДТП. Постраждалих немає, другий водій визнав провину.");
+            "Police report RIVERSIDE-2026/05/887: the collision is confirmed and an accident diagram was drawn. There were no injuries and the second driver admitted fault.");
         Add("CLM-1007-statement#0", "CLM-1007", "CLM-1007-application", "statement", 0,
-            "Пояснення водія: інший транспортний засіб не надав перевагу під час перестроювання, вдарив у ліве крило Skoda Octavia. Страхувальник гальмував але уникнути удару не встиг.");
+            "Driver statement: the other vehicle failed to give way while changing lanes and struck the left wing of the Skoda Octavia. The policyholder braked but could not avoid the impact.");
         Add("CLM-1007-missing-docs#0", "CLM-1007", "CLM-1007-invoice", "missing-doc-check", 0,
-            "Перелік відсутніх документів: рахунок СТО (обов'язковий), фото правого боку автомобіля (рекомендований). Без рахунку сума відшкодування не може бути визначена. Направлено запит клієнту.");
+            "Missing document list: repair invoice (required), photo of the right side of the vehicle (recommended). Without the invoice the indemnity amount cannot be determined. A request was sent to the customer.");
 
         // ════════════════════════════════════════════════════════════════════════════════════
-        // CLM-1008 — complete low-risk claim (Харків)
+        // CLM-1008 — complete low-risk claim (Riverside)
         //            Scenario: complete claim, all docs present, no anomalies
         // ════════════════════════════════════════════════════════════════════════════════════
         Add("CLM-1008-application#0", "CLM-1008", "CLM-1008-application", "application", 0,
-            "Заява клієнта: ДТП 26.05.2026 у місті Харків. Пакет документів повний.");
+            "Customer statement: road accident on 26.05.2026 in Riverside. The document package is complete.");
         Add("CLM-1008-police#0", "CLM-1008", "CLM-1008-police", "police", 0,
-            "Поліцейський звіт ХАРКІВ-12345: зіткнення підтверджено, оформлено за європротоколом.");
+            "Police report RIVERSIDE-12345: the collision is confirmed and was filed under the simplified accident procedure.");
         Add("CLM-1008-invoice#0", "CLM-1008", "CLM-1008-invoice", "invoice", 0,
-            "Рахунок СТО: сума ремонту в межах середнього бенчмарку, відхилень не виявлено.");
+            "Repair invoice: the repair amount is within the average benchmark and no deviation was found.");
         Add("CLM-1008-coverage-check#0", "CLM-1008", "CLM-1008-policy-terms", "coverage-check", 0,
-            "Перевірка покриття: страховий випадок підпадає під дію поліса Auto Comprehensive. Виключень не встановлено. Документи повні, сума ремонту в нормі.");
+            "Coverage check: the insured event falls under the Auto Comprehensive policy. No exclusion was established. The documents are complete and the repair amount is normal.");
         Add("CLM-1008-photo#0", "CLM-1008", "CLM-1008-photo", "photo-caption", 0,
-            "Фотоматеріали підтверджують пошкодження: фото заднього бампера, деформація кузова відповідає механізму зіткнення. Достовірність 88 відсотків.");
+            "The photographs confirm the damage: the rear bumper photo shows body deformation consistent with the collision mechanism. Confidence 88 percent.");
         Add("CLM-1008-approval-summary#0", "CLM-1008", "CLM-1008-application", "approval-summary", 0,
-            "Рекомендація: справа повністю задокументована, аномалій не виявлено. Виплата може бути здійснена після стандартної перевірки підписів. Низький ризик.");
+            "Recommendation: the claim is fully documented and no anomalies were found. The payout may proceed after the standard signature check. Low risk.");
 
         // ════════════════════════════════════════════════════════════════════════════════════
         // CLM-1009 — exclusion: driving under influence (DUI)
         //            Scenario: NOT covered due to alcohol exclusion
         // ════════════════════════════════════════════════════════════════════════════════════
         Add("CLM-1009-application#0", "CLM-1009", "CLM-1009-application", "application", 0,
-            "Заява клієнта: ДТП 02.06.2026 у місті Дніпро. Автомобіль Honda Accord, пошкоджено правий бік кузова. Страхувальник просить відшкодування ремонту.");
+            "Customer statement: road accident on 02.06.2026 in Madison. The Honda Accord sustained damage to the right side of the body. The policyholder requests reimbursement of the repair.");
         Add("CLM-1009-police#0", "CLM-1009", "CLM-1009-police", "police", 0,
-            "Поліцейський звіт ДНІПРО-2026/06/102: складено протокол про адміністративне правопорушення. Водія Honda Accord направлено на медичний огляд, встановлено алкогольне спʼяніння 1.2 проміле.");
+            "Police report MADISON-2026/06/102: an administrative offence report was filed. The Honda Accord driver was sent for a medical examination and alcohol intoxication of 1.2 promille was established.");
         Add("CLM-1009-police#1", "CLM-1009", "CLM-1009-police", "police", 1,
-            "Медичний висновок No ДН-2026/0612: встановлено стан алкогольного спʼяніння страхувальника на момент ДТП. Документ приєднано до матеріалів справи.");
+            "Medical report No. MD-2026/0612: alcohol intoxication of the policyholder at the time of the accident was established. The document is attached to the claim file.");
         Add("CLM-1009-exclusion-check#0", "CLM-1009", "CLM-1009-policy-terms", "coverage-check", 0,
-            "Перевірка виключень: виключення CLA-AC-EXCL-001 — збитки завдані під час керування у стані алкогольного спʼяніння не покриваються. Медичний висновок підтверджує спʼяніння страхувальника. Страховий випадок виключений з покриття.");
+            "Exclusion check: exclusion CLA-AC-EXCL-001 — losses caused while driving under alcohol intoxication are not covered. The medical report confirms the policyholder was intoxicated. The insured event is excluded from coverage.");
         Add("CLM-1009-denial-summary#0", "CLM-1009", "CLM-1009-application", "denial-summary", 0,
-            "Попереднє рішення: відмова у виплаті. Підстава — пункт CLA-AC-EXCL-001 поліса Auto Comprehensive: стан алкогольного спʼяніння підтверджено документально. Надіслати клієнту офіційне повідомлення про відмову із зазначенням пункту виключення.");
+            "Preliminary conclusion: denial of the payout. Basis — clause CLA-AC-EXCL-001 of the Auto Comprehensive policy: alcohol intoxication is documented. Send the customer an official denial notice citing the exclusion clause.");
         Add("CLM-1009-invoice#0", "CLM-1009", "CLM-1009-invoice", "invoice", 0,
-            "Рахунок СТО ДНІПРО: ремонт правого боку Honda Accord — заміна дверей 1200 доларів, кузовні роботи 600 доларів, лакування 400 доларів. Загальна сума 2200 доларів. Рахунок прийнятий до матеріалів справи, однак виплата не здійснюється через виключення.");
+            "Repair invoice MADISON: repair of the right side of the Honda Accord — door replacement 1200 dollars, bodywork 600 dollars, painting 400 dollars. Total amount 2200 dollars. The invoice is filed with the claim, however no payout is made because of the exclusion.");
         Add("CLM-1009-coverage-final#0", "CLM-1009", "CLM-1009-policy-terms", "coverage-final", 0,
-            "Підсумок перевірки покриття CLM-1009: страховий випадок не покривається. Виключення спʼяніння застосовується на підставі поліцейського протоколу та медичного висновку. Виплата відмовлена.");
+            "Coverage check summary for CLM-1009: the insured event is not covered. The intoxication exclusion applies based on the police report and the medical report. The payout is denied.");
 
         // ════════════════════════════════════════════════════════════════════════════════════
         // CLM-1010 — high-risk advisory: inflated invoice + photo mismatch
-        //            Scenario: ДТП collision (similar to CLM-1006 — cross-claim similarity signal)
+        //            Scenario: road accident collision (similar to CLM-1006 — cross-claim similarity signal)
         // ════════════════════════════════════════════════════════════════════════════════════
         Add("CLM-1010-application#0", "CLM-1010", "CLM-1010-application", "application", 0,
-            "Заява клієнта: дорожньо-транспортна пригода 28.05.2026 у місті Одеса. Автомобіль Volkswagen Passat 2020, зіткнення на перехресті, пошкоджено передній бампер та капот.");
+            "Customer statement: a road traffic accident on 28.05.2026 in Greenville. Volkswagen Passat 2020, a collision at an intersection, with damage to the front bumper and bonnet.");
         Add("CLM-1010-police#0", "CLM-1010", "CLM-1010-police", "police", 0,
-            "Поліцейський звіт ОДЕСА-2026/05/339: підтверджено факт зіткнення транспортних засобів 28.05.2026 на перехресті. Порушення правил проїзду перехрестя. Адміністративний протокол складено.");
+            "Police report GREENVILLE-2026/05/339: a collision of vehicles at an intersection on 28.05.2026 is confirmed. Violation of intersection right-of-way rules. An administrative report was filed.");
         Add("CLM-1010-invoice#0", "CLM-1010", "CLM-1010-invoice", "invoice", 0,
-            "Рахунок СТО Одеса: заміна переднього бампера Volkswagen Passat 1800 доларів, ремонт капота 2100 доларів, малярні роботи 1400 доларів. Загальна сума ремонту 5300 доларів США.");
+            "Repair invoice Greenville: front bumper replacement for the Volkswagen Passat 1800 dollars, bonnet repair 2100 dollars, paint work 1400 dollars. Total repair amount 5300 US dollars.");
         Add("CLM-1010-invoice#1", "CLM-1010", "CLM-1010-invoice", "invoice", 1,
-            "Оцінка ремонту 5300 доларів перевищує середній бенчмарк для Volkswagen Passat (2800 доларів) на 89 відсотків. Значне перевищення бенчмарку потребує перевірки людиною-ад'юстером.");
+            "The repair estimate of 5300 dollars exceeds the average benchmark for the Volkswagen Passat (2800 dollars) by 89 percent. This significant benchmark excess requires review by a human adjuster.");
         Add("CLM-1010-photo-front#0", "CLM-1010", "CLM-1010-photo-front", "photo-caption", 0,
-            "Фото переднього бампера Volkswagen Passat: видимі подряпини та незначна деформація. Ступінь пошкодження відповідає низько-швидкісному зіткненню.");
+            "Photo of the Volkswagen Passat front bumper: visible scratches and slight deformation. The extent of damage is consistent with a low-speed collision.");
         Add("CLM-1010-photo-mismatch#0", "CLM-1010", "CLM-1010-photo-front", "photo-mismatch", 0,
-            "Невідповідність фото та рахунку: рахунок виставлено за заміну бампера та ремонт капота, однак фото демонструє лише подряпини бампера без пошкодження капота. Розбіжність між документами потребує перевірки людиною.");
+            "Mismatch between the photo and the invoice: the invoice bills for bumper replacement and bonnet repair, yet the photo shows only bumper scratches with no bonnet damage. This mismatch between documents requires human review.");
         Add("CLM-1010-statement#0", "CLM-1010", "CLM-1010-application", "statement", 0,
-            "Пояснення водія: інший автомобіль виїхав на червоний сигнал, удар у передню частину Volkswagen Passat. Страхувальник надав контактні дані свідка.");
+            "Driver statement: the other car entered on a red light and struck the front of the Volkswagen Passat. The policyholder provided the contact details of a witness.");
         Add("CLM-1010-risk-summary#0", "CLM-1010", "CLM-1010-invoice", "risk-summary", 0,
-            "Підсумок ризику CLM-1010: виявлено дві аномалії — значне перевищення бенчмарку на 89 відсотків та невідповідність між фото та переліком робіт у рахунку. Справа потребує перевірки людиною перед прийняттям рішення. Виплата не рекомендується до завершення перевірки.");
+            "Risk summary for CLM-1010: two anomalies were found — a significant benchmark excess of 89 percent and a mismatch between the photo and the list of works on the invoice. The claim requires human review before a decision. A payout is not recommended until the review is complete.");
         Add("CLM-1010-coverage-check#0", "CLM-1010", "CLM-1010-policy-terms", "coverage-check", 0,
-            "Перевірка покриття: ДТП на перехресті підпадає під покриття поліса Auto Comprehensive. Виключень (спʼяніння, перегони) не встановлено. Проте виплата призупинена через аномалії рахунку та фото.");
+            "Coverage check: the road accident at the intersection falls under Auto Comprehensive coverage. No exclusion (intoxication, racing) was established. However the payout is suspended because of the invoice and photo anomalies.");
         Add("CLM-1010-similar-signal#0", "CLM-1010", "CLM-1010-application", "similar-claim", 0,
-            "Схожий прецедент: справа CLM-1006 також містила пошкодження переднього бампера Toyota Camry внаслідок зіткнення та перевищення бенчмарку. Порівняльний аналіз підтверджує шаблон підозрілих рахунків за бамперні роботи.");
+            "Similar precedent: claim CLM-1006 also involved front bumper damage to a Toyota Camry from a collision together with a benchmark excess. The comparative analysis shows a recurring pattern of questionable invoices for bumper work.");
 
         // ════════════════════════════════════════════════════════════════════════════════════
         // CLM-1011 — missing police report
         //            Scenario: claim with absent police documentation
         // ════════════════════════════════════════════════════════════════════════════════════
         Add("CLM-1011-application#0", "CLM-1011", "CLM-1011-application", "application", 0,
-            "Заява клієнта: ДТП 30.05.2026 у місті Запоріжжя. Автомобіль Hyundai Tucson, задній бампер пошкоджено внаслідок наїзду ззаду. Клієнт не викликав поліцію, оформив тільки розписку з іншим водієм.");
+            "Customer statement: road accident on 30.05.2026 in Salem. Hyundai Tucson, the rear bumper was damaged in a rear-end impact. The customer did not call the police and only signed a handwritten receipt with the other driver.");
         Add("CLM-1011-invoice#0", "CLM-1011", "CLM-1011-invoice", "invoice", 0,
-            "Рахунок СТО Запоріжжя: заміна заднього бампера Hyundai Tucson 850 доларів, кузовні роботи 400 доларів. Загальна сума 1250 доларів. Рахунок наданий, але поліцейський звіт відсутній.");
+            "Repair invoice Salem: rear bumper replacement for the Hyundai Tucson 850 dollars, bodywork 400 dollars. Total amount 1250 dollars. The invoice was provided, but the police report is missing.");
         Add("CLM-1011-missing-police#0", "CLM-1011", "CLM-1011-police", "missing-doc-check", 0,
-            "Поліцейський звіт відсутній. Клієнт повідомив, що не викликав поліцію. Надано лише рукописну розписку від іншого водія. Без офіційного поліцейського звіту неможливо підтвердити факт та обставини ДТП.");
+            "The police report is missing. The customer stated that the police were not called. Only a handwritten receipt from the other driver was provided. Without an official police report the fact and circumstances of the accident cannot be confirmed.");
         Add("CLM-1011-missing-police#1", "CLM-1011", "CLM-1011-police", "missing-doc-check", 1,
-            "Вимоги поліса щодо документування: для відшкодування за ДТП необхідний офіційний поліцейський протокол або довідка про ДТП. Рукописна розписка не є офіційним документом та не може замінити поліцейський звіт.");
+            "Policy documentation requirements: an official police report or an accident certificate is required for road accident indemnity. A handwritten receipt is not an official document and cannot replace the police report.");
         Add("CLM-1011-statement#0", "CLM-1011", "CLM-1011-application", "statement", 0,
-            "Пояснення водія: стверджує, що на момент ДТП погодився з іншим водієм без виклику поліції. Інший водій підписав розписку про відповідальність. Клієнт просить розглянути справу без поліцейського звіту.");
+            "Driver statement: the customer states that at the time of the accident they settled with the other driver without calling the police. The other driver signed a receipt accepting responsibility. The customer asks that the claim be considered without a police report.");
         Add("CLM-1011-missing-docs-summary#0", "CLM-1011", "CLM-1011-police", "missing-doc-summary", 0,
-            "Підсумок документів CLM-1011: відсутній обов'язковий поліцейський звіт. Рахунок СТО наявний. Потрібно направити клієнту запит на отримання офіційного документа про ДТП (поліцейський протокол або довідка форми 6).");
+            "Document summary for CLM-1011: the mandatory police report is missing. The repair invoice is present. A request must be sent to the customer to obtain an official accident document (police report or form 6 certificate).");
         Add("CLM-1011-risk-advisory#0", "CLM-1011", "CLM-1011-application", "risk-advisory", 0,
-            "Консультативна позначка: справа CLM-1011 не може бути вирішена без поліцейського звіту. До надання офіційного документа виплата призупинена. Справа потребує подальшого документування клієнтом.");
+            "Advisory note: claim CLM-1011 cannot be resolved without the police report. Until an official document is provided the payout is suspended. The claim requires further documentation by the customer.");
         Add("CLM-1011-coverage-check#0", "CLM-1011", "CLM-1011-policy-terms", "coverage-check", 0,
-            "Перевірка покриття CLM-1011: подія наїзду ззаду на Hyundai Tucson підпадає під покриття поліса Auto Comprehensive за умови надання офіційного підтвердження ДТП. Без поліцейського звіту або довідки страховий випадок не може бути підтверджено.");
+            "Coverage check for CLM-1011: the rear-end impact on the Hyundai Tucson falls under Auto Comprehensive coverage provided official confirmation of the accident is supplied. Without a police report or certificate the insured event cannot be confirmed.");
 
         if (newChunks.Count > 0)
             await db.EvidenceChunks.AddRangeAsync(newChunks, ct);
@@ -191,135 +191,135 @@ public static class RagSeeder
         var allQuestions = new List<RagEvaluationQuestion>
         {
             // ── CLM-1006 (4 questions — kept exactly as before for RagServiceTests count) ──
-            new() { QuestionId = "Q-COVER-1006-1", ClaimId = "CLM-1006", UseCase = RagUseCases.Coverage, Language = "uk",
-                Text = "Чи покриває поліс пошкодження від ДТП і яка франшиза?",
+            new() { QuestionId = "Q-COVER-1006-1", ClaimId = "CLM-1006", UseCase = RagUseCases.Coverage, Language = "en",
+                Text = "Does the policy cover road accident damage and what is the deductible?",
                 ExpectedSourceChunkIdsCsv = "CLM-1006-policy-terms#0",
-                ExpectedAnswerKeywordsCsv = "покрива,франшиз,500",
+                ExpectedAnswerKeywordsCsv = "cover,deductible,500",
                 MustNotCiteChunkIdsCsv = "CLM-1007-application#0,CLM-1007-invoice#0" },
 
-            new() { QuestionId = "Q-MISS-1006-1", ClaimId = "CLM-1006", UseCase = RagUseCases.MissingDocs, Language = "uk",
-                Text = "Яких документів бракує у справі — фото задній бампер відсутнє?",
+            new() { QuestionId = "Q-MISS-1006-1", ClaimId = "CLM-1006", UseCase = RagUseCases.MissingDocs, Language = "en",
+                Text = "Which documents are missing in this claim — is the rear bumper photo absent?",
                 ExpectedSourceChunkIdsCsv = "CLM-1006-photo-rear#0",
-                ExpectedAnswerKeywordsCsv = "фото,задн,відсут",
+                ExpectedAnswerKeywordsCsv = "photo,rear,missing",
                 MustNotCiteChunkIdsCsv = "CLM-1007-photo-front#0" },
 
-            new() { QuestionId = "Q-RISK-1006-1", ClaimId = "CLM-1006", UseCase = RagUseCases.Risk, Language = "uk",
-                Text = "Чому ця справа має підвищений ризик — оцінка ремонту перевищує бенчмарк?",
+            new() { QuestionId = "Q-RISK-1006-1", ClaimId = "CLM-1006", UseCase = RagUseCases.Risk, Language = "en",
+                Text = "Why does this claim carry elevated risk — does the repair estimate exceed the benchmark?",
                 ExpectedSourceChunkIdsCsv = "CLM-1006-invoice#1",
-                ExpectedAnswerKeywordsCsv = "перевищує,бенчмарк",
+                ExpectedAnswerKeywordsCsv = "exceeds,benchmark",
                 MustNotCiteChunkIdsCsv = "CLM-1008-invoice#0" },
 
-            new() { QuestionId = "Q-SUMM-1006-1", ClaimId = "CLM-1006", UseCase = RagUseCases.Summary, Language = "uk",
-                Text = "Підготуй зведення доказів для рішення — поліцейський звіт ДТП рахунок ремонту.",
+            new() { QuestionId = "Q-SUMM-1006-1", ClaimId = "CLM-1006", UseCase = RagUseCases.Summary, Language = "en",
+                Text = "Prepare an evidence summary for the decision — police report, accident, repair invoice.",
                 ExpectedSourceChunkIdsCsv = "CLM-1006-police#0,CLM-1006-invoice#0",
-                ExpectedAnswerKeywordsCsv = "ДТП,ремонт",
+                ExpectedAnswerKeywordsCsv = "accident,repair",
                 MustNotCiteChunkIdsCsv = "CLM-1007-application#0" },
 
             // ── CLM-1007 (2 questions) ──
-            new() { QuestionId = "Q-COVER-1007-1", ClaimId = "CLM-1007", UseCase = RagUseCases.Coverage, Language = "uk",
-                Text = "Що відомо про пошкодження бокове зіткнення двері дзеркало у цій справі?",
+            new() { QuestionId = "Q-COVER-1007-1", ClaimId = "CLM-1007", UseCase = RagUseCases.Coverage, Language = "en",
+                Text = "What is known about the damage — side collision, door, mirror in this claim?",
                 ExpectedSourceChunkIdsCsv = "CLM-1007-application#0",
-                ExpectedAnswerKeywordsCsv = "бокове,двер",
+                ExpectedAnswerKeywordsCsv = "side,door",
                 MustNotCiteChunkIdsCsv = "CLM-1006-police#0,CLM-1006-invoice#0" },
 
-            new() { QuestionId = "Q-MISS-1007-1", ClaimId = "CLM-1007", UseCase = RagUseCases.MissingDocs, Language = "uk",
-                Text = "Яких документів бракує — рахунок СТО відсутній?",
+            new() { QuestionId = "Q-MISS-1007-1", ClaimId = "CLM-1007", UseCase = RagUseCases.MissingDocs, Language = "en",
+                Text = "Which documents are missing — is the repair invoice absent?",
                 ExpectedSourceChunkIdsCsv = "CLM-1007-invoice#0",
-                ExpectedAnswerKeywordsCsv = "рахунок,відсут",
+                ExpectedAnswerKeywordsCsv = "invoice,missing",
                 MustNotCiteChunkIdsCsv = "CLM-1006-invoice#0" },
 
             // ── CLM-1008 (3 questions) ──
-            new() { QuestionId = "Q-SUMM-1008-1", ClaimId = "CLM-1008", UseCase = RagUseCases.Summary, Language = "uk",
-                Text = "Підготуй зведення доказів повна справа низький ризик рекомендація виплата.",
+            new() { QuestionId = "Q-SUMM-1008-1", ClaimId = "CLM-1008", UseCase = RagUseCases.Summary, Language = "en",
+                Text = "Prepare an evidence summary — complete claim, low risk, payout recommendation.",
                 ExpectedSourceChunkIdsCsv = "CLM-1008-approval-summary#0",
-                ExpectedAnswerKeywordsCsv = "низький,аномалій,виплата",
+                ExpectedAnswerKeywordsCsv = "Low risk,anomalies,payout",
                 MustNotCiteChunkIdsCsv = "CLM-1009-denial-summary#0" },
 
-            new() { QuestionId = "Q-COVER-1008-1", ClaimId = "CLM-1008", UseCase = RagUseCases.Coverage, Language = "uk",
-                Text = "Чи покривається страховий випадок полісом? Перевірка виключень документи повні.",
+            new() { QuestionId = "Q-COVER-1008-1", ClaimId = "CLM-1008", UseCase = RagUseCases.Coverage, Language = "en",
+                Text = "Is the insured event covered by the policy? Exclusion check, documents complete.",
                 ExpectedSourceChunkIdsCsv = "CLM-1008-coverage-check#0",
-                ExpectedAnswerKeywordsCsv = "покрива,виключень,повн",
+                ExpectedAnswerKeywordsCsv = "covered,exclusion,complete",
                 MustNotCiteChunkIdsCsv = "CLM-1009-exclusion-check#0" },
 
-            new() { QuestionId = "Q-RISK-1008-1", ClaimId = "CLM-1008", UseCase = RagUseCases.Risk, Language = "uk",
-                Text = "Яким є рівень ризику справи відхилень не виявлено бенчмарк норма?",
+            new() { QuestionId = "Q-RISK-1008-1", ClaimId = "CLM-1008", UseCase = RagUseCases.Risk, Language = "en",
+                Text = "What is the risk level of the claim — no deviation found, benchmark normal?",
                 ExpectedSourceChunkIdsCsv = "CLM-1008-invoice#0",
-                ExpectedAnswerKeywordsCsv = "бенчмарк,відхилень",
+                ExpectedAnswerKeywordsCsv = "benchmark,deviation",
                 MustNotCiteChunkIdsCsv = "CLM-1010-invoice#1" },
 
             // ── CLM-1009 (4 questions) ──
-            new() { QuestionId = "Q-COVER-1009-1", ClaimId = "CLM-1009", UseCase = RagUseCases.Coverage, Language = "uk",
-                Text = "Чи покривається ця справа полісом? Алкогольне спʼяніння виключення перевірка.",
+            new() { QuestionId = "Q-COVER-1009-1", ClaimId = "CLM-1009", UseCase = RagUseCases.Coverage, Language = "en",
+                Text = "Is this claim covered by the policy? Alcohol intoxication exclusion check.",
                 ExpectedSourceChunkIdsCsv = "CLM-1009-exclusion-check#0",
-                ExpectedAnswerKeywordsCsv = "виключен,спʼяніння,алкогол",
+                ExpectedAnswerKeywordsCsv = "exclusion,intoxication,alcohol",
                 MustNotCiteChunkIdsCsv = "CLM-1006-policy-terms#0" },
 
-            new() { QuestionId = "Q-DENY-1009-1", ClaimId = "CLM-1009", UseCase = RagUseCases.Summary, Language = "uk",
-                Text = "Підготуй підсумок відмови у виплаті спʼяніння відмова повідомлення клієнту.",
+            new() { QuestionId = "Q-DENY-1009-1", ClaimId = "CLM-1009", UseCase = RagUseCases.Summary, Language = "en",
+                Text = "Prepare a denial summary — intoxication, denial, notice to the customer.",
                 ExpectedSourceChunkIdsCsv = "CLM-1009-denial-summary#0",
-                ExpectedAnswerKeywordsCsv = "відмова,спʼяніння,виплат",
+                ExpectedAnswerKeywordsCsv = "denial,intoxication,payout",
                 MustNotCiteChunkIdsCsv = "CLM-1008-approval-summary#0" },
 
-            new() { QuestionId = "Q-RISK-1009-1", ClaimId = "CLM-1009", UseCase = RagUseCases.Risk, Language = "uk",
-                Text = "Яка підстава для відмови медичний висновок алкоголь протокол поліції?",
+            new() { QuestionId = "Q-RISK-1009-1", ClaimId = "CLM-1009", UseCase = RagUseCases.Risk, Language = "en",
+                Text = "What is the basis for denial — medical report, alcohol, police report?",
                 ExpectedSourceChunkIdsCsv = "CLM-1009-police#1",
-                ExpectedAnswerKeywordsCsv = "медичний,алкогол,спʼяніння",
+                ExpectedAnswerKeywordsCsv = "Medical report,alcohol,intoxication",
                 MustNotCiteChunkIdsCsv = "CLM-1006-police#0" },
 
-            new() { QuestionId = "Q-MISS-1009-1", ClaimId = "CLM-1009", UseCase = RagUseCases.MissingDocs, Language = "uk",
-                Text = "Які документи наявні у справі рахунок СТО поліцейський протокол?",
+            new() { QuestionId = "Q-MISS-1009-1", ClaimId = "CLM-1009", UseCase = RagUseCases.MissingDocs, Language = "en",
+                Text = "Which documents are present in the claim — repair invoice, police report?",
                 ExpectedSourceChunkIdsCsv = "CLM-1009-invoice#0",
-                ExpectedAnswerKeywordsCsv = "рахунок,СТО,сума",
+                ExpectedAnswerKeywordsCsv = "invoice,repair,amount",
                 MustNotCiteChunkIdsCsv = "CLM-1011-missing-police#0" },
 
             // ── CLM-1010 (4 questions) ──
-            new() { QuestionId = "Q-RISK-1010-1", ClaimId = "CLM-1010", UseCase = RagUseCases.Risk, Language = "uk",
-                Text = "Чому справа має підвищений ризик — перевищення бенчмарку та невідповідність фото рахунку?",
+            new() { QuestionId = "Q-RISK-1010-1", ClaimId = "CLM-1010", UseCase = RagUseCases.Risk, Language = "en",
+                Text = "Why does the claim carry elevated risk — benchmark excess and photo/invoice mismatch?",
                 ExpectedSourceChunkIdsCsv = "CLM-1010-invoice#1,CLM-1010-photo-mismatch#0",
-                ExpectedAnswerKeywordsCsv = "перевищення,бенчмарк,невідповідність",
+                ExpectedAnswerKeywordsCsv = "excess,benchmark,mismatch",
                 MustNotCiteChunkIdsCsv = "CLM-1006-invoice#1" },
 
-            new() { QuestionId = "Q-RISK-1010-2", ClaimId = "CLM-1010", UseCase = RagUseCases.Risk, Language = "uk",
-                Text = "Яке рішення рекомендується для ризикової справи перевірка людиною призупинення виплати?",
+            new() { QuestionId = "Q-RISK-1010-2", ClaimId = "CLM-1010", UseCase = RagUseCases.Risk, Language = "en",
+                Text = "What decision is recommended for a risky claim — human review, payout suspension?",
                 ExpectedSourceChunkIdsCsv = "CLM-1010-risk-summary#0",
-                ExpectedAnswerKeywordsCsv = "аномалії,потребує,перевірки",
+                ExpectedAnswerKeywordsCsv = "anomalies,requires,review",
                 MustNotCiteChunkIdsCsv = "CLM-1008-approval-summary#0" },
 
-            new() { QuestionId = "Q-COVER-1010-1", ClaimId = "CLM-1010", UseCase = RagUseCases.Coverage, Language = "uk",
-                Text = "Чи підпадає ДТП на перехресті під покриття поліса Auto Comprehensive виключень не встановлено?",
+            new() { QuestionId = "Q-COVER-1010-1", ClaimId = "CLM-1010", UseCase = RagUseCases.Coverage, Language = "en",
+                Text = "Does the intersection road accident fall under Auto Comprehensive coverage with no exclusion established?",
                 ExpectedSourceChunkIdsCsv = "CLM-1010-coverage-check#0",
-                ExpectedAnswerKeywordsCsv = "покриття,виключень,перехресті",
+                ExpectedAnswerKeywordsCsv = "coverage,exclusion,intersection",
                 MustNotCiteChunkIdsCsv = "CLM-1009-exclusion-check#0" },
 
-            new() { QuestionId = "Q-SUMM-1010-1", ClaimId = "CLM-1010", UseCase = RagUseCases.Summary, Language = "uk",
-                Text = "Зведення доказів справи — рахунок ремонт бампер капот поліцейський звіт Одеса?",
+            new() { QuestionId = "Q-SUMM-1010-1", ClaimId = "CLM-1010", UseCase = RagUseCases.Summary, Language = "en",
+                Text = "Evidence summary for the claim — invoice, repair, bumper, bonnet, police report Greenville?",
                 ExpectedSourceChunkIdsCsv = "CLM-1010-police#0,CLM-1010-invoice#0",
-                ExpectedAnswerKeywordsCsv = "зіткнення,бампер,ремонту",
+                ExpectedAnswerKeywordsCsv = "collision,bumper,repair",
                 MustNotCiteChunkIdsCsv = "CLM-1006-police#0" },
 
             // ── CLM-1011 (4 questions) ──
-            new() { QuestionId = "Q-MISS-1011-1", ClaimId = "CLM-1011", UseCase = RagUseCases.MissingDocs, Language = "uk",
-                Text = "Яких документів бракує — поліцейський звіт відсутній рукописна розписка не замінює?",
+            new() { QuestionId = "Q-MISS-1011-1", ClaimId = "CLM-1011", UseCase = RagUseCases.MissingDocs, Language = "en",
+                Text = "Which documents are missing — police report absent, handwritten receipt does not replace it?",
                 ExpectedSourceChunkIdsCsv = "CLM-1011-missing-police#0",
-                ExpectedAnswerKeywordsCsv = "поліцейський,відсутній,розписка",
+                ExpectedAnswerKeywordsCsv = "police report,missing,receipt",
                 MustNotCiteChunkIdsCsv = "CLM-1007-invoice#0" },
 
-            new() { QuestionId = "Q-MISS-1011-2", ClaimId = "CLM-1011", UseCase = RagUseCases.MissingDocs, Language = "uk",
-                Text = "Які документи вимагає поліс для відшкодування ДТП офіційний протокол довідка?",
+            new() { QuestionId = "Q-MISS-1011-2", ClaimId = "CLM-1011", UseCase = RagUseCases.MissingDocs, Language = "en",
+                Text = "Which documents does the policy require for accident indemnity — official report or certificate?",
                 ExpectedSourceChunkIdsCsv = "CLM-1011-missing-police#1",
-                ExpectedAnswerKeywordsCsv = "поліцейський,протокол,офіційний",
+                ExpectedAnswerKeywordsCsv = "police report,certificate,official",
                 MustNotCiteChunkIdsCsv = "CLM-1007-missing-docs#0" },
 
-            new() { QuestionId = "Q-RISK-1011-1", ClaimId = "CLM-1011", UseCase = RagUseCases.Risk, Language = "uk",
-                Text = "Яким є ризик справи без поліцейського звіту виплата призупинена документування?",
+            new() { QuestionId = "Q-RISK-1011-1", ClaimId = "CLM-1011", UseCase = RagUseCases.Risk, Language = "en",
+                Text = "What is the claim risk without a police report — payout suspended, documentation?",
                 ExpectedSourceChunkIdsCsv = "CLM-1011-risk-advisory#0",
-                ExpectedAnswerKeywordsCsv = "призупинена,документування,поліцейського",
+                ExpectedAnswerKeywordsCsv = "suspended,documentation,police report",
                 MustNotCiteChunkIdsCsv = "CLM-1010-risk-summary#0" },
 
-            new() { QuestionId = "Q-SUMM-1011-1", ClaimId = "CLM-1011", UseCase = RagUseCases.Summary, Language = "uk",
-                Text = "Підготуй перелік відсутніх документів для рішення — запит поліцейський протокол форма 6?",
+            new() { QuestionId = "Q-SUMM-1011-1", ClaimId = "CLM-1011", UseCase = RagUseCases.Summary, Language = "en",
+                Text = "Prepare the list of missing documents for the decision — request police report, form 6?",
                 ExpectedSourceChunkIdsCsv = "CLM-1011-missing-docs-summary#0",
-                ExpectedAnswerKeywordsCsv = "поліцейський,форма,запит",
+                ExpectedAnswerKeywordsCsv = "police report,form 6,request",
                 MustNotCiteChunkIdsCsv = "CLM-1009-denial-summary#0" },
         };
 
@@ -344,7 +344,7 @@ public static class RagSeeder
             Text = text,
             TokenCount = Math.Max(1, text.Length / 4),
             ChunkHash = Hash(text),
-            Language = "uk",
+            Language = "en",
             SourceVersion = "v0.1",
             EmbeddingModel = embed.ModelName,
             EmbeddingDim = embed.Dimensions,

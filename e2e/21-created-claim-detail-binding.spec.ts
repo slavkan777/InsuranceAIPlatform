@@ -6,7 +6,7 @@ import { login } from './helpers/auth';
  *
  * Slava found that creating a new claim from the UI navigates to
  * /claims/CLM-1032 (correct id) but the detail page renders
- * CLM-1006 — Роберт Джонсон — Toyota Camry 2021 (CLM-1006 fallback / stale
+ * CLM-1006 — Robert Johnson — Toyota Camry 2021 (CLM-1006 fallback / stale
  * Redux state). All prior tests passed because they only asserted the URL,
  * never the rendered detail content.
  *
@@ -17,16 +17,16 @@ import { login } from './helpers/auth';
  *      manual flow).
  *   4. Asserts the workspace header / breadcrumb / description carry the
  *      CREATED customer + vehicle + VIN + description.
- *   5. Asserts that CLM-1006 / Роберт Джонсон / Toyota Camry are NOT rendered
+ *   5. Asserts that CLM-1006 / Robert Johnson / Toyota Camry are NOT rendered
  *      as the page's primary claim subject (CLM-1006 may appear in unrelated
  *      copy on other pages but never as the active claim's id).
  *   6. Re-opens the same id directly via URL — same assertions hold.
- *   7. Drives "Передати на перевірку" / "Підготувати рішення" / "Відкрити
- *      збір документів" buttons and confirms they navigate within the created
+ *   7. Drives "Send for review" / "Prepare decision" / "Open document
+ *      collection" buttons and confirms they navigate within the created
  *      claim's nested routes (no hardcoded /claims/CLM-1006/... jumps).
  *
- * This spec FAILS on the pre-fix behaviour (header shows CLM-1006 — Роберт
- * Джонсон) and PASSES on the post-fix behaviour.
+ * This spec FAILS on the pre-fix behaviour (header shows CLM-1006 — Robert
+ * Johnson) and PASSES on the post-fix behaviour.
  */
 test.describe('Created claim detail binding (PostManualV4 regression)', () => {
   test('created claim renders its own customer/vehicle/VIN/description — not CLM-1006', async ({
@@ -42,7 +42,7 @@ test.describe('Created claim detail binding (PostManualV4 regression)', () => {
     const vehicleLabel = `E2E Detail Vehicle ${stamp}-${tag}`;
     const vehicleVin = `VIN-DETAIL-${stamp}`;
     const description = `Detail binding regression ${stamp}-${tag}`;
-    const locationLabel = `E2E sandbox, Київ ${stamp}`;
+    const locationLabel = `E2E sandbox, Springfield ${stamp}`;
 
     // --- Step 1: create the customer ---
     await page.goto('/customers');
@@ -74,7 +74,9 @@ test.describe('Created claim detail binding (PostManualV4 regression)', () => {
     await page.locator('[data-testid=new-claim-vehicleVin]').fill(vehicleVin);
     await page.locator('[data-testid=new-claim-location]').fill(locationLabel);
     // Description textarea: locate by placeholder (no testid by spec — minimal change).
-    await page.getByPlaceholder(/Короткий опис обставин/).fill(description);
+    // Matches the current product placeholder (`ui.newClaimPlaceholderDescription`):
+    // "Brief description of the incident (synthetic)."
+    await page.getByPlaceholder(/Brief description of the incident/i).fill(description);
     await page.locator('[data-testid=new-claim-submit]').click();
 
     // Submission navigates to /claims/{createdId}.
@@ -99,7 +101,7 @@ test.describe('Created claim detail binding (PostManualV4 regression)', () => {
       'header must not show CLM-1006 for a created claim',
     ).toBe(false);
     expect(
-      /Роберт Джонсон/.test(headerText),
+      /Robert Johnson/.test(headerText),
       'header must not show the CLM-1006 customer for a created claim',
     ).toBe(false);
 
@@ -114,7 +116,7 @@ test.describe('Created claim detail binding (PostManualV4 regression)', () => {
     await expect(page.locator('[data-testid=claim-detail-customer]')).toContainText(customerName);
     await expect(page.locator('[data-testid=claim-detail-vehicle]')).toContainText(vehicleLabel);
     await expect(page.locator('[data-testid=claim-detail-vin]')).toContainText(vehicleVin);
-    await expect(page.locator('[data-testid=claim-detail-event-type]')).toContainText(/ДТП/);
+    await expect(page.locator('[data-testid=claim-detail-event-type]')).toContainText(/Road accident/i);
     await expect(page.locator('[data-testid=claim-detail-location]')).toContainText(locationLabel);
     await expect(page.locator('[data-testid=claim-detail-description-text]')).toContainText(
       description,
@@ -159,18 +161,18 @@ test.describe('Created claim detail binding (PostManualV4 regression)', () => {
     await login(page);
     await page.goto('/claims/CLM-1006');
 
-    // Header must still show CLM-1006 + Роберт Джонсон.
+    // Header must still show CLM-1006 + Robert Johnson.
     await expect(page.locator('[data-testid=claim-header-title]')).toContainText('CLM-1006', {
       timeout: 10000,
     });
     await expect(page.locator('[data-testid=claim-header-title]')).toContainText(
-      /Роберт Джонсон/,
+      /Robert Johnson/,
       { timeout: 10000 },
     );
     // Breadcrumb carries CLM-1006 + golden customer + vehicle.
     await expect(page.locator('[data-testid=claim-shell-id]')).toHaveText('CLM-1006');
     await expect(page.locator('[data-testid=claim-shell-customer]')).toContainText(
-      /Роберт Джонсон/,
+      /Robert Johnson/,
     );
     await expect(page.locator('[data-testid=claim-shell-vehicle]')).toContainText(/Toyota Camry/);
     // Description tile is the rich golden one, not the sandbox notice.

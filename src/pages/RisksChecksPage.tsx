@@ -108,13 +108,13 @@ export default function RisksChecksPage() {
             <div>
               <dt className="metric-label">{t.risks.costBenchmarkExpected}</dt>
               <dd className="text-xl font-bold text-ink-900 mt-1 font-mono">
-                ${c.expectedBenchmark.toLocaleString('uk-UA')}
+                ${c.expectedBenchmark.toLocaleString('en-US')}
               </dd>
             </div>
             <div>
               <dt className="metric-label">{t.risks.costBenchmarkSubmitted}</dt>
               <dd className="text-xl font-bold text-ink-900 mt-1 font-mono">
-                ${c.estimate.toLocaleString('uk-UA')}
+                ${c.estimate.toLocaleString('en-US')}
               </dd>
             </div>
           </dl>

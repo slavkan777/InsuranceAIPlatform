@@ -7,7 +7,6 @@ import { selectAuthUser } from '@/features/auth/authSelectors';
 import { setSearch } from '@/features/claims/claimsSlice';
 import { pushToast } from '@/features/ui/uiFeedbackSlice';
 import { Icon } from '@/components/ui/Icon';
-import { LanguageSwitcher } from '@/components/layout/LanguageSwitcher';
 import { useI18n } from '@/i18n/useI18n';
 
 export function TopBar() {
@@ -112,7 +111,6 @@ export function TopBar() {
           </span>
           <Icon name="bell" size={18} />
         </button>
-        <LanguageSwitcher />
         <div
           className="w-9 h-9 rounded-full bg-gradient-to-br from-brand-500 to-brand-800 grid place-items-center text-white text-sm font-semibold ring-1 ring-brand-300/30"
           title={user?.login ?? 'demo user'}

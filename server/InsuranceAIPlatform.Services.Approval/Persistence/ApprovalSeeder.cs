@@ -22,14 +22,14 @@ public static class ApprovalSeeder
             Submitted = false,
             SubmittedAt = null,
             SavedAt = null,
-            AiRecommendation = "Запросити додаткові документи",
+            AiRecommendation = "Request additional documents",
             RecommendedPayout = 1800.00m,
             Options = new List<ApprovalDecisionOption>
             {
-                new() { ClaimId = SeedConstants.GoldenClaimId, Key = "request",  Label = "Запросити додаткові документи",       Recommended = true,  Rationale = "Рекомендовано AI — запросити фото заднього бампера" },
-                new() { ClaimId = SeedConstants.GoldenClaimId, Key = "approve",  Label = "Затвердити виплату",                  Recommended = false, Rationale = "Якщо ризики прийнятні після перевірки" },
-                new() { ClaimId = SeedConstants.GoldenClaimId, Key = "reject",   Label = "Відхилити заявку",                    Recommended = false, Rationale = "З обґрунтуванням відмови" },
-                new() { ClaimId = SeedConstants.GoldenClaimId, Key = "escalate", Label = "Передати до відділу розслідування",   Recommended = false, Rationale = "Ескалація для детального розслідування" },
+                new() { ClaimId = SeedConstants.GoldenClaimId, Key = "request",  Label = "Request additional documents",        Recommended = true,  Rationale = "AI recommended — request the rear bumper photo" },
+                new() { ClaimId = SeedConstants.GoldenClaimId, Key = "approve",  Label = "Approve payout",                      Recommended = false, Rationale = "If the risks are acceptable after review" },
+                new() { ClaimId = SeedConstants.GoldenClaimId, Key = "reject",   Label = "Reject the claim",                    Recommended = false, Rationale = "With a written justification" },
+                new() { ClaimId = SeedConstants.GoldenClaimId, Key = "escalate", Label = "Escalate to the investigation unit",  Recommended = false, Rationale = "Escalation for a detailed investigation" },
             }
         };
 

@@ -18,18 +18,18 @@ test.describe('Customers catalog deep', () => {
 
   test('pagination Next + Prev cycles between pages', async ({ page }) => {
     const meta = page.locator('[data-testid=customers-meta]');
-    await expect.poll(async () => (await meta.textContent()) ?? '').toMatch(/\d+ знайдено/);
+    await expect.poll(async () => (await meta.textContent()) ?? '').toMatch(/\d+ found/);
 
-    // Click "Далі" → page should increment.
-    const next = page.getByRole('button', { name: /Далі/ });
+    // Click "Next" → page should increment.
+    const next = page.getByRole('button', { name: /Next/ });
     if (await next.isEnabled()) {
       await next.click();
-      await expect.poll(async () => (await meta.textContent()) ?? '').toMatch(/сторінка 2/);
+      await expect.poll(async () => (await meta.textContent()) ?? '').toMatch(/page 2/);
 
-      // Click "← Назад" → page 1 again.
-      const prev = page.getByRole('button', { name: /Назад/ });
+      // Click "← Back" → page 1 again.
+      const prev = page.getByRole('button', { name: /Back/ });
       await prev.click();
-      await expect.poll(async () => (await meta.textContent()) ?? '').toMatch(/сторінка 1/);
+      await expect.poll(async () => (await meta.textContent()) ?? '').toMatch(/page 1/);
     } else {
       // Backend has fewer than PAGE_SIZE rows — pagination button absent, valid state.
       test.info().annotations.push({

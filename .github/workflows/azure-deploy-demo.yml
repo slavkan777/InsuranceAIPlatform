@@ -1,28 +1,27 @@
 # =====================================================================
-# Azure deploy — SKELETON / DISABLED.
-# Manual-only (workflow_dispatch). DOES NOT run on push. NO secrets stored.
-# OIDC placeholders only. Build/push + deploy steps are GUARDED behind an
-# explicit 'confirm: DEPLOY' input AND remain commented until AZURE_MINIMAL_DEPLOY_V0.1.
+# GHCR image build — MANUAL ONLY (workflow_dispatch). Never runs on push.
+# The build+push job is GUARDED behind an explicit 'confirm: BUILD_IMAGE' input.
 # A manual run with the default input only validates (bicep + backend + frontend build).
+# Authentication uses the built-in secrets.GITHUB_TOKEN via docker/login-action
+# (never printed). No Azure login, no deploy, no stored cloud secrets.
 # =====================================================================
-name: azure-deploy-demo (disabled skeleton)
+name: ghcr-image-build (manual, confirm=BUILD_IMAGE)
 
 on:
   workflow_dispatch:
     inputs:
       confirm:
-        description: "Type DEPLOY to enable build+push+deploy (otherwise validate-only)."
+        description: "Type BUILD_IMAGE to build server/Dockerfile and push to GHCR (otherwise validate-only)."
         required: false
         default: "validate-only"
 
 permissions:
-  id-token: write   # future Azure OIDC federated login (no client secret)
   contents: read
-  packages: write   # future GHCR image push (only used by the guarded build job)
+  packages: write   # GHCR image push (only used by the guarded build job)
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: insurance-api
+  IMAGE_NAME: insuranceai-api
 
 jobs:
   validate:
@@ -47,52 +46,26 @@ jobs:
           npm run build
 
   # ---------------------------------------------------------------
-  # Build the API image and push to GHCR. GUARDED (confirm=DEPLOY) +
-  # steps COMMENTED until AZURE_MINIMAL_DEPLOY_V0.1 flips them on.
+  # Build the API image from server/Dockerfile and push to GHCR.
+  # GUARDED: only runs on a manual dispatch with confirm=BUILD_IMAGE.
+  # Uses the built-in GITHUB_TOKEN (packages: write) — no stored secrets.
   # ---------------------------------------------------------------
   build-and-push:
     needs: validate
     runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.confirm == 'DEPLOY' }}
+    if: ${{ github.event.inputs.confirm == 'BUILD_IMAGE' }}
     steps:
       - uses: actions/checkout@v4
-      # - name: Log in to GHCR
-      #   uses: docker/login-action@v3
-      #   with:
-      #     registry: ${{ env.REGISTRY }}
-      #     username: ${{ github.actor }}
-      #     password: ${{ secrets.GITHUB_TOKEN }}
-      # - name: Build and push API image (context = server/)
-      #   uses: docker/build-push-action@v6
-      #   with:
-      #     context: server
-      #     file: server/Dockerfile
-      #     push: true
-      #     tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-      - name: Placeholder
-        run: echo "Build+push disabled until AZURE_MINIMAL_DEPLOY_V0.1."
-
-  deploy:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    # GUARD: only runs when manually dispatched with confirm=DEPLOY.
-    if: ${{ github.event.inputs.confirm == 'DEPLOY' }}
-    environment: azure-demo   # add a manual-approval reviewer here before first real deploy
-    steps:
-      - uses: actions/checkout@v4
-      # - name: Azure login (OIDC — placeholders; secrets not configured yet)
-      #   uses: azure/login@v2
-      #   with:
-      #     client-id: ${{ secrets.AZURE_CLIENT_ID }}
-      #     tenant-id: ${{ secrets.AZURE_TENANT_ID }}
-      #     subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      # - name: Deploy infra (subscription scope)
-      #   run: |
-      #     az deployment sub create \
-      #       --location westeurope \
-      #       --template-file infra/main.bicep \
-      #       --parameters infra/parameters/demo.bicepparam \
-      #         insuranceApiImage=${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }} \
-      #         sqlAdminObjectId=${{ secrets.SQL_ADMIN_OBJECT_ID }}
-      - name: Placeholder
-        run: echo "Deploy steps are intentionally disabled until AZURE_MINIMAL_DEPLOY_V0.1."
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push API image (context = server/)
+        uses: docker/build-push-action@v6
+        with:
+          context: server
+          file: server/Dockerfile
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ github.sha }}

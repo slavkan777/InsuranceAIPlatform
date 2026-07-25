@@ -217,6 +217,18 @@ await using (var scope = provider.CreateAsyncScope())
     Console.WriteLine($"  skipped (left untouched): {residue.Skipped}");
     foreach (var smp in residue.SkippedSamples) Console.WriteLine($"    - {smp}");
     Console.WriteLine($"=== Data backfill complete: {residue.Version} ===");
+
+    // ---- Lease 15 follow-up: live free-typed detail columns (critic finding) ----
+    Console.WriteLine();
+    Console.WriteLine($"=== Data backfill: {EnglishOnlyLiveResidueBackfill.Version} ===");
+    var liveApplied = await EnglishOnlyLiveResidueBackfill.WasAppliedAsync(claimsDb, ct);
+    Console.WriteLine($"  checkpoint: {(liveApplied ? "version already recorded — rerunning is safe (expect 0 updates)" : "not yet applied")}");
+    var live = await EnglishOnlyLiveResidueBackfill.RunAsync(claimsDb, customersDb, claimsDb, ct);
+    Console.WriteLine($"  updated:          {live.Updated}");
+    Console.WriteLine($"  already English:  {live.AlreadyEnglish}");
+    Console.WriteLine($"  neutral fallbacks (no literal map): {live.Skipped}");
+    foreach (var smp in live.SkippedSamples) Console.WriteLine($"    - {smp}");
+    Console.WriteLine($"=== Data backfill complete: {live.Version} ===");
 }
 
 // -----------------------------------------------------------------------
